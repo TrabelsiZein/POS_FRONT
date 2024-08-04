@@ -45,6 +45,33 @@ const router = new VueRouter({
       },
     },
     {
+      path: '/users-list',
+      name: 'UsersManagement_READ',
+      component: () => import('@/views/users-management/UsersList.vue'),
+      meta: {
+        action: "READ",
+        resource: "UsersManagement",
+      },
+    },
+    {
+      path: '/user-sheet',
+      name: 'UsersManagement_WRITE',
+      component: () => import('@/views/users-management/UserSheet.vue'),
+      meta: {
+        action: "WRITE",
+        resource: "UsersManagement",
+      },
+    },
+    {
+      path: '/user-sheet/:id',
+      name: 'UsersManagement_EDIT',
+      component: () => import('@/views/users-management/UserSheet.vue'),
+      meta: {
+        action: "EDIT",
+        resource: "UsersManagement",
+      },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/Login.vue'),

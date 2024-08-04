@@ -3,7 +3,8 @@
     <ag-grid-vue :gridOptions="gridOptions" :headerHeight="32" :rowHeight="50"
         :class="isDark ? 'ag-theme-balham-dark' : 'ag-theme-balham'" style="width: 100%; height: 67vh;"
         :defaultColDef="defaultColDef" @grid-ready="onGridReady" :pagination="true" paginationPageSize="30"
-        :columnDefs="agGridData.columnDefs" :rowData="agGridData.rows" :overlayLoadingTemplate="overlayLoadingTemplate">
+        :columnDefs="agGridData.columnDefs" :rowData="agGridData.rows" :overlayLoadingTemplate="overlayLoadingTemplate"
+        :tooltipShowDelay="2000">
     </ag-grid-vue>
 
 </template>
@@ -67,6 +68,7 @@ export default {
                     'border-width': '1px',
                     'font-family': "'Montserrat', Helvetica, Arial, serif"
                 },
+                tooltipValueGetter: params => this.getTooltipContent(params.data),
             },
             gridApi: null,
             columnApi: null,
@@ -74,6 +76,10 @@ export default {
         }
     },
     methods: {
+        getTooltipContent(data) {
+            const { createdBy, createdAt, updatedBy, updatedAt } = data;
+            return `Created By: ${createdBy}\nCreated At: ${createdAt}\nUpdated By: ${updatedBy}\nUpdated At: ${updatedAt}`;
+        },
         onCellValueChanged(params) {
             this.$emit('onCellValueChanged', params);
         },
@@ -112,5 +118,20 @@ export default {
     .ag-theme-balham {
         height: 80vh ! important;
     }
+}
+</style>
+
+<style>
+.ag-tooltip {
+    white-space: pre-wrap;
+    /* Ensures line breaks are respected */
+    background-color: #ffffff;
+    /* Optional: Background color */
+    border: 1px solid #cccccc;
+    /* Optional: Border */
+    padding: 5px;
+    /* Optional: Padding */
+    border-radius: 3px;
+    /* Optional: Rounded corners */
 }
 </style>

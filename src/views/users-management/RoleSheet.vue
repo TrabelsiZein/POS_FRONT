@@ -3,7 +3,7 @@
         <b-card>
 
             <BreadcrumbSheet :componentName="componentName" :componentAPI="componentAPI"
-                :breadcrumbData="breadcrumbData" @reset="reset" @save="save" @deletClicked="deletClicked" />
+                :breadcrumbData="breadcrumbData" @reset="reset" @save="save" />
 
             <hr>
 
@@ -148,9 +148,6 @@ export default {
                 await this.findRoleById();
             }
         },
-        async deletClicked() {
-
-        },
         async save() {
             this.showLoading = true;
             try {
@@ -169,7 +166,7 @@ export default {
                     }
                 });
                 await this.$http.post(this.componentAPI, this.role);
-                this.$router.push({ name: "RolesManagement_READ" })
+                this.$router.push({ name: this.componentName + "_READ" })
             } finally {
                 this.showLoading = false;
             }

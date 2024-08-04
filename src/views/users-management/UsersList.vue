@@ -2,7 +2,8 @@
 
   <div>
 
-    <List :componentName="componentName" :breadcrumbData="breadcrumbData" :agGridData="agGridData" />
+    <List :componentName="componentName" :componentAPI="componentAPI" :breadcrumbData="breadcrumbData"
+      :agGridData="agGridData" />
 
   </div>
 </template>
@@ -19,6 +20,7 @@ export default {
   data() {
     return {
       componentName: "UsersManagement",
+      componentAPI: "user",
       breadcrumbData: {
         title: "Liste Des Utilisateurs",
         route: [
@@ -35,7 +37,7 @@ export default {
         ]
       },
       agGridData: {
-        singleClickEdit: true,
+        // singleClickEdit: true,
         columnDefs: [
           {
             headerName: "Username",
@@ -63,11 +65,9 @@ export default {
   },
   methods: {
     async loadData() {
-      let response = await this.$http.get("user");
+      let response = await this.$http.get(this.componentAPI);
       this.agGridData.rows = response.data;
     }
   }
 }
 </script>
-
-<style></style>

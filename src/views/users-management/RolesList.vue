@@ -56,7 +56,7 @@ export default {
   },
   methods: {
     async loadData() {
-      let response = await this.$http.get("role");
+      let response = await this.$http.get(this.componentAPI);
       this.agGridData.rows = response.data;
     }
   }

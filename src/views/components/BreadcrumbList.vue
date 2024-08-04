@@ -3,7 +3,7 @@
     <b-row class="content-header">
 
         <!-- Content Left -->
-        <b-col class="content-header-left mb-2" cols="12" md="6">
+        <b-col class="content-header-left mb-2" sm="12" md="5" lg="7">
             <b-row class="breadcrumbs-top">
                 <b-col cols="12">
                     <h2 class="content-header-title float-left pr-1 mb-0">
@@ -26,7 +26,7 @@
 
         <!-- Content Right -->
         <!-- <b-col class="content-header-right text-md-right d-md-block d-none mb-1" md="5" cols="12"> -->
-        <b-col class="content-header-right text-md-right mb-1" md="6" cols="12">
+        <b-col class="content-header-right text-md-right mb-1" sm="12" md="7" lg="5">
 
             <b-button variant="relief-info" class="btn-icon mr-50 " @click="searchClicked">
                 <feather-icon icon="SearchIcon" />
