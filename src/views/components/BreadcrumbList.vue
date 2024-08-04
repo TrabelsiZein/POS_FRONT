@@ -91,6 +91,9 @@ export default {
             type: Object,
             required: true,
         },
+        onlyListComponent: {
+            type: Boolean,
+        },
     },
     data() {
         return {
@@ -100,7 +103,10 @@ export default {
     },
     methods: {
         newClicked() {
-            this.$router.push({ name: this.componentName + "_WRITE" })
+            if (this.onlyListComponent)
+                this.$emit("newClicked");
+            else
+                this.$router.push({ name: this.componentName + "_WRITE" })
         },
         searchClicked() {
             this.showSearchBar = !this.showSearchBar;

@@ -4,9 +4,10 @@
 
         <b-card>
 
-            <Breadcrumb :componentName="componentName" :breadcrumbData="breadcrumbData" @editClicked="editClicked"
-                @downloadClicked="downloadClicked" @printClicked="printClicked" @deleteClicked="deleteClicked"
-                @updateSearchQuery="updateSearchQuery" />
+            <Breadcrumb :onlyListComponent="onlyListComponent" :componentName="componentName"
+                :breadcrumbData="breadcrumbData" @editClicked="editClicked" @downloadClicked="downloadClicked"
+                @printClicked="printClicked" @deleteClicked="deleteClicked" @updateSearchQuery="updateSearchQuery"
+                @newClicked="$emit('newClicked')" />
 
             <hr>
 
@@ -15,7 +16,7 @@
         </b-card>
 
     </b-overlay>
-    
+
 </template>
 
 <script>
@@ -47,6 +48,9 @@ export default {
             type: Object,
             required: true,
         },
+        onlyListComponent: {
+            type: Boolean,
+        },
     },
     data() {
         return {
@@ -54,15 +58,23 @@ export default {
         }
     },
     methods: {
-
         editClicked() {
             if (this.$refs.agGrid.gridApi.getSelectedRows().length > 0) {
                 const selectedData = this.$refs.agGrid.gridApi.getSelectedRows();
-                this.$router.push({ name: this.componentName + "_EDIT", params: { id: selectedData[0].id } })
+                if (this.onlyListComponent) {
+                    this.$emit('editclicked', selectedData[0]);
+                }
+                else
+                    this.$router.push({ name: this.componentName + "_EDIT", params: { id: selectedData[0].id } })
             }
         },
         cellDoubleClicked(param) {
-            this.$router.push({ name: this.componentName + "_EDIT", params: { id: param.data.id } })
+            if (this.onlyListComponent) {
+                const selectedData = this.$refs.agGrid.gridApi.getSelectedRows();
+                this.$emit('editclicked', selectedData[0]);
+            }
+            else
+                this.$router.push({ name: this.componentName + "_EDIT", params: { id: param.data.id } })
         },
         deleteClicked() {
             if (this.$refs.agGrid.gridApi.getSelectedRows().length > 0) {
