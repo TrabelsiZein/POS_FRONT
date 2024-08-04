@@ -81,6 +81,15 @@ const router = new VueRouter({
       },
     },
     {
+      path: '/item-unit-of-measure',
+      name: 'ItemUnitOfMeasure_READ',
+      component: () => import('@/views/ItemUnitOfMeasure.vue'),
+      meta: {
+        action: "READ",
+        resource: "ItemUnitOfMeasure",
+      },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/Login.vue'),

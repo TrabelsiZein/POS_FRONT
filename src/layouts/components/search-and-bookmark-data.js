@@ -7,6 +7,7 @@ export default {
       { title: 'Gestion Des Roles', route: { name: 'RolesManagement_READ' }, icon: 'LockIcon' },
       { title: 'Gestion Des Utilisateurs', route: { name: 'UsersManagement_READ' }, icon: 'UserIcon' },
       { title: 'Unités De Mesure', route: { name: 'UnitOfMeasure_READ' }, icon: 'CodepenIcon' },
+      { title: 'Unités De Mesure Article', route: { name: 'ItemUnitOfMeasure_READ' }, icon: 'CodepenIcon' },
     ],
   },
   Fiche: {
