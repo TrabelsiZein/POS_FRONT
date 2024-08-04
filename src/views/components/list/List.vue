@@ -68,13 +68,12 @@ export default {
                     this.$router.push({ name: this.componentName + "_EDIT", params: { id: selectedData[0].id } })
             }
         },
-        cellDoubleClicked(param) {
-            if (this.onlyListComponent) {
-                const selectedData = this.$refs.agGrid.gridApi.getSelectedRows();
-                this.$emit('editclicked', selectedData[0]);
-            }
-            else
-                this.$router.push({ name: this.componentName + "_EDIT", params: { id: param.data.id } })
+        cellDoubleClicked(params) {
+            if (this.$can('EDIT', this.componentName))
+                if (this.onlyListComponent)
+                    this.$emit('editclicked', params.data);
+                else
+                    this.$router.push({ name: this.componentName + "_EDIT", params: { id: params.data.id } })
         },
         deleteClicked() {
             if (this.$refs.agGrid.gridApi.getSelectedRows().length > 0) {
