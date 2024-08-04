@@ -24,35 +24,13 @@
             <p class="user-name font-weight-bolder mb-0">
               John Doe
             </p>
-            <span class="user-status">Admin</span>
+            <!-- <span class="user-status">Admin</span> -->
           </div>
           <b-avatar size="40" variant="light-primary" badge :src="require('@/assets/images/avatars/13-small.png')"
             class="badge-minimal" badge-variant="success" />
         </template>
 
-        <b-dropdown-item link-class="d-flex align-items-center">
-          <feather-icon size="16" icon="UserIcon" class="mr-50" />
-          <span>Profile</span>
-        </b-dropdown-item>
-
-        <b-dropdown-item link-class="d-flex align-items-center">
-          <feather-icon size="16" icon="MailIcon" class="mr-50" />
-          <span>Inbox</span>
-        </b-dropdown-item>
-
-        <b-dropdown-item link-class="d-flex align-items-center">
-          <feather-icon size="16" icon="CheckSquareIcon" class="mr-50" />
-          <span>Task</span>
-        </b-dropdown-item>
-
-        <b-dropdown-item link-class="d-flex align-items-center">
-          <feather-icon size="16" icon="MessageSquareIcon" class="mr-50" />
-          <span>Chat</span>
-        </b-dropdown-item>
-
-        <b-dropdown-divider />
-
-        <b-dropdown-item link-class="d-flex align-items-center">
+        <b-dropdown-item link-class="d-flex align-items-center btn-danger m-1" @click="logout">
           <feather-icon size="16" icon="LogOutIcon" class="mr-50" />
           <span>Logout</span>
         </b-dropdown-item>
@@ -63,21 +41,14 @@
 </template>
 
 <script>
-import {
-  BLink, BNavbarNav, BNavItemDropdown, BDropdownItem, BDropdownDivider, BAvatar,
-} from 'bootstrap-vue'
+
 import DarkToggler from '@core/layouts/components/app-navbar/components/DarkToggler.vue'
 import SearchBar from './SearchBar.vue'
+import { initialAbility } from '@/libs/acl/config'
+import useJwt from '@/auth/jwt/useJwt'
 
 export default {
   components: {
-    BLink,
-    BNavbarNav,
-    BNavItemDropdown,
-    BDropdownItem,
-    BDropdownDivider,
-    BAvatar,
-
     // Navbar Components
     DarkToggler,
     SearchBar
@@ -88,5 +59,17 @@ export default {
       default: () => { },
     },
   },
+  methods: {
+    async logout() {
+      localStorage.removeItem(useJwt.jwtConfig.storageTokenKeyName)
+      localStorage.removeItem(useJwt.jwtConfig.storageRefreshTokenKeyName)
+      localStorage.removeItem('userData');
+      localStorage.removeItem('sessionId');
+      localStorage.removeItem('company');
+      this.$ability.update(initialAbility)
+      this.$router.push({ name: 'login' })
+      this.$forceUpdate()
+    },
+  }
 }
 </script>

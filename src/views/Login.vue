@@ -177,7 +177,6 @@ export default {
           username: this.username,
           password: this.password,
         });
-        console.log(response);
         if (response.status == 200 && response.data.status == 200) {
           useJwt.setToken(response.data.token);
           useJwt.setUserData({ abilities: response.data.abilities })
