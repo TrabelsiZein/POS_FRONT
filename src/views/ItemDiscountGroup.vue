@@ -65,16 +65,16 @@ export default {
                 description: "",
             },
             selectedEntity: null,
-            componentName: "UnitOfMeasure",
-            componentAPI: "unit_of_measure",
+            componentName: "ItemDiscountGroup",
+            componentAPI: "item_discount_group",
             breadcrumbData: {
-                title: "Unités De Mesure",
+                title: "Groupe Remises Article",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Unités De Mesure',
+                        text: 'Groupe Remises Article',
                         active: true,
                     },
                 ],

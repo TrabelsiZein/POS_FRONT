@@ -134,7 +134,6 @@ const router = new VueRouter({
         resource: "GeneralBusinessPostingGroup",
       },
     },
-
     {
       path: '/general-ledger-account',
       name: 'GeneralLedgerAccount_READ',
@@ -162,7 +161,51 @@ const router = new VueRouter({
         resource: "GeneralLedgerAccount",
       },
     },
-
+    {
+      path: '/currency',
+      name: 'Currency_READ',
+      component: () => import('@/views/Currency.vue'),
+      meta: {
+        action: "READ",
+        resource: "Currency",
+      },
+    },
+    {
+      path: '/item-discount-group',
+      name: 'ItemDiscountGroup_READ',
+      component: () => import('@/views/ItemDiscountGroup.vue'),
+      meta: {
+        action: "READ",
+        resource: "ItemDiscountGroup",
+      },
+    },
+    {
+      path: '/location',
+      name: 'Location_READ',
+      component: () => import('@/views/LocationList.vue'),
+      meta: {
+        action: "READ",
+        resource: "Location",
+      },
+    },
+    {
+      path: '/location',
+      name: 'Location_WRITE',
+      component: () => import('@/views/LocationSheet.vue'),
+      meta: {
+        action: "WRITE",
+        resource: "Location",
+      },
+    },
+    {
+      path: '/location/:id',
+      name: 'Location_EDIT',
+      component: () => import('@/views/LocationSheet.vue'),
+      meta: {
+        action: "EDIT",
+        resource: "Location",
+      },
+    },
 
 
 

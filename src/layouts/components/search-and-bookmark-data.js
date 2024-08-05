@@ -14,6 +14,9 @@ export default {
       { title: 'Groupe compta. Marché TVA', route: { name: 'VatBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
       { title: 'Groupe compta. Marché', route: { name: 'GeneralBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
       { title: 'Compte Général', route: { name: 'GeneralLedgerAccount_READ' }, icon: 'HardDriveIcon' },
+      { title: 'Devise', route: { name: 'Currency_READ' }, icon: 'DollarSignIcon' },
+      { title: 'Groupe Remises Article', route: { name: 'ItemDiscountGroup_READ' }, icon: 'PercentIcon' },
+      { title: 'Magasin', route: { name: 'Location_READ' }, icon: 'MapIcon' },
     ],
   },
   Fiche: {

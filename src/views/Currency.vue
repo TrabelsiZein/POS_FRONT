@@ -65,16 +65,16 @@ export default {
                 description: "",
             },
             selectedEntity: null,
-            componentName: "UnitOfMeasure",
-            componentAPI: "unit_of_measure",
+            componentName: "Currency",
+            componentAPI: "currency",
             breadcrumbData: {
-                title: "Unités De Mesure",
+                title: "Liste Des Devises",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Unités De Mesure',
+                        text: 'Devise',
                         active: true,
                     },
                 ],
