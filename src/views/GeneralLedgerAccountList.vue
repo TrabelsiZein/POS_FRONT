@@ -11,7 +11,6 @@
 <script>
 
 import List from '@/views/components/list/List.vue';
-import BadgeCell from '@/views/components/ag-grid/BadgeCell.vue'
 
 export default {
   components: {
@@ -19,41 +18,47 @@ export default {
   },
   data() {
     return {
-      componentName: "UsersManagement",
-      componentAPI: "user",
+      componentName: "GeneralLedgerAccount",
+      componentAPI: "general_ledger_account",
       showLoading: true,
       breadcrumbData: {
-        title: "Liste Des Utilisateurs",
+        title: "Compte Général",
         route: [
           {
             text: 'Configuration',
           },
           {
-            text: 'Utilisateurs',
-          },
-          {
-            text: 'Liste',
+            text: 'Compte Général',
             active: true,
           },
-        ]
+        ],
+        withFilter: false
       },
       agGridData: {
-        // singleClickEdit: true,
         columnDefs: [
           {
-            headerName: "Username",
-            field: "username",
+            headerName: "N°",
+            field: "no",
           },
           {
-            headerName: "Email",
-            field: "email",
+            headerName: "Nom",
+            field: "name",
           },
           {
-            headerName: "Statut",
-            field: "active",
-            cellRendererFramework: 'badgeCell',
-            cellRendererParams: { componentName: "UsersManagement" },
-            width: 100
+            headerName: "Type compte",
+            field: "accountType",
+          },
+          {
+            headerName: "Catégorie du compte",
+            field: "accountCategory",
+          },
+          {
+            headerName: "Groupe compta. Marché",
+            field: "genBusinessPostingGroup",
+          },
+          {
+            headerName: "Groupe compta. Produit",
+            field: "genProductPostingGroup",
           },
         ],
         rows: []
@@ -61,7 +66,6 @@ export default {
     }
   },
   created() {
-    this.$options.components.badgeCell = BadgeCell;
     this.loadData();
   },
   methods: {

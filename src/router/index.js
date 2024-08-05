@@ -119,7 +119,7 @@ const router = new VueRouter({
     {
       path: '/general-product-posting-group',
       name: 'GeneralProductPostingGroup_READ',
-      component: () => import('@/views/posting-group/GenProductPostingGroup.vue'),
+      component: () => import('@/views/posting-group/GeneralProductPostingGroup.vue'),
       meta: {
         action: "READ",
         resource: "GeneralProductPostingGroup",
@@ -128,12 +128,45 @@ const router = new VueRouter({
     {
       path: '/general-business-posting-group',
       name: 'GeneralBusinessPostingGroup_READ',
-      component: () => import('@/views/posting-group/GenBusinessPostingGroup.vue'),
+      component: () => import('@/views/posting-group/GeneralBusinessPostingGroup.vue'),
       meta: {
         action: "READ",
         resource: "GeneralBusinessPostingGroup",
       },
     },
+
+    {
+      path: '/general-ledger-account',
+      name: 'GeneralLedgerAccount_READ',
+      component: () => import('@/views/GeneralLedgerAccountList.vue'),
+      meta: {
+        action: "READ",
+        resource: "GeneralLedgerAccount",
+      },
+    },
+    {
+      path: '/general-ledger-account-sheet',
+      name: 'GeneralLedgerAccount_WRITE',
+      component: () => import('@/views/GeneralLedgerAccountSheet.vue'),
+      meta: {
+        action: "WRITE",
+        resource: "GeneralLedgerAccount",
+      },
+    },
+    {
+      path: '/general-ledger-account-sheet/:id',
+      name: 'GeneralLedgerAccount_EDIT',
+      component: () => import('@/views/GeneralLedgerAccountSheet.vue'),
+      meta: {
+        action: "EDIT",
+        resource: "GeneralLedgerAccount",
+      },
+    },
+
+
+
+
+
     {
       path: '/login',
       name: 'login',

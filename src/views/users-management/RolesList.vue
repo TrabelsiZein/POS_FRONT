@@ -1,11 +1,11 @@
 <template>
 
-  <div>
+  <b-overlay :show="showLoading" spinner-variant="primary">
 
     <List :componentName="componentName" :componentAPI="componentAPI" :breadcrumbData="breadcrumbData"
       :agGridData="agGridData" />
 
-  </div>
+  </b-overlay>
 </template>
 
 <script>
@@ -20,6 +20,7 @@ export default {
     return {
       componentName: "RolesManagement",
       componentAPI: "role",
+      showLoading: true,
       breadcrumbData: {
         title: "Liste Des Roles",
         route: [
@@ -58,9 +59,8 @@ export default {
     async loadData() {
       let response = await this.$http.get(this.componentAPI);
       this.agGridData.rows = response.data;
+      this.showLoading = false;
     }
   }
 }
 </script>
-
-<style></style>

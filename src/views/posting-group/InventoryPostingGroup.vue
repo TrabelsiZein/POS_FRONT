@@ -6,7 +6,7 @@
             <b-row>
 
                 <b-col cols="12">
-                    <b-form-group label="Code">
+                    <b-form-group label="N°">
                         <b-form-input v-model="entity.no" ref="no" />
                     </b-form-group>
                 </b-col>
@@ -59,6 +59,7 @@ export default {
     data() {
         return {
             showLoading: true,
+            entity: {},
             emptyEntity: {
                 no: "",
                 description: "",
@@ -122,7 +123,7 @@ export default {
         async save() {
             this.showLoading = true;
             try {
-                await this.$http.post(this.componentAPI, this.unitOfMeasure);
+                await this.$http.post(this.componentAPI, this.entity);
                 this.$refs["modal"].hide();
                 this.loadData();
             } catch {

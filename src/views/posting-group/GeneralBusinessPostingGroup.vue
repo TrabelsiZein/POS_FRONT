@@ -6,7 +6,7 @@
             <b-row>
 
                 <b-col cols="12">
-                    <b-form-group label="Code">
+                    <b-form-group label="N°">
                         <b-form-input v-model="entity.no" ref="no" />
                     </b-form-group>
                 </b-col>
@@ -19,9 +19,9 @@
 
 
                 <b-col cols="12">
-                    <b-form-group label="Gpe compta. produit TVA par défaut">
-                        <v-select v-model="selectedVatProductPostingGroup" label="description"
-                            :options="vatProductPostingGroupOptions" />
+                    <b-form-group label="Gpe compta. marché TVA par défaut">
+                        <v-select v-model="selectedVatBusinessPostingGroup" label="description"
+                            :options="vatBusinessPostingGroupOptions" />
                     </b-form-group>
                 </b-col>
 
@@ -73,19 +73,19 @@ export default {
             emptyEntity: {
                 no: "",
                 description: "",
-                defVatProdPostingGroup: ""
+                defVatBusPostingGroup: ""
             },
             selectedEntity: null,
-            componentName: "GeneralProductPostingGroup",
-            componentAPI: "general_product_posting_group",
+            componentName: "GeneralBusinessPostingGroup",
+            componentAPI: "general_business_posting_group",
             breadcrumbData: {
-                title: "Groupe compta. Produit",
+                title: "Groupe compta. Marché",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Groupe compta. Produit',
+                        text: 'Groupe compta. Marché',
                         active: true,
                     },
                 ],
@@ -104,8 +104,8 @@ export default {
                 ],
                 rows: []
             },
-            vatProductPostingGroupOptions: [],
-            selectedVatProductPostingGroup: null
+            vatBusinessPostingGroupOptions: [],
+            selectedVatBusinessPostingGroup: null
         }
     },
     created() {
@@ -123,7 +123,7 @@ export default {
         newClicked() {
             this.entity = { ...this.emptyEntity };
             this.selectedEntity = null;
-            this.selectedVatProductPostingGroup = null;
+            this.selectedVatBusinessPostingGroup = null;
             this.$refs['modal'].show();
             setTimeout(() => {
                 this.$refs["no"].focus();
@@ -132,10 +132,10 @@ export default {
         editclicked(data) {
             this.entity = data;
             this.selectedEntity = { ...data };
-            if (data.defVatProdPostingGroup != null && data.defVatProdPostingGroup != '')
-                this.selectedVatProductPostingGroup = this.vatProductPostingGroupOptions.find(el => el.no === data.defVatProdPostingGroup);
+            if (data.defVatBusPostingGroup != null && data.defVatBusPostingGroup != '')
+                this.selectedVatBusinessPostingGroup = this.vatBusinessPostingGroupOptions.find(el => el.no === data.defVatBusPostingGroup);
             else
-                this.selectedVatProductPostingGroup = null;
+                this.selectedVatBusinessPostingGroup = null;
             this.$refs['modal'].show();
             setTimeout(() => {
                 this.$refs["no"].focus();
@@ -144,10 +144,10 @@ export default {
         async save() {
             this.showLoading = true;
             try {
-                if (this.selectedVatProductPostingGroup != null)
-                    this.entity.defVatProdPostingGroup = this.selectedVatProductPostingGroup.no;
+                if (this.selectedVatBusinessPostingGroup != null)
+                    this.entity.defVatBusPostingGroup = this.selectedVatBusinessPostingGroup.no;
                 else
-                    this.entity.defVatProdPostingGroup = null;
+                    this.entity.defVatBusPostingGroup = null;
                 await this.$http.post(this.componentAPI, this.entity);
                 this.$refs["modal"].hide();
                 this.loadData();
@@ -161,12 +161,12 @@ export default {
                 this.entity = { ...this.emptyEntity };
             else
                 this.entity = { ...this.selectedEntity };
-            if (this.entity.defVatProdPostingGroup != null && this.entity.defVatProdPostingGroup != '')
-                this.selectedVatProductPostingGroup = this.vatProductPostingGroupOptions.find(el => el.no === this.entity.defVatProdPostingGroup);
+            if (this.entity.defVatBusPostingGroup != null && this.entity.defVatBusPostingGroup != '')
+                this.selectedVatBusinessPostingGroup = this.vatBusinessPostingGroupOptions.find(el => el.no === this.entity.defVatBusPostingGroup);
         },
         loadVatProductPostingGroup() {
-            this.$http.get("vat_product_posting_group").then(response => {
-                this.vatProductPostingGroupOptions = response.data;
+            this.$http.get("vat_business_posting_group").then(response => {
+                this.vatBusinessPostingGroupOptions = response.data;
             });
         },
     }
