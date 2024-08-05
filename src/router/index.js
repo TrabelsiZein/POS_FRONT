@@ -117,12 +117,21 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/gen-product-posting-group',
+      path: '/general-product-posting-group',
       name: 'GeneralProductPostingGroup_READ',
       component: () => import('@/views/posting-group/GenProductPostingGroup.vue'),
       meta: {
         action: "READ",
         resource: "GeneralProductPostingGroup",
+      },
+    },
+    {
+      path: '/general-business-posting-group',
+      name: 'GeneralBusinessPostingGroup_READ',
+      component: () => import('@/views/posting-group/GenBusinessPostingGroup.vue'),
+      meta: {
+        action: "READ",
+        resource: "GeneralBusinessPostingGroup",
       },
     },
     {

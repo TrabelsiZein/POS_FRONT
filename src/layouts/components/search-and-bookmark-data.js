@@ -12,6 +12,7 @@ export default {
       { title: 'Groupe compta. Produit TVA', route: { name: 'VatProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
       { title: 'Groupe compta. Produit', route: { name: 'GeneralProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
       { title: 'Groupe compta. Marché TVA', route: { name: 'VatBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
+      { title: 'Groupe compta. Marché', route: { name: 'GeneralBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
     ],
   },
   Fiche: {
