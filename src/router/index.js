@@ -90,6 +90,42 @@ const router = new VueRouter({
       },
     },
     {
+      path: '/inventory-posting-group',
+      name: 'InventoryPostingGroup_READ',
+      component: () => import('@/views/posting-group/InventoryPostingGroup.vue'),
+      meta: {
+        action: "READ",
+        resource: "InventoryPostingGroup",
+      },
+    },
+    {
+      path: '/vat-product-posting-group',
+      name: 'VatProductPostingGroup_READ',
+      component: () => import('@/views/posting-group/VatProductPostingGroup.vue'),
+      meta: {
+        action: "READ",
+        resource: "VatProductPostingGroup",
+      },
+    },
+    {
+      path: '/vat-business-posting-group',
+      name: 'VatBusinessPostingGroup_READ',
+      component: () => import('@/views/posting-group/VatBusinessPostingGroup.vue'),
+      meta: {
+        action: "READ",
+        resource: "VatBusinessPostingGroup",
+      },
+    },
+    {
+      path: '/gen-product-posting-group',
+      name: 'GeneralProductPostingGroup_READ',
+      component: () => import('@/views/posting-group/GenProductPostingGroup.vue'),
+      meta: {
+        action: "READ",
+        resource: "GeneralProductPostingGroup",
+      },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/Login.vue'),

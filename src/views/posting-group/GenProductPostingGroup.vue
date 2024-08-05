@@ -7,20 +7,21 @@
 
                 <b-col cols="12">
                     <b-form-group label="Code">
-                        <b-form-input v-model="unitOfMeasure.no" ref="no" />
+                        <b-form-input v-model="entity.no" ref="no" />
                     </b-form-group>
                 </b-col>
 
                 <b-col cols="12">
                     <b-form-group label="Description">
-                        <b-form-input v-model="unitOfMeasure.description" ref="description" />
+                        <b-form-input v-model="entity.description" ref="description" />
                     </b-form-group>
                 </b-col>
 
+
                 <b-col cols="12">
-                    <b-form-group label="Quantité par unité">
-                        <b-form-input type="number" v-model="unitOfMeasure.qtyPerUnitOfMeasure"
-                            ref="qtyPerUnitOfMeasure" />
+                    <b-form-group label="Gpe compta. produit TVA par défaut">
+                        <v-select v-model="selectedVatProductPostingGroup" label="description"
+                            :options="vatProductPostingGroupOptions" />
                     </b-form-group>
                 </b-col>
 
@@ -58,10 +59,12 @@
 <script>
 
 import List from '@/views/components/list/List.vue';
+import vSelect from 'vue-select'
 
 export default {
     components: {
-        List
+        List,
+        vSelect
     },
     data() {
         return {
@@ -70,19 +73,19 @@ export default {
             emptyEntity: {
                 no: "",
                 description: "",
-                qtyPerUnitOfMeasure: 0
+                defVatProdPostingGroup: ""
             },
             selectedEntity: null,
-            componentName: "ItemUnitOfMeasure",
-            componentAPI: "item_unit_of_measure",
+            componentName: "GeneralProductPostingGroup",
+            componentAPI: "general_product_posting_group",
             breadcrumbData: {
-                title: "Unités De Mesure Article",
+                title: "Groupe compta. Produit",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Unités De Mesure Article',
+                        text: 'Groupe compta. Produit',
                         active: true,
                     },
                 ],
@@ -101,6 +104,8 @@ export default {
                 ],
                 rows: []
             },
+            vatProductPostingGroupOptions: [],
+            selectedVatProductPostingGroup: null
         }
     },
     created() {
@@ -109,6 +114,8 @@ export default {
     },
     methods: {
         async loadData() {
+            this.entity = { ...this.emptyEntity };
+            this.loadVatProductPostingGroup();
             let response = await this.$http.get(this.componentAPI);
             this.agGridData.rows = response.data;
             this.showLoading = false;
@@ -116,6 +123,7 @@ export default {
         newClicked() {
             this.entity = { ...this.emptyEntity };
             this.selectedEntity = null;
+            this.selectedVatProductPostingGroup = null;
             this.$refs['modal'].show();
             setTimeout(() => {
                 this.$refs["no"].focus();
@@ -124,6 +132,10 @@ export default {
         editclicked(data) {
             this.entity = data;
             this.selectedEntity = { ...data };
+            if (data.defVatProdPostingGroup != null && data.defVatProdPostingGroup != '')
+                this.selectedVatProductPostingGroup = this.vatProductPostingGroupOptions.find(el => el.no === data.defVatProdPostingGroup);
+            else
+                this.selectedVatProductPostingGroup = null;
             this.$refs['modal'].show();
             setTimeout(() => {
                 this.$refs["no"].focus();
@@ -132,10 +144,15 @@ export default {
         async save() {
             this.showLoading = true;
             try {
-                await this.$http.post(this.componentAPI, this.unitOfMeasure);
+                if (this.selectedVatProductPostingGroup != null)
+                    this.entity.defVatProdPostingGroup = this.selectedVatProductPostingGroup.no;
+                else
+                    this.entity.defVatProdPostingGroup = null;
+                await this.$http.post(this.componentAPI, this.entity);
                 this.$refs["modal"].hide();
                 this.loadData();
-            } catch {
+            } catch (error) {
+                console.log(error);
                 this.showLoading = false;
             }
         },
@@ -144,7 +161,23 @@ export default {
                 this.entity = { ...this.emptyEntity };
             else
                 this.entity = { ...this.selectedEntity };
-        }
+            if (this.entity.defVatProdPostingGroup != null && this.entity.defVatProdPostingGroup != '')
+                this.selectedVatProductPostingGroup = this.vatProductPostingGroupOptions.find(el => el.no === this.entity.defVatProdPostingGroup);
+        },
+        loadVatProductPostingGroup() {
+            this.$http.get("vat_product_posting_group").then(response => {
+                this.vatProductPostingGroupOptions = response.data;
+            });
+        },
     }
 }
 </script>
+
+<style lang="scss">
+@import '@core/scss/vue/libs/vue-select.scss';
+
+.v-select .vs__dropdown-menu {
+    z-index: 1050;
+    position: relative;
+}
+</style>

@@ -8,6 +8,10 @@ export default {
       { title: 'Gestion Des Utilisateurs', route: { name: 'UsersManagement_READ' }, icon: 'UserIcon' },
       { title: 'Unités De Mesure', route: { name: 'UnitOfMeasure_READ' }, icon: 'CodepenIcon' },
       { title: 'Unités De Mesure Article', route: { name: 'ItemUnitOfMeasure_READ' }, icon: 'CodepenIcon' },
+      { title: 'Groupe Compta. Stock', route: { name: 'InventoryPostingGroup_READ' }, icon: 'HardDriveIcon' },
+      { title: 'Groupe compta. Produit TVA', route: { name: 'VatProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
+      { title: 'Groupe compta. Produit', route: { name: 'GeneralProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
+      { title: 'Groupe compta. Marché TVA', route: { name: 'VatBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
     ],
   },
   Fiche: {

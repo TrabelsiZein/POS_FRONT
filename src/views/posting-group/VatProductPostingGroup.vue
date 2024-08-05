@@ -7,20 +7,13 @@
 
                 <b-col cols="12">
                     <b-form-group label="Code">
-                        <b-form-input v-model="unitOfMeasure.no" ref="no" />
+                        <b-form-input v-model="entity.no" ref="no" />
                     </b-form-group>
                 </b-col>
 
                 <b-col cols="12">
                     <b-form-group label="Description">
-                        <b-form-input v-model="unitOfMeasure.description" ref="description" />
-                    </b-form-group>
-                </b-col>
-
-                <b-col cols="12">
-                    <b-form-group label="Quantité par unité">
-                        <b-form-input type="number" v-model="unitOfMeasure.qtyPerUnitOfMeasure"
-                            ref="qtyPerUnitOfMeasure" />
+                        <b-form-input v-model="entity.description" ref="description" />
                     </b-form-group>
                 </b-col>
 
@@ -70,19 +63,18 @@ export default {
             emptyEntity: {
                 no: "",
                 description: "",
-                qtyPerUnitOfMeasure: 0
             },
             selectedEntity: null,
-            componentName: "ItemUnitOfMeasure",
-            componentAPI: "item_unit_of_measure",
+            componentName: "VatProductPostingGroup",
+            componentAPI: "vat_product_posting_group",
             breadcrumbData: {
-                title: "Unités De Mesure Article",
+                title: "Groupe compta. Produit TVA",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Unités De Mesure Article',
+                        text: 'Groupe compta. Produit TVA',
                         active: true,
                     },
                 ],

@@ -7,17 +7,19 @@
 
                 <b-col cols="12">
                     <b-form-group label="Code">
-                        <b-form-input v-model="unitOfMeasure.no" ref="no" />
+                        <b-form-input v-model="entity.no" ref="no" />
                     </b-form-group>
                 </b-col>
 
                 <b-col cols="12">
                     <b-form-group label="Description">
-                        <b-form-input v-model="unitOfMeasure.description" ref="description" />
+                        <b-form-input v-model="entity.description" ref="description" />
                     </b-form-group>
                 </b-col>
 
             </b-row>
+
+            <hr>
 
             <b-row class="text-right">
 
@@ -57,11 +59,12 @@ export default {
     data() {
         return {
             showLoading: true,
-            unitOfMeasure: {
+            entity: {},
+            emptyEntity: {
                 no: "",
-                description: ""
+                description: "",
             },
-            selectedUnitOfMeasure: {},
+            selectedEntity: null,
             componentName: "UnitOfMeasure",
             componentAPI: "unit_of_measure",
             breadcrumbData: {
@@ -93,6 +96,7 @@ export default {
         }
     },
     created() {
+        this.entity = { ...this.emptyEntity };
         this.loadData();
     },
     methods: {
@@ -102,22 +106,16 @@ export default {
             this.showLoading = false;
         },
         newClicked() {
-            this.unitOfMeasure = {
-                no: "",
-                description: ""
-            };
-            this.selectedUnitOfMeasure = {
-                no: "",
-                description: ""
-            };
+            this.entity = { ...this.emptyEntity };
+            this.selectedEntity = null;
             this.$refs['modal'].show();
             setTimeout(() => {
                 this.$refs["no"].focus();
             }, 300);
         },
         editclicked(data) {
-            this.unitOfMeasure = data;
-            this.selectedUnitOfMeasure = { ...data };
+            this.entity = data;
+            this.selectedEntity = { ...data };
             this.$refs['modal'].show();
             setTimeout(() => {
                 this.$refs["no"].focus();
@@ -134,10 +132,11 @@ export default {
             }
         },
         reset() {
-            this.unitOfMeasure = { ...this.selectedUnitOfMeasure };
+            if (this.selectedEntity == null)
+                this.entity = { ...this.emptyEntity };
+            else
+                this.entity = { ...this.selectedEntity };
         }
     }
 }
 </script>
-
-<style></style>
