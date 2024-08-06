@@ -215,6 +215,24 @@ const router = new VueRouter({
         resource: "SeriesHeader",
       },
     },
+    {
+      path: '/inventory-posting-setup',
+      name: 'InventoryPostingSetup_READ',
+      component: () => import('@/views/posting-setup/InventoryPostingSetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "InventoryPostingSetup",
+      },
+    },
+    {
+      path: '/vat-posting-setup',
+      name: 'VatPostingSetup_READ',
+      component: () => import('@/views/posting-setup/VatPostingSetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "VatPostingSetup",
+      },
+    },
 
 
 

@@ -21,24 +21,20 @@
 
       <!-- Login-->
       <b-col lg="4" class="d-flex align-items-center auth-bg px-2 p-lg-5">
-        <b-col sm="8" md="6" lg="12" class="px-xl-2 mx-auto">
-          <b-card-title title-tag="h2" class="font-weight-bold mb-1">
-            Welcome to Vuexy! 👋
-          </b-card-title>
-          <b-card-text class="mb-2">
-            Please sign-in to your account and start the adventure
-          </b-card-text>
+        <b-overlay :show="showLoading" rounded="sm">
+          <b-col sm="8" md="6" lg="12" class="px-xl-2 mx-auto">
+            <b-card-title title-tag="h2" class="font-weight-bold mb-1">
+              Welcome to Vuexy! 👋
+            </b-card-title>
+            <b-card-text class="mb-2">
+              Please sign-in to your account and start the adventure
+            </b-card-text>
 
-          <!-- form -->
-          <validation-observer ref="loginValidation">
+            <!-- form -->
             <b-form class="auth-login-form mt-2" @submit.prevent>
               <!-- email -->
               <b-form-group label="Email" label-for="login-email">
-                <validation-provider #default="{ errors }" name="Email" rules="required|email">
-                  <b-form-input id="login-email" v-model="username" :state="errors.length > 0 ? false : null"
-                    name="login-email" placeholder="john@example.com" />
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
+                <b-form-input id="login-email" v-model="username" name="login-email" placeholder="john@example.com" />
               </b-form-group>
 
               <!-- forgot password -->
@@ -49,18 +45,13 @@
                     <small>Forgot Password?</small>
                   </b-link>
                 </div>
-                <validation-provider #default="{ errors }" name="Password" rules="required">
-                  <b-input-group class="input-group-merge" :class="errors.length > 0 ? 'is-invalid' : null">
-                    <b-form-input id="login-password" v-model="password" :state="errors.length > 0 ? false : null"
-                      class="form-control-merge" :type="passwordFieldType" name="login-password"
-                      placeholder="············" />
-                    <b-input-group-append is-text>
-                      <feather-icon class="cursor-pointer" :icon="passwordToggleIcon"
-                        @click="togglePasswordVisibility" />
-                    </b-input-group-append>
-                  </b-input-group>
-                  <small class="text-danger">{{ errors[0] }}</small>
-                </validation-provider>
+                <b-input-group class="input-group-merge">
+                  <b-form-input id="login-password" v-model="password" class="form-control-merge"
+                    :type="passwordFieldType" name="login-password" placeholder="············" />
+                  <b-input-group-append is-text>
+                    <feather-icon class="cursor-pointer" :icon="passwordToggleIcon" @click="togglePasswordVisibility" />
+                  </b-input-group-append>
+                </b-input-group>
               </b-form-group>
 
               <!-- checkbox -->
@@ -75,38 +66,38 @@
                 Sign in
               </b-button>
             </b-form>
-          </validation-observer>
 
-          <b-card-text class="text-center mt-2">
-            <span>New on our platform? </span>
-            <b-link :to="{ name: 'page-auth-register-v2' }">
-              <span>&nbsp;Create an account</span>
-            </b-link>
-          </b-card-text>
+            <b-card-text class="text-center mt-2">
+              <span>New on our platform? </span>
+              <b-link :to="{ name: 'page-auth-register-v2' }">
+                <span>&nbsp;Create an account</span>
+              </b-link>
+            </b-card-text>
 
-          <!-- divider -->
-          <div class="divider my-2">
-            <div class="divider-text">
-              or
+            <!-- divider -->
+            <div class="divider my-2">
+              <div class="divider-text">
+                or
+              </div>
             </div>
-          </div>
 
-          <!-- social buttons -->
-          <div class="auth-footer-btn d-flex justify-content-center">
-            <b-button variant="facebook" href="javascript:void(0)">
-              <feather-icon icon="FacebookIcon" />
-            </b-button>
-            <b-button variant="twitter" href="javascript:void(0)">
-              <feather-icon icon="TwitterIcon" />
-            </b-button>
-            <b-button variant="google" href="javascript:void(0)">
-              <feather-icon icon="MailIcon" />
-            </b-button>
-            <b-button variant="github" href="javascript:void(0)">
-              <feather-icon icon="GithubIcon" />
-            </b-button>
-          </div>
-        </b-col>
+            <!-- social buttons -->
+            <div class="auth-footer-btn d-flex justify-content-center">
+              <b-button variant="facebook" href="javascript:void(0)">
+                <feather-icon icon="FacebookIcon" />
+              </b-button>
+              <b-button variant="twitter" href="javascript:void(0)">
+                <feather-icon icon="TwitterIcon" />
+              </b-button>
+              <b-button variant="google" href="javascript:void(0)">
+                <feather-icon icon="MailIcon" />
+              </b-button>
+              <b-button variant="github" href="javascript:void(0)">
+                <feather-icon icon="GithubIcon" />
+              </b-button>
+            </div>
+          </b-col>
+        </b-overlay>
       </b-col>
       <!-- /Login-->
     </b-row>
@@ -115,44 +106,25 @@
 
 <script>
 /* eslint-disable global-require */
-import { ValidationProvider, ValidationObserver } from 'vee-validate'
 import VuexyLogo from '@core/layouts/components/Logo.vue'
-import {
-  BRow, BCol, BLink, BFormGroup, BFormInput, BInputGroupAppend, BInputGroup, BFormCheckbox, BCardText, BCardTitle, BImg, BForm, BButton,
-} from 'bootstrap-vue'
 import { required, email } from '@validations'
 import { togglePasswordVisibility } from '@core/mixins/ui/forms'
 import store from '@/store/index'
-// import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import useJwt from "@/auth/jwt/useJwt"
 
 export default {
   components: {
-    BRow,
-    BCol,
-    BLink,
-    BFormGroup,
-    BFormInput,
-    BInputGroupAppend,
-    BInputGroup,
-    BFormCheckbox,
-    BCardText,
-    BCardTitle,
-    BImg,
-    BForm,
-    BButton,
     VuexyLogo,
-    ValidationProvider,
-    ValidationObserver,
   },
   mixins: [togglePasswordVisibility],
   data() {
     return {
+      showLoading: false,
       status: '',
       password: '',
       username: '',
       sideImg: require('@/assets/images/pages/login-v2.svg'),
-      // validation rulesimport store from '@/store/index'
       required,
       email,
     }
@@ -171,36 +143,49 @@ export default {
     },
   },
   methods: {
-    async validationForm() {
-      try {
-        let response = await useJwt.login({
-          username: this.username,
-          password: this.password,
-        });
+    validationForm() {
+      this.showLoading = true;
+      useJwt.login({
+        username: this.username,
+        password: this.password,
+      }).then(response => {
+        this.showLoading = false;
+        this.$toast.clear();
         if (response.status == 200 && response.data.status == 200) {
           useJwt.setToken(response.data.token);
-          useJwt.setUserData({ abilities: response.data.abilities })
+          useJwt.setUserData({ abilities: response.data.abilities });
+          this.$ability.update(response.data.abilities);
           this.$router.push({ name: 'home' });
         } else {
-          console.log(response.data);
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: 'Authentification invalide',
+              icon: 'XIcon',
+              text: 'nom d\'utilisateur ou mot de passe incorrect. Veuillez vérifier vos informations.',
+              variant: 'danger',
+            },
+          }, {
+            timeout: 10000
+          });
         }
-      } catch (error) {
-        console.log(error);
-      }
-      // this.$refs.loginValidation.validate().then(success => {
-      //   if (success) {
-      //     this.$toast({
-      //       component: ToastificationContent,
-      //       props: {
-      //         title: 'Form Submitted',
-      //         icon: 'EditIcon',
-      //         variant: 'success',
-      //       },
-      //     })
-      //   }
-      // })
-    },
-  },
+      }).catch(() => {
+        this.showLoading = false;
+        this.$toast.clear();
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Authentification invalide',
+            icon: 'XIcon',
+            text: 'nom d\'utilisateur ou mot de passe incorrect. Veuillez vérifier vos informations.',
+            variant: 'danger',
+          },
+        }, {
+          timeout: 10000
+        });
+      })
+    }
+  }
 }
 </script>
 

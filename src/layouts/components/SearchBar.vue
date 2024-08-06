@@ -14,7 +14,7 @@
       <!-- <input type="text" placeholder="Explore Vuexy...." class="form-control-input"> -->
       <!-- @keyup.esc="escPressed" -->
       <!-- @keyup.enter="suggestionSelected" -->
-      <b-form-input v-if="showSearchBar" v-model="searchQuery" placeholder="Explore Vuexy" autofocus autocomplete="off"
+      <b-form-input v-if="showSearchBar" v-model="searchQuery" placeholder="Recherche Pages , Listes ..." autofocus autocomplete="off"
         @keyup.up="increaseIndex(false)" @keyup.down="increaseIndex"
         @keyup.esc="showSearchBar = false; resetsearchQuery()" @keyup.enter="suggestionSelected"
         @blur.stop="showSearchBar = false; resetsearchQuery()" />

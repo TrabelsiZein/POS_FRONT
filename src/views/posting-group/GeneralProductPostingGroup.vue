@@ -163,6 +163,8 @@ export default {
                 this.entity = { ...this.selectedEntity };
             if (this.entity.defVatProdPostingGroup != null && this.entity.defVatProdPostingGroup != '')
                 this.selectedVatProductPostingGroup = this.vatProductPostingGroupOptions.find(el => el.no === this.entity.defVatProdPostingGroup);
+            else
+                this.selectedVatProductPostingGroup = null;
         },
         loadVatProductPostingGroup() {
             this.$http.get("vat_product_posting_group").then(response => {
