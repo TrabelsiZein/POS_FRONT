@@ -189,7 +189,7 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/location',
+      path: '/location-sheet',
       name: 'Location_WRITE',
       component: () => import('@/views/LocationSheet.vue'),
       meta: {
@@ -198,12 +198,21 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/location/:id',
+      path: '/location-sheet/:id',
       name: 'Location_EDIT',
       component: () => import('@/views/LocationSheet.vue'),
       meta: {
         action: "EDIT",
         resource: "Location",
+      },
+    },
+    {
+      path: '/series',
+      name: 'SeriesHeader_READ',
+      component: () => import('@/views/SeriesHeader.vue'),
+      meta: {
+        action: "READ",
+        resource: "SeriesHeader",
       },
     },
 

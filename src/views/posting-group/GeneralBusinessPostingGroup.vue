@@ -130,7 +130,7 @@ export default {
             }, 300);
         },
         editclicked(data) {
-            this.entity = data;
+            this.entity = { ...data };
             this.selectedEntity = { ...data };
             if (data.defVatBusPostingGroup != null && data.defVatBusPostingGroup != '')
                 this.selectedVatBusinessPostingGroup = this.vatBusinessPostingGroupOptions.find(el => el.no === data.defVatBusPostingGroup);

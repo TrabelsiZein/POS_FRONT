@@ -114,7 +114,7 @@ export default {
             }, 300);
         },
         editclicked(data) {
-            this.entity = data;
+            this.entity = { ...data };
             this.selectedEntity = { ...data };
             this.$refs['modal'].show();
             setTimeout(() => {

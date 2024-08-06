@@ -17,6 +17,7 @@ export default {
       { title: 'Devise', route: { name: 'Currency_READ' }, icon: 'DollarSignIcon' },
       { title: 'Groupe Remises Article', route: { name: 'ItemDiscountGroup_READ' }, icon: 'PercentIcon' },
       { title: 'Magasin', route: { name: 'Location_READ' }, icon: 'MapIcon' },
+      { title: 'Souches', route: { name: 'SeriesHeader_READ' }, icon: 'TerminalIcon' },
     ],
   },
   Fiche: {
