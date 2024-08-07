@@ -1,7 +1,7 @@
 /* eslint-disable */
 // prettier-ignore
 export default {
-  Liste: {
+  List: {
     key: 'title',
     data: [
       { title: 'Gestion Des Roles', route: { name: 'RolesManagement_READ' }, icon: 'LockIcon' },
@@ -15,6 +15,7 @@ export default {
       { title: 'Paramètres compta. TVA', route: { name: 'VatPostingSetup_READ' }, icon: 'SettingsIcon' },
       { title: 'Groupe compta. Produit', route: { name: 'GeneralProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
       { title: 'Groupe compta. Marché', route: { name: 'GeneralBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
+      { title: 'Paramètres comptabilisation', route: { name: 'GeneralPostingSetup_READ' }, icon: 'SettingsIcon' },
       { title: 'Compte Général', route: { name: 'GeneralLedgerAccount_READ' }, icon: 'HardDriveIcon' },
       { title: 'Devise', route: { name: 'Currency_READ' }, icon: 'DollarSignIcon' },
       { title: 'Groupe Remises Article', route: { name: 'ItemDiscountGroup_READ' }, icon: 'PercentIcon' },
@@ -22,9 +23,10 @@ export default {
       { title: 'Souches', route: { name: 'SeriesHeader_READ' }, icon: 'TerminalIcon' },
     ],
   },
-  Fiche: {
+  Card: {
     key: 'title',
     data: [
+      { title: 'Paramètres Stock', route: { name: 'InventorySetup_READ' }, icon: 'SettingsIcon' },
     ],
   },
 }

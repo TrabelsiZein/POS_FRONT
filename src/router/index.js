@@ -233,6 +233,24 @@ const router = new VueRouter({
         resource: "VatPostingSetup",
       },
     },
+    {
+      path: '/general-posting-setup',
+      name: 'GeneralPostingSetup_READ',
+      component: () => import('@/views/posting-setup/GeneralPostingSetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "GeneralPostingSetup",
+      },
+    },
+    {
+      path: '/inventory-setup',
+      name: 'InventorySetup_READ',
+      component: () => import('@/views/setup/InventorySetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "InventorySetup",
+      },
+    },
 
 
 
