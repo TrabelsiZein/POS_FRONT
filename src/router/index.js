@@ -251,6 +251,15 @@ const router = new VueRouter({
         resource: "InventorySetup",
       },
     },
+    {
+      path: '/sales-setup',
+      name: 'SalesSetup_READ',
+      component: () => import('@/views/setup/SalesSetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "SalesSetup",
+      },
+    },
 
 
 

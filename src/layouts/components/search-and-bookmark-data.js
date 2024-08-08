@@ -27,6 +27,7 @@ export default {
     key: 'title',
     data: [
       { title: 'Paramètres Stock', route: { name: 'InventorySetup_READ' }, icon: 'SettingsIcon' },
+      { title: 'Paramètres Vente', route: { name: 'SalesSetup_READ' }, icon: 'SettingsIcon' },
     ],
   },
 }
