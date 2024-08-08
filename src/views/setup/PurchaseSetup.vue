@@ -166,13 +166,13 @@ export default {
             componentAPI: "purchase_setup",
             entity: {},
             breadcrumbData: {
-                title: "Paramètres Vente",
+                title: "Paramètres Achat",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Paramètres Vente',
+                        text: 'Paramètres Achat',
                     },
                 ],
             },

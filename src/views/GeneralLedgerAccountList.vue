@@ -22,13 +22,13 @@ export default {
       componentAPI: "general_ledger_account",
       showLoading: true,
       breadcrumbData: {
-        title: "Compte Général",
+        title: "Compte Grand Livre",
         route: [
           {
             text: 'Configuration',
           },
           {
-            text: 'Compte Général',
+            text: 'Compte Grand Livre',
             active: true,
           },
         ],

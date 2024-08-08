@@ -269,6 +269,15 @@ const router = new VueRouter({
         resource: "PurchaseSetup",
       },
     },
+    {
+      path: '/general_ledger_setup-setup',
+      name: 'GeneralLedgerSetup_READ',
+      component: () => import('@/views/setup/GeneralLedgerSetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "GeneralLedgerSetup",
+      },
+    },
 
 
 

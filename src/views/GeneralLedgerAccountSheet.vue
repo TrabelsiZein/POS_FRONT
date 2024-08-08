@@ -120,13 +120,13 @@ export default {
             componentName: "GeneralLedgerAccount",
             componentAPI: "general_ledger_account",
             breadcrumbData: {
-                title: "Fiche Compte Général",
+                title: "Fiche Compte Grand Livre",
                 route: [
                     {
                         text: 'Configuration',
                     },
                     {
-                        text: 'Compte Général',
+                        text: 'Compte Grand Livre',
                     },
                     {
                         text: 'Fiche',

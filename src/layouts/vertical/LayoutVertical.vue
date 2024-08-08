@@ -41,6 +41,7 @@ export default {
   },
   methods: {
     showErrorMessage(error) {
+
       if (error.data.message) {
         this.$swal({
           title: "Une erreur inattendue s'est manifestée.",

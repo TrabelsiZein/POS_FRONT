@@ -29,6 +29,7 @@ export default {
       { title: 'Paramètres Stock', route: { name: 'InventorySetup_READ' }, icon: 'SettingsIcon' },
       { title: 'Paramètres Vente', route: { name: 'SalesSetup_READ' }, icon: 'SettingsIcon' },
       { title: 'Paramètres Achat', route: { name: 'PurchaseSetup_READ' }, icon: 'SettingsIcon' },
+      { title: 'Paramètres Grand Livre', route: { name: 'GeneralLedgerSetup_READ' }, icon: 'SettingsIcon' },
     ],
   },
 }
