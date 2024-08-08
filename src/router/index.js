@@ -260,6 +260,15 @@ const router = new VueRouter({
         resource: "SalesSetup",
       },
     },
+    {
+      path: '/purchase-setup',
+      name: 'PurchaseSetup_READ',
+      component: () => import('@/views/setup/PurchaseSetup.vue'),
+      meta: {
+        action: "READ",
+        resource: "PurchaseSetup",
+      },
+    },
 
 
 
