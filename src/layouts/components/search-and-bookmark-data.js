@@ -21,6 +21,10 @@ export default {
       { title: 'Groupe Remises Article', route: { name: 'ItemDiscountGroup_READ' }, icon: 'PercentIcon' },
       { title: 'Magasin', route: { name: 'Location_READ' }, icon: 'MapIcon' },
       { title: 'Souches', route: { name: 'SeriesHeader_READ' }, icon: 'TerminalIcon' },
+      { title: 'Articles', route: { name: 'Item_READ' }, icon: 'CodesandboxIcon' },
+      { title: 'Code de suivi de l\'article', route: { name: 'ItemTrackingCode_READ' }, icon: 'CodeIcon' },
+      { title: 'Familles articles', route: { name: 'ItemFamily_READ' }, icon: 'CodepenIcon' },
+      { title: 'Sous-Familles Articles', route: { name: 'ItemSubFamily_READ' }, icon: 'CodepenIcon' },
     ],
   },
   Card: {

@@ -278,6 +278,60 @@ const router = new VueRouter({
         resource: "GeneralLedgerSetup",
       },
     },
+    {
+      path: '/item-tracking-code',
+      name: 'ItemTrackingCode_READ',
+      component: () => import('@/views/item/ItemTrackingCode.vue'),
+      meta: {
+        action: "READ",
+        resource: "ItemTrackingCode",
+      },
+    },
+    {
+      path: '/item-family',
+      name: 'ItemFamily_READ',
+      component: () => import('@/views/item/ItemFamily.vue'),
+      meta: {
+        action: "READ",
+        resource: "ItemFamily",
+      },
+    },
+    {
+      path: '/item-sub-family',
+      name: 'ItemSubFamily_READ',
+      component: () => import('@/views/item/ItemSubFamily.vue'),
+      meta: {
+        action: "READ",
+        resource: "ItemSubFamily",
+      },
+    },
+        {
+      path: '/item',
+      name: 'Item_READ',
+      component: () => import('@/views/item/ItemList.vue'),
+      meta: {
+        action: "READ",
+        resource: "Item",
+      },
+    },
+    {
+      path: '/item-sheet',
+      name: 'Item_WRITE',
+      component: () => import('@/views/item/ItemSheet.vue'),
+      meta: {
+        action: "WRITE",
+        resource: "Item",
+      },
+    },
+    {
+      path: '/item-sheet/:id',
+      name: 'Item_EDIT',
+      component: () => import('@/views/item/ItemSheet.vue'),
+      meta: {
+        action: "EDIT",
+        resource: "Item",
+      },
+    },
 
 
 
