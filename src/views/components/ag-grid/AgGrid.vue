@@ -2,9 +2,9 @@
 
     <ag-grid-vue :gridOptions="gridOptions" :headerHeight="32" :rowHeight="50"
         :class="isDark ? 'ag-theme-balham-dark' : 'ag-theme-balham'" style="width: 100%; height: 67vh;"
-        :defaultColDef="defaultColDef" @grid-ready="onGridReady" :pagination="true" paginationPageSize="30"
-        :columnDefs="agGridData.columnDefs" :rowData="agGridData.rows" :overlayLoadingTemplate="overlayLoadingTemplate"
-        :tooltipShowDelay="2000">
+        :defaultColDef="defaultColDef" @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered"
+        :pagination="true" paginationPageSize="30" :columnDefs="agGridColumnDefs" :rowData="agGridData"
+        :overlayLoadingTemplate="overlayLoadingTemplate" :tooltipShowDelay="2000">
     </ag-grid-vue>
 
 </template>
@@ -26,14 +26,20 @@ export default {
     },
     props: {
         agGridData: {
-            type: Object,
+            type: Array,
             required: true,
         },
-        pageTitle: {
-            type: String,
+        agGridColumnDefs: {
+            type: Array,
+            required: true,
         },
-        autoSizeColumns: {
-            type: Boolean
+        sizeColumnsToFit: {
+            type: Boolean,
+            default: true,
+        },
+        multiRowSelection: {
+            type: Boolean,
+            default: false,
         },
     },
     setup() {
@@ -43,13 +49,24 @@ export default {
     },
     data() {
         return {
+            handleColumnsConfigChanged: false,
             overlayLoadingTemplate: '<span class="ag-overlay-loading-center">Merci de patienter pendant le chargement des données...</span>',
             gridOptions: {
                 localeText: frenshVersion,
-                // rowSelection: "multiple",
-                rowSelection: "single",
+                rowSelection: this.multiRowSelection ? 'multiple' : 'single',
                 suppressCellSelection: true,
                 enableCellTextSelection: true,
+                onColumnMoved: params => {
+                    this.onColumnChanged(params);
+                },
+                onColumnVisible: params => {
+                    this.onColumnChanged(params);
+                },
+                onColumnResized: params => {
+                    if (params.finished) {
+                        this.onColumnChanged(params);
+                    }
+                }
             },
             defaultColDef: {
                 onCellDoubleClicked: this.handleCellDoubleClick,
@@ -72,10 +89,13 @@ export default {
             },
             gridApi: null,
             columnApi: null,
-            collapseVisible: false,
         }
     },
     methods: {
+        onColumnChanged(params) {
+            if (this.handleColumnsConfigChanged)
+                this.$emit('onColumnChanged', params);
+        },
         getTooltipContent(data) {
             const { createdBy, createdAt, updatedBy, updatedAt } = data;
             return `Created By: ${createdBy}\nCreated At: ${createdAt}\nUpdated By: ${updatedBy}\nUpdated At: ${updatedAt}`;
@@ -89,26 +109,82 @@ export default {
         handleCellDoubleClick(params) {
             this.$emit('cellDoubleClicked', params);
         },
-        filterClicked(obj) {
-            this.collapseVisible = !this.collapseVisible;
-            this.$emit('filterClicked', obj)
-        },
         onFirstDataRendered(params) {
             this.$emit('onFirstDataRendered');
             params.api.hideOverlay();
+            this.handleColumnsConfigChanged = true;
         },
         onGridReady(params) {
             params.api.showLoadingOverlay();
             this.gridApi = params.api;
             this.columnApi = params.columnApi;
-            if (!this.autoSizeColumns)
+            if (this.sizeColumnsToFit) {
                 if (!/Mobi/i.test(navigator.userAgent))
                     this.gridApi.sizeColumnsToFit();
-            this.$emit('onGridReady');
+            }
+            // else
+            //     this.columnApi.autoSizeAllColumns();
+            this.$emit('onGridReady', params);
         },
         updateSearchQuery(val) {
             this.gridApi.setQuickFilter(val);
         },
+    },
+    watch: {
+        multiRowSelection(val) {
+
+            // 1. Update grid option (note: this does NOT apply dynamically)
+            this.gridOptions.rowSelection = val ? 'multiple' : 'single';
+
+            // 2. Deselect all selected rows
+            if (this.gridApi) {
+                this.gridApi.deselectAll();
+            }
+
+            // 3. Define unique colId for checkbox column
+            const checkboxColId = '__checkbox__';
+
+            // 4. Get current column definitions
+            const currentDefs = this.gridApi.getColumnDefs();
+
+            // 5. Check if checkbox column already exists
+            const checkboxExists = currentDefs.some(col => col.colId === checkboxColId);
+
+            if (val) {
+                if (!checkboxExists) {
+                    const checkboxCol = {
+                        colId: checkboxColId,
+                        headerName: '',
+                        checkboxSelection: true,
+                        headerCheckboxSelection: true,
+                        width: 40,
+                        pinned: 'left',
+                        resizable: false,
+                        suppressColumnsToolPanel: true,
+                        suppressMovable: true,
+                        filter: false,
+                        sortable: false
+                    };
+
+                    this.gridApi.setColumnDefs([checkboxCol, ...currentDefs]);
+                } else {
+                    this.columnApi.setColumnVisible(checkboxColId, true);
+                }
+            } else {
+                if (checkboxExists) {
+                    this.columnApi.setColumnVisible(checkboxColId, false);
+                    // const updatedDefs = this.gridApi
+                    //     .getColumnDefs()
+                    //     .filter(col => col.colId !== checkboxColId);
+
+                    // this.gridApi.setColumnDefs(updatedDefs);
+                }
+            }
+            if (this.sizeColumnsToFit) {                
+                if (!/Mobi/i.test(navigator.userAgent))
+                    this.gridApi.sizeColumnsToFit();
+            }
+        }
     }
 }
 </script>

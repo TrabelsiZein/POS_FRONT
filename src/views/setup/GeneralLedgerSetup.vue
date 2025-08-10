@@ -64,7 +64,7 @@
 
 <script>
 
-import Crad from '../components/card/Crad.vue';
+import Crad from '../components/card/CradSetup.vue';
 import vSelect from 'vue-select'
 
 export default {

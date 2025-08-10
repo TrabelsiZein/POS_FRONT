@@ -25,6 +25,12 @@ export default {
       { title: 'Code de suivi de l\'article', route: { name: 'ItemTrackingCode_READ' }, icon: 'CodeIcon' },
       { title: 'Familles articles', route: { name: 'ItemFamily_READ' }, icon: 'CodepenIcon' },
       { title: 'Sous-Familles Articles', route: { name: 'ItemSubFamily_READ' }, icon: 'CodepenIcon' },
+      { title: 'Fournisseurs', route: { name: 'Vendor_READ' }, icon: 'TruckIcon' },
+      { title: 'Secteurs', route: { name: 'Territory_READ' }, icon: 'SettingsIcon' },
+      { title: 'Mode de règlement', route: { name: 'PaymentMethod_READ' }, icon: 'SettingsIcon' },
+      { title: 'Conditions de paiement', route: { name: 'PaymentTerms_READ' }, icon: 'SettingsIcon' },
+      { title: 'Vendeur/Acheteur', route: { name: 'SalesPersonPurchaser_READ' }, icon: 'SettingsIcon' },
+      { title: 'Transporteurs', route: { name: 'ShipmentAgent_READ' }, icon: 'SettingsIcon' },
     ],
   },
   Card: {

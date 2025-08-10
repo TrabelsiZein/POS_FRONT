@@ -222,8 +222,8 @@ export default {
                 this.$refs["modal"].hide();
                 this.loadData();
             } catch (error) {
-                console.log(error);
                 this.showLoading = false;
+                this.$toast.error("Erreur lors de la sauvegarde des données.");
             }
         },
         reset() {

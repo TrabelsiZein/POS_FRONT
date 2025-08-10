@@ -1,26 +1,9 @@
 <template>
-  <b-overlay
-    v-if="!cardClosed"
-    variant="white"
-    :show="showLoading"
-    spinner-variant="primary"
-    blur="0"
-    opacity=".75"
-    rounded="sm"
-  >
-    <b-card
-      ref="bCard"
-      v-bind="cardAttrs"
-      no-body
-      :aria-expanded="!content_visible ? 'true' : 'false'"
-      :aria-controls="parentID"
-      :style="cardStyles"
-      v-on="$listeners"
-    >
-      <div
-        v-if="showHeader"
-        class="card-header"
-      >
+  <b-overlay v-if="!cardClosed" variant="white" :show="showLoading" spinner-variant="primary" blur="0" opacity=".75"
+    rounded="sm">
+    <b-card ref="bCard" v-bind="cardAttrs" no-body :aria-expanded="!content_visible ? 'true' : 'false'"
+      :aria-controls="parentID" :style="cardStyles" v-on="$listeners">
+      <div v-if="showHeader" class="card-header">
         <!-- Title & SubTitle -->
         <div>
           <b-card-title>{{ $attrs.title }}</b-card-title>
@@ -30,23 +13,13 @@
         </div>
 
         <!-- Card Actions -->
-        <b-card-actions-container
-          v-if="showActions"
-          :available-actions="availableActions"
-          :is-collapsed="!content_visible"
-          @collapse="triggerCollapse"
-          @refresh="triggerRefresh"
-          @close="triggerClose"
-        />
+        <b-card-actions-container v-if="showActions" :available-actions="availableActions"
+          :is-collapsed="!content_visible" @collapse="triggerCollapse" @refresh="triggerRefresh"
+          @close="triggerClose" />
       </div>
 
       <!-- Collapsible Content -->
-      <b-collapse
-        :id="parentID"
-        v-model="content_visible"
-        :visible="content_visible"
-        class="card-content"
-      >
+      <b-collapse :id="parentID" v-model="content_visible" :visible="content_visible" class="card-content">
         <!-- Handle no-body -->
         <slot v-if="$attrs['no-body'] !== undefined" />
         <b-card-body v-else>
@@ -186,6 +159,7 @@ export default {
 
 .dark-layout {
   .b-overlay-wrap ::v-deep .b-overlay {
+
     // border: 10px solid red;
     .bg-white {
       background-color: $theme-dark-body-bg !important;

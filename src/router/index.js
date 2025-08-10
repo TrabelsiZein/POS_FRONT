@@ -2,7 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import { isUserLoggedIn } from '@/auth/utils'
 import { canNavigate } from '@/libs/acl/routeProtection'
-
+import settings from "./settings";
 Vue.use(VueRouter)
 
 const router = new VueRouter({
@@ -12,6 +12,7 @@ const router = new VueRouter({
     return { x: 0, y: 0 }
   },
   routes: [
+    ...settings,
     {
       path: '/',
       name: 'home',
@@ -305,7 +306,7 @@ const router = new VueRouter({
         resource: "ItemSubFamily",
       },
     },
-        {
+    {
       path: '/item',
       name: 'Item_READ',
       component: () => import('@/views/item/ItemList.vue'),
@@ -330,6 +331,33 @@ const router = new VueRouter({
       meta: {
         action: "EDIT",
         resource: "Item",
+      },
+    },
+    {
+      path: '/vendor',
+      name: 'Vendor_READ',
+      component: () => import('@/views/vendor/VendorList.vue'),
+      meta: {
+        action: "READ",
+        resource: "Vendor",
+      },
+    },
+    {
+      path: '/vendor-sheet',
+      name: 'Vendor_WRITE',
+      component: () => import('@/views/vendor/VendorSheet.vue'),
+      meta: {
+        action: "WRITE",
+        resource: "Vendor",
+      },
+    },
+    {
+      path: '/vendor-sheet/:id',
+      name: 'Vendor_EDIT',
+      component: () => import('@/views/vendor/VendorSheet.vue'),
+      meta: {
+        action: "EDIT",
+        resource: "Vendor",
       },
     },
 
