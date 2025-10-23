@@ -11,7 +11,8 @@
                             :tooltip="field.tooltip ? field.tooltip.fr ? field.tooltip.fr : field.label.fr : field.label.fr"
                             :lookupComponentName="field.lookupEntity" :lookupApiURI="field.lookupApiURI"
                             :value="entity[field.field]" @input="onFieldInput(field.field, $event)"
-                            :autoFocus="index === 0" :ref="'ref_' + index" />
+                            :autoFocus="index === 0" :ref="'ref_' + index" :componentName="componentName" :field="field.field" :apiURI="entityDefinition.apiURI"
+                            :mandatory="field.mandatory || false" :disabled="field.disabled || false"/>
                     </b-row>
                 </app-collapse-item>
             </app-collapse>
@@ -24,7 +25,8 @@
                     :tooltip="field.tooltip ? field.tooltip.fr ? field.tooltip.fr : field.label.fr : field.label.fr"
                     :lookupComponentName="field.lookupEntity" :lookupApiURI="field.lookupApiURI"
                     :value="entity[field.field]" @input="onFieldInput(field.field, $event)" :autoFocus="index === 0"
-                    :ref="'ref_' + index" />
+                    :ref="'ref_' + index" :componentName="componentName" :field="field.field" :apiURI="entityDefinition.apiURI"
+                    :mandatory="field.mandatory || false" :disabled="field.disabled || false"/>
             </b-row>
         </template>
 
@@ -50,6 +52,10 @@ export default {
         isPopup: {
             type: Boolean,
             default: false
+        },
+        componentName: {
+            type: String,
+            required: false,
         },
     },
     emits: ['update:entity'],

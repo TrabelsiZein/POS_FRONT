@@ -2,7 +2,7 @@
 
     <b-overlay :show="showLoading" spinner-variant="primary">
 
-        <List :componentName="$options.entity" :onlyListComponent="true"/>
+        <List :componentName="$options.entity" :onlyListComponent="true" />
 
     </b-overlay>
 </template>

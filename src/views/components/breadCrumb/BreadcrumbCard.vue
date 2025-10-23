@@ -27,12 +27,12 @@
         <!-- Content Right -->
         <b-col class="content-header-right text-md-right mb-1" sm="12" md="7" lg="6">
 
-            <b-button variant="outline-secondary" class="mr-50" @click="backClicked">
+            <b-button v-if="!isSetup" variant="outline-secondary" class="mr-50" @click="backClicked">
                 <feather-icon icon="ArrowLeftIcon" />
                 <!-- <span class="align-middle">Back</span> -->
             </b-button>
 
-            <b-button variant="outline-primary" class="mr-50" @click="$emit('reset')">
+            <b-button variant="outline-primary" class="mr-50" v-if="!isSetup" @click="$emit('reset')">
                 <feather-icon icon="RotateCcwIcon" />
                 <!-- <span class="align-middle">Reset</span> -->
             </b-button>
@@ -57,6 +57,11 @@
 
 export default {
     props: {
+        isSetup: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
         componentName: {
             type: String,
             required: true,

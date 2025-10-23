@@ -1,26 +1,26 @@
 <template>
+
     <b-overlay :show="showLoading" spinner-variant="primary">
-        <Card :componentName="$options.entity" />
+
+        <List :componentName="$options.entity" />
+
     </b-overlay>
 </template>
 
 <script>
 
-import Card from '../components/card/Card.vue';
+import List from '@/views/components/list/List.vue';
 
 export default {
-    name: 'VendorCard',
-    entity: 'Vendor',
+    name: 'ItemList',
+    entity: 'Item',
     components: {
-        Card,
+        List
     },
     data() {
         return {
             showLoading: false,
         }
     },
-
 }
 </script>
-
-<style lang="scss"></style>

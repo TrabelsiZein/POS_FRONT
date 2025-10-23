@@ -3,6 +3,12 @@ import VueRouter from 'vue-router'
 import { isUserLoggedIn } from '@/auth/utils'
 import { canNavigate } from '@/libs/acl/routeProtection'
 import settings from "./settings";
+import postingGroup from "./posting-group";
+import inventory from "./inventory";
+import sales from "./sales";
+import purchase from "./purchase";
+import finance from "./finance";
+
 Vue.use(VueRouter)
 
 const router = new VueRouter({
@@ -13,6 +19,11 @@ const router = new VueRouter({
   },
   routes: [
     ...settings,
+    ...postingGroup,
+    ...inventory,
+    ...sales,
+    ...purchase,
+    ...finance,
     {
       path: '/',
       name: 'home',
@@ -73,150 +84,6 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/unit-of-measure',
-      name: 'UnitOfMeasure_READ',
-      component: () => import('@/views/UnitOfMeasure.vue'),
-      meta: {
-        action: "READ",
-        resource: "UnitOfMeasure",
-      },
-    },
-    {
-      path: '/item-unit-of-measure',
-      name: 'ItemUnitOfMeasure_READ',
-      component: () => import('@/views/ItemUnitOfMeasure.vue'),
-      meta: {
-        action: "READ",
-        resource: "ItemUnitOfMeasure",
-      },
-    },
-    {
-      path: '/inventory-posting-group',
-      name: 'InventoryPostingGroup_READ',
-      component: () => import('@/views/posting-group/InventoryPostingGroup.vue'),
-      meta: {
-        action: "READ",
-        resource: "InventoryPostingGroup",
-      },
-    },
-    {
-      path: '/vat-product-posting-group',
-      name: 'VatProductPostingGroup_READ',
-      component: () => import('@/views/posting-group/VatProductPostingGroup.vue'),
-      meta: {
-        action: "READ",
-        resource: "VatProductPostingGroup",
-      },
-    },
-    {
-      path: '/vat-business-posting-group',
-      name: 'VatBusinessPostingGroup_READ',
-      component: () => import('@/views/posting-group/VatBusinessPostingGroup.vue'),
-      meta: {
-        action: "READ",
-        resource: "VatBusinessPostingGroup",
-      },
-    },
-    {
-      path: '/general-product-posting-group',
-      name: 'GeneralProductPostingGroup_READ',
-      component: () => import('@/views/posting-group/GeneralProductPostingGroup.vue'),
-      meta: {
-        action: "READ",
-        resource: "GeneralProductPostingGroup",
-      },
-    },
-    {
-      path: '/general-business-posting-group',
-      name: 'GeneralBusinessPostingGroup_READ',
-      component: () => import('@/views/posting-group/GeneralBusinessPostingGroup.vue'),
-      meta: {
-        action: "READ",
-        resource: "GeneralBusinessPostingGroup",
-      },
-    },
-    {
-      path: '/general-ledger-account',
-      name: 'GeneralLedgerAccount_READ',
-      component: () => import('@/views/GeneralLedgerAccountList.vue'),
-      meta: {
-        action: "READ",
-        resource: "GeneralLedgerAccount",
-      },
-    },
-    {
-      path: '/general-ledger-account-sheet',
-      name: 'GeneralLedgerAccount_WRITE',
-      component: () => import('@/views/GeneralLedgerAccountSheet.vue'),
-      meta: {
-        action: "WRITE",
-        resource: "GeneralLedgerAccount",
-      },
-    },
-    {
-      path: '/general-ledger-account-sheet/:id',
-      name: 'GeneralLedgerAccount_EDIT',
-      component: () => import('@/views/GeneralLedgerAccountSheet.vue'),
-      meta: {
-        action: "EDIT",
-        resource: "GeneralLedgerAccount",
-      },
-    },
-    {
-      path: '/currency',
-      name: 'Currency_READ',
-      component: () => import('@/views/Currency.vue'),
-      meta: {
-        action: "READ",
-        resource: "Currency",
-      },
-    },
-    {
-      path: '/item-discount-group',
-      name: 'ItemDiscountGroup_READ',
-      component: () => import('@/views/ItemDiscountGroup.vue'),
-      meta: {
-        action: "READ",
-        resource: "ItemDiscountGroup",
-      },
-    },
-    {
-      path: '/location',
-      name: 'Location_READ',
-      component: () => import('@/views/LocationList.vue'),
-      meta: {
-        action: "READ",
-        resource: "Location",
-      },
-    },
-    {
-      path: '/location-sheet',
-      name: 'Location_WRITE',
-      component: () => import('@/views/LocationSheet.vue'),
-      meta: {
-        action: "WRITE",
-        resource: "Location",
-      },
-    },
-    {
-      path: '/location-sheet/:id',
-      name: 'Location_EDIT',
-      component: () => import('@/views/LocationSheet.vue'),
-      meta: {
-        action: "EDIT",
-        resource: "Location",
-      },
-    },
-    {
-      path: '/series',
-      name: 'SeriesHeader_READ',
-      component: () => import('@/views/SeriesHeader.vue'),
-      meta: {
-        action: "READ",
-        resource: "SeriesHeader",
-      },
-    },
-    {
       path: '/inventory-posting-setup',
       name: 'InventoryPostingSetup_READ',
       component: () => import('@/views/posting-setup/InventoryPostingSetup.vue'),
@@ -271,93 +138,12 @@ const router = new VueRouter({
       },
     },
     {
-      path: '/general_ledger_setup-setup',
+      path: '/general_ledger_setup',
       name: 'GeneralLedgerSetup_READ',
       component: () => import('@/views/setup/GeneralLedgerSetup.vue'),
       meta: {
         action: "READ",
         resource: "GeneralLedgerSetup",
-      },
-    },
-    {
-      path: '/item-tracking-code',
-      name: 'ItemTrackingCode_READ',
-      component: () => import('@/views/item/ItemTrackingCode.vue'),
-      meta: {
-        action: "READ",
-        resource: "ItemTrackingCode",
-      },
-    },
-    {
-      path: '/item-family',
-      name: 'ItemFamily_READ',
-      component: () => import('@/views/item/ItemFamily.vue'),
-      meta: {
-        action: "READ",
-        resource: "ItemFamily",
-      },
-    },
-    {
-      path: '/item-sub-family',
-      name: 'ItemSubFamily_READ',
-      component: () => import('@/views/item/ItemSubFamily.vue'),
-      meta: {
-        action: "READ",
-        resource: "ItemSubFamily",
-      },
-    },
-    {
-      path: '/item',
-      name: 'Item_READ',
-      component: () => import('@/views/item/ItemList.vue'),
-      meta: {
-        action: "READ",
-        resource: "Item",
-      },
-    },
-    {
-      path: '/item-sheet',
-      name: 'Item_WRITE',
-      component: () => import('@/views/item/ItemSheet.vue'),
-      meta: {
-        action: "WRITE",
-        resource: "Item",
-      },
-    },
-    {
-      path: '/item-sheet/:id',
-      name: 'Item_EDIT',
-      component: () => import('@/views/item/ItemSheet.vue'),
-      meta: {
-        action: "EDIT",
-        resource: "Item",
-      },
-    },
-    {
-      path: '/vendor',
-      name: 'Vendor_READ',
-      component: () => import('@/views/vendor/VendorList.vue'),
-      meta: {
-        action: "READ",
-        resource: "Vendor",
-      },
-    },
-    {
-      path: '/vendor-sheet',
-      name: 'Vendor_WRITE',
-      component: () => import('@/views/vendor/VendorSheet.vue'),
-      meta: {
-        action: "WRITE",
-        resource: "Vendor",
-      },
-    },
-    {
-      path: '/vendor-sheet/:id',
-      name: 'Vendor_EDIT',
-      component: () => import('@/views/vendor/VendorSheet.vue'),
-      meta: {
-        action: "EDIT",
-        resource: "Vendor",
       },
     },
 

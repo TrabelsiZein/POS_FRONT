@@ -31,6 +31,18 @@ export default {
       { title: 'Conditions de paiement', route: { name: 'PaymentTerms_READ' }, icon: 'SettingsIcon' },
       { title: 'Vendeur/Acheteur', route: { name: 'SalesPersonPurchaser_READ' }, icon: 'SettingsIcon' },
       { title: 'Transporteurs', route: { name: 'ShipmentAgent_READ' }, icon: 'SettingsIcon' },
+
+      { title: 'VendorPostingGroup', route: { name: 'VendorPostingGroup_READ' }, icon: 'SettingsIcon' },
+      { title: 'CustomerPostingGroup', route: { name: 'CustomerPostingGroup_READ' }, icon: 'SettingsIcon' },
+      { title: 'Customer', route: { name: 'Customer_READ' }, icon: 'SettingsIcon' },
+      { title: 'CustomerDiscountGroup', route: { name: 'CustomerDiscountGroup_READ' }, icon: 'SettingsIcon' },
+      { title: 'CustomerPriceGroup', route: { name: 'CustomerPriceGroup_READ' }, icon: 'SettingsIcon' },
+      { title: 'ItemVariants', route: { name: 'ItemVariants_READ' }, icon: 'SettingsIcon' },
+      { title: 'ResponsibilityCenter', route: { name: 'ResponsibilityCenter_READ' }, icon: 'SettingsIcon' },
+      { title: 'StockKeepingUnit', route: { name: 'StockKeepingUnit_READ' }, icon: 'SettingsIcon' },
+      { title: 'Commandes Vente', route: { name: 'SalesHeader_READ' }, icon: 'SettingsIcon' },
+      // { title: 'SalesLine', route: { name: 'SalesLine_READ' }, icon: 'SettingsIcon' },
+
     ],
   },
   Card: {

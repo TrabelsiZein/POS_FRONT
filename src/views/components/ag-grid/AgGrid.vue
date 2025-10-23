@@ -115,7 +115,7 @@ export default {
             this.handleColumnsConfigChanged = true;
         },
         onGridReady(params) {
-            params.api.showLoadingOverlay();
+            // params.api.showLoadingOverlay();
             this.gridApi = params.api;
             this.columnApi = params.columnApi;
             if (this.sizeColumnsToFit) {

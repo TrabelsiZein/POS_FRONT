@@ -3,62 +3,18 @@
 
 
         <b-input-group>
-            <b-form-input :size="size" :value="localValue" readonly :title="localValue"  />
+            <b-form-input :size="size" :value="localValue" readonly :title="localValue" :disabled="disabled" />
             <b-input-group-append is-text>
-                <feather-icon icon="SearchIcon" class="cursor-pointer" @click="openModal" />
+                <feather-icon icon="SearchIcon" class="cursor-pointer" @click="openModal" :class="{ 'disabled': disabled }" />
             </b-input-group-append>
         </b-input-group>
 
 
 
-        <b-modal hide-footer ref="modal" scrollable :size="localLookupSize" hide-header-close>
+        <b-modal hide-footer ref="modal" scrollable :size="localLookupSize">
 
-            <template #modal-header>
-                <div class="d-flex justify-content-between w-100 align-items-center">
-                    <h5 class="modal-title mb-0">{{ title }}</h5>
-                    <div>
-
-                        <b-button variant="outline-success" class="btn-icon mr-50" size="sm" @click="openInNewTab">
-                            <feather-icon icon="ExternalLinkIcon" />
-                        </b-button>
-
-                        <b-button variant="outline-primary" class="btn-icon mr-50" size="sm" @click="changeModalSize">
-                            <feather-icon :icon="lookupSizeIcon" />
-                        </b-button>
-
-                        <b-button variant="outline-secondary" class="btn-icon" size="sm" @click="$refs.modal.hide()">
-                            <feather-icon icon="XIcon" />
-                        </b-button>
-
-                    </div>
-                </div>
-            </template>
-
-            <b-row>
-
-                <b-col cols="10">
-                    <b-form-group>
-                        <b-input-group class="input-group-merge">
-                            <b-input-group-prepend is-text>
-                                <feather-icon icon="SearchIcon" />
-                            </b-input-group-prepend>
-                            <b-form-input id="icons-search" ref="icons-search" @input="updateSearchQuery"
-                                placeholder="Recherche..." />
-                        </b-input-group>
-                    </b-form-group>
-                </b-col>
-
-                <b-col cols="2" class="text-right">
-                    <b-button variant="outline-secondary" class="btn-icon" @click="refresh()">
-                        <feather-icon icon="RefreshCcwIcon" />
-                    </b-button>
-                </b-col>
-
-            </b-row>
-
-
-            <AgGrid :agGridData="agGridData.rows" :agGridColumnDefs="agGridData.columnDefs" ref="agGrid" @onGridReady="onGridReady"
-                @cellDoubleClicked="cellDoubleClicked" />
+            <List :componentName="componentName" :showBreadCrumbOpenNewTab="true"
+                :hideBreadCrumbPath="true" @lookupItemClicked="cellDoubleClicked" :onlyListComponent="true" />
 
         </b-modal>
 
@@ -68,9 +24,10 @@
 
 <script>
 
-import AgGrid from '@/views/components/ag-grid/AgGrid.vue';
+import List from '@/views/components/list/List.vue';
 
 export default {
+    name: 'EntityLookup',
     props: {
         columnDefs: {
             type: Array,
@@ -104,15 +61,20 @@ export default {
         lookupSize: {
             type: String,
             required: false,
-            default: "lg"
+            default: "xl"
         },
         title: {
             type: String,
             required: false,
         },
+        disabled: {
+            type: Boolean,
+            default: false,
+            required: false,
+        },
     },
     components: {
-        AgGrid
+        List
     },
     data() {
         return {
@@ -122,7 +84,11 @@ export default {
                 columnDefs: this.columnDefs,
                 rows: []
             },
+            loadedComponent: null
         };
+    },
+    mounted() {
+        // this.loadComponent()
     },
     watch: {
         selectedItem: {
@@ -133,6 +99,18 @@ export default {
         }
     },
     methods: {
+        // async loadComponent() {
+        //     const routeName = this.componentName + '_READ';
+
+        //     const matchedRoute = this.$router.options.routes.find(route => route.name === routeName);
+
+        //     if (matchedRoute && matchedRoute.component) {
+        //         const comp = await matchedRoute.component()
+        //         this.loadedComponent = comp.default // important!
+        //     } else {
+        //         console.warn(`Route not found for name: ${routeName}`)
+        //     }
+        // },
         openInNewTab() {
             const url = this.$router.resolve({ name: this.componentName + "_READ" }).href;
             window.open(url, '_blank');
@@ -144,7 +122,9 @@ export default {
             }, 200);
         },
         openModal() {
-            this.$refs['modal'].show();
+            if (!this.disabled) {
+                this.$refs['modal'].show();
+            }
         },
         async getData() {
             this.$http.get(this.apiURI).then(response => {
@@ -156,8 +136,8 @@ export default {
         },
         cellDoubleClicked(params) {
             this.$refs.modal.hide();
-            this.localValue = params.data.no;
-            this.$emit("onItemSelected", params.data, this.field)
+            this.localValue = params.no;
+            this.$emit("onItemSelected", params, this.field)
         },
         onGridReady() {
             this.getData();
@@ -179,5 +159,11 @@ export default {
 [dir] .form-control:disabled,
 [dir] .form-control[readonly] {
     background-color: #fefcfc;
+}
+
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    pointer-events: none;
 }
 </style>

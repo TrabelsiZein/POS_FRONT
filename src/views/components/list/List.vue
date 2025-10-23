@@ -3,15 +3,18 @@
     <b-overlay :show="showLoading" spinner-variant="primary">
 
         <CardPopup v-if="onlyListComponent" :componentName="componentName" ref="popup" :entityData="entityPopup"
-            :editMode="editMode" @entitySaved="loadData" />
+            :editMode="editMode" :enableAutoSave="isCardLine ? false : true" @entitySaved="loadData" @saveClicked="(data) => $emit('saveClicked', data)"/>
 
         <b-card>
 
-            <Breadcrumb :filterFields="filterFields" :onlyListComponent="onlyListComponent"
-                :componentName="componentName" :breadcrumbData="localBreadcrumbData" @editClicked="editClicked"
-                @downloadClicked="downloadClicked" @printClicked="printClicked" @deleteClicked="deleteClicked"
-                @updateSearchQuery="updateSearchQuery" @newClicked="newClicked"
-                @filterSearchChnaged="filterSearchChnaged" />
+            <Breadcrumb :hidePrintButton="isCardLine ? true : false" :hideDownloadButton="isCardLine ? true : false"
+                :hideFilterButton="isCardLine ? true : false"
+                :showBreadCrumbOpenNewTab="isCardLine ? false : showBreadCrumbOpenNewTab"
+                :hideBreadCrumbPath="isCardLine ? true : hideBreadCrumbPath" :filterFields="filterFields"
+                :onlyListComponent="onlyListComponent" :componentName="componentName"
+                :breadcrumbData="localBreadcrumbData" :linesEnabled="linesEnabled" @editClicked="editClicked" @downloadClicked="downloadClicked"
+                @printClicked="printClicked" @deleteClicked="deleteClicked" @updateSearchQuery="updateSearchQuery"
+                @newClicked="newClicked" @filterSearchChnaged="filterSearchChnaged" />
 
             <hr>
 
@@ -31,7 +34,7 @@
 
 <script>
 
-import Breadcrumb from '../BreadcrumbList.vue'
+import Breadcrumb from '@/views/components/breadCrumb/BreadcrumbList.vue'
 import AgGrid from '../ag-grid/AgGrid.vue'
 import * as XLSX from 'xlsx';
 import FileSaver from 'file-saver';
@@ -50,6 +53,23 @@ export default {
         CardPopup
     },
     props: {
+        isCardLine: {
+            type: Boolean,
+            default: false,
+            required: false,
+        },
+        entityHeader: { // only for card line lists (when isCardLine=true)
+            type: Object,
+            required: false,
+        },
+        showBreadCrumbOpenNewTab: {
+            type: Boolean,
+            default: false,
+        },
+        hideBreadCrumbPath: {
+            type: Boolean,
+            default: false,
+        },
         componentName: {
             type: String,
             required: true,
@@ -69,6 +89,10 @@ export default {
             type: Boolean,
             default: false,
         },
+        linesEnabled: {
+            type: Boolean,
+            default: true,
+        },
     },
     data() {
         return {
@@ -86,15 +110,14 @@ export default {
             localBreadcrumbData: this.breadcrumbData || {
                 title: "",
                 route: [],
-                withFilter: false,
             },
         }
     },
     async mounted() {
         // If retrieveDataFromParent is false, show loading spinner
-        if (!this.retrieveDataFromParent) {
-            this.showLoading = true;
-        }
+        // if (!this.retrieveDataFromParent) {
+        //     this.showLoading = true;
+        // }
         // If breadcrumbData is not provided, use default from columnDefinitions.js
         if (!this.breadcrumbData)
             this.localBreadcrumbData = getBreadcrumbList(this.componentName);
@@ -282,36 +305,41 @@ export default {
             this.$emit('onGridReady');
         },
         editClicked() {
-            if (this.$refs.agGrid.gridApi.getSelectedRows().length > 0) {
+            if (this.$refs.agGrid.gridApi.getSelectedRows().length > 0 && this.linesEnabled) {
                 const selectedData = this.$refs.agGrid.gridApi.getSelectedRows();
-                if (this.onlyListComponent) {
-                    this.editMode = true;
-                    this.entityPopup = selectedData[0];
-                    this.$refs.popup.$refs.modal.show();
-                    this.$emit('editclicked', selectedData[0]);
-                }
-                else
-                    this.$router.push({ name: this.componentName + "_EDIT", params: { id: selectedData[0].id } })
+                if (this.$can('EDIT', this.componentName))
+                    if (this.onlyListComponent) {
+                        this.editMode = true;
+                        this.entityPopup = selectedData[0];
+                        this.$refs.popup.$refs.modal.show();
+                        this.$emit('editclicked', selectedData[0]);
+                    }
+                    else
+                        this.$router.push({ name: this.componentName + "_EDIT", params: { id: selectedData[0].id } })
             }
         },
         cellDoubleClicked(params) {
-            if (this.$can('EDIT', this.componentName))
-                if (this.onlyListComponent) {
-                    this.editMode = true;
-                    this.entityPopup = params.data;
-                    this.$refs.popup.$refs.modal.show();
-                    this.$emit('editclicked', params.data);
-                }
-                else
-                    this.$router.push({ name: this.componentName + "_EDIT", params: { id: params.data.id } })
+            if (this.hideBreadCrumbPath) {
+                this.$emit('lookupItemClicked', params.data);
+            } else {
+                if (this.$can('EDIT', this.componentName) && this.linesEnabled)
+                    if (this.onlyListComponent) {
+                        this.editMode = true;
+                        this.entityPopup = params.data;
+                        this.$refs.popup.$refs.modal.show();
+                        this.$emit('editclicked', params.data);
+                    }
+                    else
+                        this.$router.push({ name: this.componentName + "_EDIT", params: { id: params.data.id } })
+            }
         },
         newClicked() {
-            if (this.onlyListComponent) {
-                console.log("New clicked in List component, but no action defined.", this.entityData);
-                for (const key in this.entityPopup) {
-                    this.$set(this.entityPopup, key, null);
-                }
+            if (this.onlyListComponent && this.linesEnabled) {
+                // Properly reset the entityPopup object
+                this.entityPopup = {};
                 this.editMode = false;
+                console.log("List newClicked - entityPopup reset to:", this.entityPopup);
+                console.log("List newClicked - editMode set to:", this.editMode);
                 this.$refs.popup.$refs.modal.show();
                 this.$emit('newClicked');
             }
@@ -356,12 +384,12 @@ export default {
         //     }
         // },
         async deleteClicked() {
-            // 1️⃣  Make sure at least one row is selected
+            // 1️⃣  Make sure at least one row is selected and lines are enabled
             const api = this.$refs.agGrid.gridApi;
             const rowData = this.$refs.agGrid._data.gridOptions.rowData;
             const selection = api.getSelectedRows();
 
-            if (!selection.length) return;   // nothing selected → nothing to do
+            if (!selection.length || !this.linesEnabled) return;   // nothing selected or lines disabled → nothing to do
 
             // 2️⃣  Confirm with the user (keep your existing wording / styling)
             const { value: confirmed } = await this.$swal({
@@ -566,10 +594,27 @@ export default {
             this.saveGridConfigIfChanged();
         },
         async loadData() {
-            this.showLoading = true;
-            let response = await this.$http.get(getEntityApiURI(this.componentName));
-            this.localAgGridData = response.data;
-            this.showLoading = false;
+            if (this.isCardLine) {
+                if (this.entityHeader && this.entityHeader.id) {
+                    this.showLoading = true;
+                    let response = await this.$http.get(getEntityApiURI(this.componentName) + "/findByField", {
+                        params: {
+                            fieldName: 'documentId',
+                            operation: "=",
+                            value: this.entityHeader.id
+                        }
+                    });
+                    this.localAgGridData = response.data;
+                    this.showLoading = false;
+                } else {
+                    this.localAgGridData = [];
+                }
+            } else {
+                this.showLoading = true;
+                let response = await this.$http.get(getEntityApiURI(this.componentName));
+                this.localAgGridData = response.data;
+                this.showLoading = false;
+            }
         }
     },
     created() {

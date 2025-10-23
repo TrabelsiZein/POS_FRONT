@@ -15,11 +15,13 @@ import '@/libs/portal-vue';
 import '@/libs/toastification';
 import '@/libs/acl';
 import '@/libs/sweet-alerts';
+import EntityLookup from '@/views/components/lookup/EntityLookup.vue'
 
 Vue.use(BootstrapVue);
 Vue.use(ToastPlugin);
 Vue.use(ModalPlugin);
 Vue.use(VueCompositionAPI);
+Vue.component('EntityLookup', EntityLookup)
 
 // import core styles
 require('@core/scss/core.scss');

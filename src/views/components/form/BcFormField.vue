@@ -5,7 +5,7 @@
                 <div class="d-flex align-items-center">
                     <span class="text-truncate" :title="tooltip || label"
                         style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
-                        {{ label }}
+                        {{ label }}<span v-if="mandatory" class="text-danger ml-1">*</span>
                     </span>
                     <div class="flex-grow-1 ml-50" style="border-bottom: 1px dotted #999; height: 1px;"></div>
                 </div>
@@ -13,16 +13,18 @@
 
             <!-- default input rendering or slot fallback -->
             <template v-if="!$slots.default">
-                <b-form-input v-if="type == 'String'" v-model="inputValue" size="sm" :title="inputValue" ref="input" />
+                <b-form-input v-if="type == 'String'" v-model="inputValue" size="sm" :title="inputValue" ref="input" :disabled="disabled" />
                 <b-form-input v-else-if="type == 'Number'" type="number" v-model="inputValue" size="sm"
-                    :title="inputValue" ref="input" />
+                    :title="inputValue" ref="input" :disabled="disabled" />
                 <b-form-checkbox v-else-if="type === 'Boolean'" v-model="inputValue" switch
-                    :title="inputValue ? 'Yes' : 'No'" ref="input" />
+                    :title="inputValue ? 'Yes' : 'No'" ref="input" :disabled="disabled" /> 
+                <b-form-datepicker v-else-if="type === 'Date'" v-model="inputValue" size="sm"
+                    :title="inputValue ? 'Yes' : 'No'" ref="input" :disabled="disabled" />
                 <EntityLookup v-else-if="type === 'Lookup'" :title="label" :componentName="lookupComponentName"
                     :apiURI="lookupApiURI" :selectedItem="inputValue" @onItemSelected="onLookupItemSelected"
-                    ref="input" />
-                <b-form-select v-else-if="type === 'Dropdown'" size="sm" v-model="inputValue" :options="dropdownOptions"
-                    :title="inputValue" ref="input" />
+                    ref="input" :disabled="disabled" />
+                <b-form-select v-else-if="type === 'Dropdown'" size="sm" v-model="inputValue" :options="dropdownItems"
+                    :title="inputValue" ref="input" :disabled="disabled || dropdownLoading" />
             </template>
 
             <slot />
@@ -32,13 +34,11 @@
 
 <script>
 
-import EntityLookup from '@/views/components/lookup/EntityLookup.vue';
 import layoutState from '@/layouts/layoutListenerService.js';
 
 export default {
     name: 'BcFormField',
     components: {
-        EntityLookup,
     },
     props: {
         label: { type: String, required: true },
@@ -61,11 +61,6 @@ export default {
             default: null,
             required: false
         },
-        dropdownOptions: {
-            type: Array,
-            default: () => [],
-            required: false
-        },
         isPopup: {
             type: Boolean,
             default: false
@@ -74,6 +69,17 @@ export default {
             type: Boolean,
             default: false
         },
+        field: { type: String, required: false },
+        componentName: { type: String, required: false },
+        apiURI: { type: String, required: false },
+        mandatory: { type: Boolean, default: false, required: false },
+        disabled: { type: Boolean, default: false, required: false },
+    },
+    data() {
+        return {
+            dropdownItems: [],
+            dropdownLoading: false,
+        }
     },
     emits: ['input'],
     computed: {
@@ -90,6 +96,38 @@ export default {
         },
     },
     methods: {
+        async loadDropdown() {
+            
+            // guard
+            if (this.type !== 'Dropdown' || !this.field || !this.componentName) {
+                this.dropdownItems = []
+                return
+            }
+
+            this.dropdownLoading = true
+            try {
+                // Ensure plain strings, not reactive objects
+                const entity = String(this.componentName)
+                const field = String(this.field)
+
+                // Adjust the URL to your controller path
+                const { data } = await this.$http.get(this.apiURI + '/getEnumValuesByField', {
+                    params: { entity, field }
+                })
+
+                // The API returns ["Imputable","Title",...]
+                // Map to BootstrapVue options: { value, text }
+                this.dropdownItems = Array.isArray(data)
+                    ? data.map(v => ({ value: v, text: v }))
+                    : []
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error('Dropdown load failed', e)
+                this.dropdownItems = []
+            } finally {
+                this.dropdownLoading = false
+            }
+        },
         onLookupItemSelected(data) {
             this.$emit('input', data.no);
         },
@@ -103,6 +141,7 @@ export default {
                 this.$refs.input?.focus?.();
             });
         }
+        if (this.type === 'Dropdown') this.loadDropdown()
     },
 }
 </script>

@@ -1,12 +1,10 @@
 <template>
-    <b-modal hide-footer v-model="showPopup" ref="modal" :title="entityDefinition.titleForm" scrollable size="lg"
+    <b-modal hide-footer v-model="showPopup" ref="modal" :title="entityDefinition.titleForm" scrollable size="xl"
         no-close-on-esc no-close-on-backdrop>
 
         <b-overlay :show="showLoading" spinner-variant="primary">
-
             <Form :isPopup="true" :entityDefinition="entityDefinition" :entity.sync="entity" v-model="entity"
-                ref="form" />
-
+                :componentName="componentName" ref="form" />
             <hr>
 
             <b-row class="text-right">
@@ -37,7 +35,13 @@ import Form from '../form/Form.vue';
 import { getColumnDefinitionForCard } from '@/entities/entitiesConfigService';
 
 export default {
+    name: 'CardPopup',
     props: {
+        enableAutoSave: {
+            type: Boolean,
+            required: false,
+            default: true,
+        },
         componentName: {
             type: String,
             required: true,
@@ -89,13 +93,18 @@ export default {
             this.entity = this.localEditMode ? this.selectedEntity : {};
         },
         async save() {
-            this.showLoading = true;
-            try {
-                await this.$http.post(this.entityDefinition.apiURI, this.entity);
+            if (this.enableAutoSave) {
+                this.showLoading = true;
+                try {
+                    await this.$http.post(this.entityDefinition.apiURI, this.entity);
+                    this.$refs.modal.hide();
+                } finally {
+                    this.showLoading = false;
+                    this.$emit('entitySaved', this.entity);
+                }
+            } else {
                 this.$refs.modal.hide();
-            } finally {
-                this.showLoading = false;
-                this.$emit('entitySaved', this.entity);
+                this.$emit('saveClicked', this.entity);
             }
         }
     },

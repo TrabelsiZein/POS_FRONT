@@ -44,5 +44,58 @@ export default [
       resource: "ShipmentAgent",
     },
   },
-
+  {
+    path: '/responsibility-center',
+    name: 'ResponsibilityCenter_READ',
+    component: () => import('@/views/settings/ResponsibilityCenter.vue'),
+    meta: {
+      action: "READ",
+      resource: "ResponsibilityCenter",
+    },
+  },
+  {
+    path: '/unit-of-measure',
+    name: 'UnitOfMeasure_READ',
+    component: () => import('@/views/settings/UnitOfMeasure.vue'),
+    meta: {
+      action: "READ",
+      resource: "UnitOfMeasure",
+    },
+  },
+  {
+    path: '/currency',
+    name: 'Currency_READ',
+    component: () => import('@/views/settings/Currency.vue'),
+    meta: {
+      action: "READ",
+      resource: "Currency",
+    },
+  },
+  {
+    path: '/series',
+    name: 'SeriesHeader_READ',
+    component: () => import('@/views/settings/SeriesHeaderList.vue'),
+    meta: {
+      action: "READ",
+      resource: "SeriesHeader",
+    },
+  },
+  {
+    path: '/series-card',
+    name: 'SeriesHeader_WRITE',
+    component: () => import('@/views/settings/SeriesHeaderCard.vue'),
+    meta: {
+      action: "WRITE",
+      resource: "SeriesHeader",
+    },
+  },
+  {
+    path: '/series-card/:id',
+    name: 'SeriesHeader_EDIT',
+    component: () => import('@/views/settings/SeriesHeaderCard.vue'),
+    meta: {
+      action: "EDIT",
+      resource: "SeriesHeader",
+    },
+  },
 ]

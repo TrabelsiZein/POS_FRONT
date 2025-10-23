@@ -78,7 +78,7 @@
 <script>
 
 import List from '@/views/components/list/List.vue';
-import BLinkCellRenderer from './components/ag-grid/BLinkCellRenderer.vue';
+import BLinkCellRenderer from '@/views/components/ag-grid/BLinkCellRenderer.vue';
 import SeriesLine from './SeriesLine.vue';
 export default {
   components: {

@@ -71,7 +71,7 @@
 
 <script>
 
-import BreadcrumbSheet from '@/views/components/BreadcrumbSheet.vue';
+import BreadcrumbSheet from '@/views/components/breadCrumb/BreadcrumbCard.vue';
 
 export default {
     components: {

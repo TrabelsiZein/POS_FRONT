@@ -10,7 +10,7 @@
                         <h2 class="content-header-title float-left pr-1 mb-0">
                             {{ breadcrumbData.title }}
                         </h2>
-                        <div class="breadcrumb-wrapper">
+                        <div class="breadcrumb-wrapper" v-if="!hideBreadCrumbPath">
                             <b-breadcrumb>
                                 <b-breadcrumb-item to="/">
                                     <feather-icon icon="HomeIcon" size="16" class="align-text-top" />
@@ -26,40 +26,46 @@
             </b-col>
 
             <!-- Content Right -->
-            <!-- <b-col class="content-header-right text-md-right d-md-block d-none mb-1" md="5" cols="12"> -->
             <b-col class="content-header-right text-md-right mb-1" sm="12" md="7" lg="5">
+
+                <b-button v-if="showBreadCrumbOpenNewTab" variant="relief-primary" class="btn-icon mr-50"
+                    @click="openInNewTab">
+                    <feather-icon icon="ExternalLinkIcon" />
+                </b-button>
 
                 <b-button variant="relief-info" class="btn-icon mr-50 " @click="searchClicked">
                     <feather-icon icon="SearchIcon" />
                 </b-button>
 
-                <b-button variant="relief-info" class="btn-icon mr-50 " @click="filterClicked">
+                <b-button v-if="!hideFilterButton" variant="relief-info" class="btn-icon mr-50 " @click="filterClicked">
                     <feather-icon icon="FilterIcon" />
                 </b-button>
 
-                <b-button variant="relief-dark" class="btn-icon mr-50" v-if="breadcrumbData.withFilter">
+                <!-- <b-button v-if="!hideFilterButton" variant="relief-dark" class="btn-icon mr-50">
                     <feather-icon icon="FilterIcon" />
-                </b-button>
+                </b-button> -->
 
-                <b-button variant="relief-secondary" class="btn-icon mr-50" @click="$emit('downloadClicked')">
+                <b-button v-if="!hideDownloadButton" variant="relief-secondary" class="btn-icon mr-50"
+                    @click="$emit('downloadClicked')">
                     <feather-icon icon="DownloadIcon" />
                 </b-button>
 
-                <b-button variant="relief-warning" class="btn-icon mr-50" @click="$emit('printClicked')">
+                <b-button v-if="!hidePrintButton" variant="relief-warning" class="btn-icon mr-50"
+                    @click="$emit('printClicked')">
                     <feather-icon icon="PrinterIcon" />
                 </b-button>
 
-                <b-button variant="relief-danger" class="btn-icon mr-50" v-if="$can('DELETE', componentName)"
+                <b-button variant="relief-danger" class="btn-icon mr-50" v-if="$can('DELETE', componentName) && linesEnabled"
                     @click="$emit('deleteClicked')">
                     <feather-icon icon="Trash2Icon" />
                 </b-button>
 
-                <b-button variant="relief-primary" class="btn-icon mr-50" v-if="$can('EDIT', componentName)"
+                <b-button variant="relief-primary" class="btn-icon mr-50" v-if="$can('EDIT', componentName) && linesEnabled"
                     @click="$emit('editClicked')">
                     <feather-icon icon="EditIcon" />
                 </b-button>
 
-                <b-button variant="relief-success" class="btn-icon" v-if="$can('WRITE', componentName)"
+                <b-button variant="relief-success" class="btn-icon" v-if="$can('WRITE', componentName) && linesEnabled"
                     @click="newClicked">
                     <feather-icon icon="PlusIcon" />
                 </b-button>
@@ -80,14 +86,6 @@
                 </b-form-group>
             </b-col>
 
-            <!-- <b-form-checkbox checked="true" class="custom-control-primary" name="check-button" switch>
-            <span class="switch-icon-left">
-                ET
-            </span>
-            <span class="switch-icon-right">
-                OU
-            </span>
-        </b-form-checkbox> -->
 
 
         </b-row>
@@ -113,8 +111,7 @@
                 <!-- Actions (Add / Delete) -->
                 <b-col sm="12" md="6" lg="4" class="mt-2 text-right">
                     <!-- Delete (if more than one row) -->
-                    <b-button v-if="filters.length > 1" variant="outline-danger" size="sm"
-                        @click="deleteRow(index)">
+                    <b-button v-if="filters.length > 1" variant="outline-danger" size="sm" @click="deleteRow(index)">
                         Supprimer
                     </b-button>
 
@@ -135,6 +132,29 @@
 
 export default {
     props: {
+        hidePrintButton: {
+            type: Boolean,
+            default: false,
+            required: false,
+        },
+        hideDownloadButton: {
+            type: Boolean,
+            default: false,
+            required: false,
+        },
+        hideFilterButton: {
+            type: Boolean,
+            default: false,
+            required: false,
+        },
+        showBreadCrumbOpenNewTab: {
+            type: Boolean,
+            default: false,
+        },
+        hideBreadCrumbPath: {
+            type: Boolean,
+            default: false,
+        },
         filterFields: {
             type: Array,
             required: false,
@@ -150,6 +170,10 @@ export default {
         onlyListComponent: {
             type: Boolean,
         },
+        linesEnabled: {
+            type: Boolean,
+            default: true,
+        },
     },
     data() {
         return {
@@ -161,6 +185,10 @@ export default {
         }
     },
     methods: {
+        openInNewTab() {
+            const url = this.$router.resolve({ name: this.componentName + "_READ" }).href;
+            window.open(url, '_blank');
+        },
         newClicked() {
             if (this.onlyListComponent)
                 this.$emit("newClicked");
