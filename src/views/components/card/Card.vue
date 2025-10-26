@@ -8,11 +8,12 @@
             <hr>
 
             <Form :entityDefinition="entityDefinition" :entity.sync="entity" v-model="entity"
-                :componentName="componentName" />
+                :componentName="componentName" :isEditMode="!!$route.params.id" :seriesHeaderData="seriesHeaderData" />
             <hr>
 
             <List v-if="componentLineName && entityLoaded" :isCardLine="true" :componentName="componentLineName"
-                :entityHeader="entity" :onlyListComponent="true" :linesEnabled="!!entity.id" @saveClicked="(data) => $emit('saveClicked', data)" ref="linesList" />
+                :entityHeader="entity" :onlyListComponent="true" :linesEnabled="!!entity.id"
+                @saveClicked="(data) => $emit('saveClicked', data)" ref="linesList" />
 
         </b-card>
     </b-overlay>
@@ -62,6 +63,7 @@ export default {
                 route: [],
                 withFilter: false,
             },
+            seriesHeaderData: null,
         }
     },
     async mounted() {
@@ -71,6 +73,9 @@ export default {
     },
     async created() {
         console.log("Entity Definition:", this.entityDefinition);
+
+        // Fetch series header data if this entity has series headers
+
         if (this.isSetup) {
             await this.loadData();
         }
@@ -78,6 +83,7 @@ export default {
             await this.findById();
             this.entityLoaded = true;
         } else {
+            await this.loadSeriesHeaderData();
             this.entityLoaded = true;
         }
     },
@@ -125,13 +131,16 @@ export default {
 
             this.showLoading = true;
             try {
-                const response = await this.$http.post(this.entityDefinition.apiURI, this.entity);
-                
+                const seriesHeaderNo = this.seriesHeaderData ? this.seriesHeaderData.no : null;
+                const response = await this.$http.post(this.entityDefinition.apiURI, this.entity, {
+                    params: { seriesHeaderNo }
+                });
+
                 // Update the entity with the returned data (including the ID)
                 if (response.data) {
                     this.entity = { ...this.entity, ...response.data };
                 }
-                
+
                 if (this.isSetup) {
                     this.$swal.fire({
                         position: "absolute",
@@ -150,13 +159,13 @@ export default {
                         showConfirmButton: true,
                         timer: 3000
                     });
-                    
+
                     // Update the URL to include the ID for proper edit mode
                     if (response.data && response.data.id && !this.$route.params.id) {
-                        const newRoute = { 
-                            name: this.$route.name, 
+                        const newRoute = {
+                            name: this.$route.name,
                             params: { ...this.$route.params, id: response.data.id },
-                            query: this.$route.query 
+                            query: this.$route.query
                         };
                         this.$router.replace(newRoute);
                     }
@@ -174,9 +183,25 @@ export default {
                 await this.$refs.linesList.loadData();
             }
         },
+        async loadSeriesHeaderData() {
+            try {
+                // Check if this entity has a seriesHeaderNo field
+                const hasSeriesHeader = this.hasSeriesHeaderField();
+                if (hasSeriesHeader) {
+                    const response = await this.$http.get('/series_header/findByEntityName/' + this.componentName);
+                    this.seriesHeaderData = response.data;
+                }
+            } catch (error) {
+                console.warn('Error loading series header data:', error);
+            }
+        },
+        hasSeriesHeaderField() {
+            // Check if entity exists in the entitiesWithSeriesHeaders list
+            return window.entitiesWithSeriesHeaders && window.entitiesWithSeriesHeaders.includes(this.componentName);
+        },
         validateMandatoryFields() {
             const errors = [];
-            
+
             // Get all fields from the entity definition
             let allFields = [];
             if (this.entityDefinition.tabs && this.entityDefinition.tabs.length) {
@@ -190,17 +215,21 @@ export default {
                 // If entity has no tabs, get fields directly
                 allFields = this.entityDefinition.fields;
             }
-            
+
             // Check each mandatory field
             allFields.forEach(field => {
                 if (field.mandatory) {
+                    // Skip validation for "no" field if entity has series headers
+                    if (field.field === 'no' && this.hasSeriesHeaderField()) {
+                        return;
+                    }
                     const value = this.entity[field.field];
                     if (!value || (typeof value === 'string' && value.trim() === '')) {
                         errors.push(field.label.fr || field.field);
                     }
                 }
             });
-            
+
             return errors;
         }
     },

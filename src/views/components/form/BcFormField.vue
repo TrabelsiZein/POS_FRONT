@@ -13,18 +13,18 @@
 
             <!-- default input rendering or slot fallback -->
             <template v-if="!$slots.default">
-                <b-form-input v-if="type == 'String'" v-model="inputValue" size="sm" :title="inputValue" ref="input" :disabled="disabled" />
+                <b-form-input v-if="type == 'String'" v-model="inputValue" size="sm" :title="inputValue" ref="input" :disabled="isFieldDisabled" />
                 <b-form-input v-else-if="type == 'Number'" type="number" v-model="inputValue" size="sm"
-                    :title="inputValue" ref="input" :disabled="disabled" />
+                    :title="inputValue" ref="input" :disabled="isFieldDisabled" />
                 <b-form-checkbox v-else-if="type === 'Boolean'" v-model="inputValue" switch
-                    :title="inputValue ? 'Yes' : 'No'" ref="input" :disabled="disabled" /> 
+                    :title="inputValue ? 'Yes' : 'No'" ref="input" :disabled="isFieldDisabled" /> 
                 <b-form-datepicker v-else-if="type === 'Date'" v-model="inputValue" size="sm"
-                    :title="inputValue ? 'Yes' : 'No'" ref="input" :disabled="disabled" />
+                    :title="inputValue ? 'Yes' : 'No'" ref="input" :disabled="isFieldDisabled" />
                 <EntityLookup v-else-if="type === 'Lookup'" :title="label" :componentName="lookupComponentName"
                     :apiURI="lookupApiURI" :selectedItem="inputValue" @onItemSelected="onLookupItemSelected"
-                    ref="input" :disabled="disabled" />
+                    ref="input" :disabled="isFieldDisabled" />
                 <b-form-select v-else-if="type === 'Dropdown'" size="sm" v-model="inputValue" :options="dropdownItems"
-                    :title="inputValue" ref="input" :disabled="disabled || dropdownLoading" />
+                    :title="inputValue" ref="input" :disabled="isFieldDisabled || dropdownLoading" />
             </template>
 
             <slot />
@@ -74,6 +74,8 @@ export default {
         apiURI: { type: String, required: false },
         mandatory: { type: Boolean, default: false, required: false },
         disabled: { type: Boolean, default: false, required: false },
+        isEditMode: { type: Boolean, default: false, required: false },
+        seriesHeaderData: { type: Object, default: null, required: false },
     },
     data() {
         return {
@@ -93,6 +95,18 @@ export default {
         },
         colSize() {
             return this.isPopup ? 12 : layoutState.colSize;
+        },
+        isFieldDisabled() {
+            // If field is "no" and we're in edit mode, disable it regardless of configuration
+            if (this.field === 'no' && this.isEditMode) {
+                return true;
+            }
+            // If field is "no" and manualNo is false, also disable it in creation mode
+            if (this.field === 'no' && this.seriesHeaderData && !this.seriesHeaderData.manualNo) {
+                return true;
+            }
+            // Otherwise, use the configured disabled state
+            return this.disabled;
         },
     },
     methods: {

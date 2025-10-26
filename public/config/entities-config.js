@@ -22,6 +22,15 @@ const defaultFields = {
     contact: [noField, nameField, ...contactFields],
 };
 
+// List of entities that have series headers
+const entitiesWithSeriesHeaders = [
+    'Customer',
+    'Currency',
+    'SalesHeader',
+    'Vendor',
+    'Item',
+];
+
 window.entities = {
     // ========================================
     // SALES MODULE ENTITIES
@@ -977,13 +986,13 @@ window.entities = {
         titleForm: { fr: 'Ligne de souche', en: 'Series Line', ar: 'سطر السلسلة' },
         breadcrumb: ['Configuration'],
         fields: [
-            { field: 'documentNo', label: { fr: 'N° document', en: 'Document No', ar: 'رقم المستند' }, showList: true, showCard: true, type: 'String', tooltip: { fr: '', en: '', ar: '' }, tab: 1, mandatory: true,disabled:true },
-            { field: 'documentId', label: { fr: 'ID document', en: 'Document ID', ar: 'معرف المستند' }, showList: false, showCard: false, type: 'Number', tooltip: { fr: '', en: '', ar: '' }, tab: 1, mandatory: true },
+            { field: 'documentNo', label: { fr: 'N° document', en: 'Document No', ar: 'رقم المستند' }, showList: true, showCard: true, type: 'String', tooltip: { fr: '', en: '', ar: '' }, tab: 1,disabled:true },
+            { field: 'documentId', label: { fr: 'ID document', en: 'Document ID', ar: 'معرف المستند' }, showList: false, showCard: false, type: 'Number', tooltip: { fr: '', en: '', ar: '' }, tab: 1, },
             { field: 'startDate', label: { fr: 'Date début', en: 'Start Date', ar: 'تاريخ البداية' }, showList: true, showCard: true, type: 'Date', tooltip: { fr: '', en: '', ar: '' }, tab: 1, mandatory: true },
             { field: 'startNo', label: { fr: 'N° début', en: 'Start No', ar: 'رقم البداية' }, showList: true, showCard: true, type: 'String', tooltip: { fr: '', en: '', ar: '' }, tab: 1, mandatory: true },
             { field: 'endNo', label: { fr: 'N° fin', en: 'End No', ar: 'رقم النهاية' }, showList: true, showCard: true, type: 'String', tooltip: { fr: '', en: '', ar: '' }, tab: 1 },
             { field: 'lastNoUsed', label: { fr: 'Dernier N° utilisé', en: 'Last No Used', ar: 'آخر رقم مستخدم' }, showList: true, showCard: true, type: 'String', tooltip: { fr: '', en: '', ar: '' }, tab: 1,disabled:true },
-            { field: 'lastDateUsed', label: { fr: 'Dernière date utilisée', en: 'Last Date Used', ar: 'آخر تاريخ مستخدم' }, showList: true, showCard: true, type: 'Date', tooltip: { fr: '', en: '', ar: '' }, tab: 1 },
+            { field: 'lastDateUsed', label: { fr: 'Dernière date utilisée', en: 'Last Date Used', ar: 'آخر تاريخ مستخدم' }, showList: true, showCard: true, type: 'Date', tooltip: { fr: '', en: '', ar: '' }, tab: 1,disabled:true },
             ...auditFields
         ]
     },
@@ -1064,3 +1073,6 @@ window.entities = {
         fields: [...defaultFields.noDescription, ...auditFields]
     }
 };
+
+// Export the entitiesWithSeriesHeaders list for use in components
+window.entitiesWithSeriesHeaders = entitiesWithSeriesHeaders;

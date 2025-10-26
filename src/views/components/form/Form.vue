@@ -12,7 +12,7 @@
                             :lookupComponentName="field.lookupEntity" :lookupApiURI="field.lookupApiURI"
                             :value="entity[field.field]" @input="onFieldInput(field.field, $event)"
                             :autoFocus="index === 0" :ref="'ref_' + index" :componentName="componentName" :field="field.field" :apiURI="entityDefinition.apiURI"
-                            :mandatory="field.mandatory || false" :disabled="field.disabled || false"/>
+                            :mandatory="field.mandatory || false" :disabled="field.disabled || false" :isEditMode="isEditMode" :seriesHeaderData="seriesHeaderData"/>
                     </b-row>
                 </app-collapse-item>
             </app-collapse>
@@ -26,7 +26,7 @@
                     :lookupComponentName="field.lookupEntity" :lookupApiURI="field.lookupApiURI"
                     :value="entity[field.field]" @input="onFieldInput(field.field, $event)" :autoFocus="index === 0"
                     :ref="'ref_' + index" :componentName="componentName" :field="field.field" :apiURI="entityDefinition.apiURI"
-                    :mandatory="field.mandatory || false" :disabled="field.disabled || false"/>
+                    :mandatory="field.mandatory || false" :disabled="field.disabled || false" :isEditMode="isEditMode" :seriesHeaderData="seriesHeaderData"/>
             </b-row>
         </template>
 
@@ -56,6 +56,15 @@ export default {
         componentName: {
             type: String,
             required: false,
+        },
+        isEditMode: {
+            type: Boolean,
+            default: false
+        },
+        seriesHeaderData: {
+            type: Object,
+            default: null,
+            required: false
         },
     },
     emits: ['update:entity'],

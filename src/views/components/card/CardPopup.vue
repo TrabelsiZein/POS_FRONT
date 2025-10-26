@@ -4,7 +4,8 @@
 
         <b-overlay :show="showLoading" spinner-variant="primary">
             <Form :isPopup="true" :entityDefinition="entityDefinition" :entity.sync="entity" v-model="entity"
-                :componentName="componentName" ref="form" />
+                :componentName="componentName" :isEditMode="localEditMode" :seriesHeaderData="seriesHeaderData"
+                ref="form" />
             <hr>
 
             <b-row class="text-right">
@@ -66,7 +67,13 @@ export default {
             entity: {},
             selectedEntity: {},
             entityDefinition: getColumnDefinitionForCard(this.componentName),
+            seriesHeaderData: null,
         }
+    },
+    async created() {
+        // Fetch series header data if this entity has series headers
+        if (!this.localEditMode)
+            await this.loadSeriesHeaderData();
     },
     watch: {
         showPopup(newValue) {
@@ -89,14 +96,47 @@ export default {
         }
     },
     methods: {
+        async loadSeriesHeaderData() {
+            try {
+                // Check if this entity has a seriesHeaderNo field
+                const hasSeriesHeader = this.hasSeriesHeaderField();
+                
+                if (hasSeriesHeader) {
+                    const response = await this.$http.get('/series_header/findByEntityName/' + this.componentName);
+                    this.seriesHeaderData = response.data;
+                }
+            } catch (error) {
+                console.warn('Error loading series header data:', error);
+            }
+        },
+        hasSeriesHeaderField() {
+            // Check if entity exists in the entitiesWithSeriesHeaders list
+            return window.entitiesWithSeriesHeaders && window.entitiesWithSeriesHeaders.includes(this.componentName);
+        },
         async reset() {
             this.entity = this.localEditMode ? this.selectedEntity : {};
         },
         async save() {
+            // Validate mandatory fields before saving
+            const validationErrors = this.validateMandatoryFields();
+            if (validationErrors.length > 0) {
+                this.$swal.fire({
+                    position: "absolute",
+                    icon: "error",
+                    title: "Champs obligatoires manquants",
+                    html: `Les champs suivants sont obligatoires :<br><ul>${validationErrors.map(error => `<li>${error}</li>`).join('')}</ul>`,
+                    showConfirmButton: true
+                });
+                return;
+            }
+
             if (this.enableAutoSave) {
                 this.showLoading = true;
                 try {
-                    await this.$http.post(this.entityDefinition.apiURI, this.entity);
+                    const seriesHeaderNo = this.seriesHeaderData ? this.seriesHeaderData.no : null;
+                    await this.$http.post(this.entityDefinition.apiURI, this.entity, {
+                        params: { seriesHeaderNo }
+                    });
                     this.$refs.modal.hide();
                 } finally {
                     this.showLoading = false;
@@ -106,6 +146,39 @@ export default {
                 this.$refs.modal.hide();
                 this.$emit('saveClicked', this.entity);
             }
+        },
+        validateMandatoryFields() {
+            const errors = [];
+
+            // Get all fields from the entity definition
+            let allFields = [];
+            if (this.entityDefinition.tabs && this.entityDefinition.tabs.length) {
+                // If entity has tabs, get fields from all tabs
+                this.entityDefinition.tabs.forEach(tab => {
+                    if (tab.fields) {
+                        allFields = allFields.concat(tab.fields);
+                    }
+                });
+            } else if (this.entityDefinition.fields) {
+                // If entity has no tabs, get fields directly
+                allFields = this.entityDefinition.fields;
+            }
+
+            // Check each mandatory field
+            allFields.forEach(field => {
+                if (field.mandatory) {
+                    // Skip validation for "no" field if entity has series headers
+                    if (field.field === 'no' && this.hasSeriesHeaderField()) {
+                        return;
+                    }
+                    const value = this.entity[field.field];
+                    if (!value || (typeof value === 'string' && value.trim() === '')) {
+                        errors.push(field.label.fr || field.field);
+                    }
+                }
+            });
+
+            return errors;
         }
     },
 }

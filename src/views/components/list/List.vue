@@ -4,7 +4,6 @@
 
         <CardPopup v-if="onlyListComponent" :componentName="componentName" ref="popup" :entityData="entityPopup"
             :editMode="editMode" :enableAutoSave="isCardLine ? false : true" @entitySaved="loadData" @saveClicked="(data) => $emit('saveClicked', data)"/>
-
         <b-card>
 
             <Breadcrumb :hidePrintButton="isCardLine ? true : false" :hideDownloadButton="isCardLine ? true : false"
