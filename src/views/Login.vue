@@ -6,7 +6,7 @@
       <b-link class="brand-logo">
         <vuexy-logo />
         <h2 class="brand-text text-primary ml-1">
-          Vuexy
+          POS System
         </h2>
       </b-link>
       <!-- /Brand logo-->
@@ -24,27 +24,22 @@
         <b-overlay :show="showLoading" rounded="sm">
           <b-col sm="8" md="6" lg="12" class="px-xl-2 mx-auto">
             <b-card-title title-tag="h2" class="font-weight-bold mb-1">
-              Welcome to Vuexy! 👋
+              Welcome to POS! 👋
             </b-card-title>
             <b-card-text class="mb-2">
-              Please sign-in to your account and start the adventure
+              Please sign-in to your account
             </b-card-text>
 
             <!-- form -->
             <b-form class="auth-login-form mt-2" @submit.prevent>
-              <!-- email -->
-              <b-form-group label="Email" label-for="login-email">
-                <b-form-input id="login-email" v-model="username" name="login-email" placeholder="john@example.com" />
+              <!-- username -->
+              <b-form-group label="Username" label-for="login-username">
+                <b-form-input id="login-username" v-model="username" name="login-username" placeholder="Enter username" />
               </b-form-group>
 
-              <!-- forgot password -->
+              <!-- password -->
               <b-form-group>
-                <div class="d-flex justify-content-between">
-                  <label for="login-password">Password</label>
-                  <b-link :to="{ name: 'auth-forgot-password-v2' }">
-                    <small>Forgot Password?</small>
-                  </b-link>
-                </div>
+                <label for="login-password">Password</label>
                 <b-input-group class="input-group-merge">
                   <b-form-input id="login-password" v-model="password" class="form-control-merge"
                     :type="passwordFieldType" name="login-password" placeholder="············" />
@@ -54,48 +49,11 @@
                 </b-input-group>
               </b-form-group>
 
-              <!-- checkbox -->
-              <b-form-group>
-                <b-form-checkbox id="remember-me" v-model="status" name="checkbox-1">
-                  Remember Me
-                </b-form-checkbox>
-              </b-form-group>
-
               <!-- submit buttons -->
               <b-button type="submit" variant="primary" block @click="validationForm">
                 Sign in
               </b-button>
             </b-form>
-
-            <b-card-text class="text-center mt-2">
-              <span>New on our platform? </span>
-              <b-link :to="{ name: 'page-auth-register-v2' }">
-                <span>&nbsp;Create an account</span>
-              </b-link>
-            </b-card-text>
-
-            <!-- divider -->
-            <div class="divider my-2">
-              <div class="divider-text">
-                or
-              </div>
-            </div>
-
-            <!-- social buttons -->
-            <div class="auth-footer-btn d-flex justify-content-center">
-              <b-button variant="facebook" href="javascript:void(0)">
-                <feather-icon icon="FacebookIcon" />
-              </b-button>
-              <b-button variant="twitter" href="javascript:void(0)">
-                <feather-icon icon="TwitterIcon" />
-              </b-button>
-              <b-button variant="google" href="javascript:void(0)">
-                <feather-icon icon="MailIcon" />
-              </b-button>
-              <b-button variant="github" href="javascript:void(0)">
-                <feather-icon icon="GithubIcon" />
-              </b-button>
-            </div>
           </b-col>
         </b-overlay>
       </b-col>
@@ -107,11 +65,12 @@
 <script>
 /* eslint-disable global-require */
 import VuexyLogo from '@core/layouts/components/Logo.vue'
-import { required, email } from '@validations'
 import { togglePasswordVisibility } from '@core/mixins/ui/forms'
 import store from '@/store/index'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import useJwt from "@/auth/jwt/useJwt"
+import { getHomeRouteForLoggedInUser } from '@/auth/utils'
+import ability from '@/libs/acl/ability'
 
 export default {
   components: {
@@ -121,12 +80,9 @@ export default {
   data() {
     return {
       showLoading: false,
-      status: '',
       password: '',
       username: '',
       sideImg: require('@/assets/images/pages/login-v2.svg'),
-      required,
-      email,
     }
   },
   computed: {
@@ -152,36 +108,98 @@ export default {
         this.showLoading = false;
         this.$toast.clear();
         if (response.status == 200 && response.data.status == 200) {
+          // Store token
           useJwt.setToken(response.data.token);
-          useJwt.setUserData({ abilities: response.data.abilities });
-          this.$ability.update(response.data.abilities);
-          this.$router.push({ name: 'home' });
+          
+          // Build abilities based on role
+          const abilities = [
+            {
+              action: 'read',
+              subject: 'Auth',
+            }
+          ]
+          
+          // Add role-specific abilities
+          if (response.data.role === 'ADMIN') {
+            abilities.push(
+              { action: 'read', subject: 'admin-users' },
+              { action: 'read', subject: 'admin-sessions' },
+              { action: 'read', subject: 'admin-sessions-history' },
+              { action: 'read', subject: 'tickets-history' },
+              { action: 'read', subject: 'admin-item-barcodes' },
+              { action: 'read', subject: 'admin-customers' },
+              { action: 'read', subject: 'admin-returns' },
+              { action: 'write', subject: 'admin-users' },
+              { action: 'delete', subject: 'admin-users' },
+              { action: 'write', subject: 'admin-customers' },
+              { action: 'delete', subject: 'admin-customers' }
+            )
+            // ADMIN uses admin-sessions route, not responsible-sessions
+            // This prevents duplicate menu items
+          }
+          if (response.data.role === 'RESPONSIBLE') {
+            abilities.push(
+              { action: 'read', subject: 'responsible-sessions' },
+              { action: 'read', subject: 'admin-sessions-history' },
+              { action: 'read', subject: 'tickets-history' },
+              { action: 'read', subject: 'admin-item-barcodes' },
+              { action: 'read', subject: 'admin-customers' },
+              { action: 'read', subject: 'admin-returns' },
+              { action: 'write', subject: 'responsible-sessions' },
+              { action: 'write', subject: 'admin-customers' },
+              { action: 'delete', subject: 'admin-customers' }
+            )
+          }
+          
+          // Store user data with role and abilities
+          useJwt.setUserData({ 
+            role: response.data.role,
+            fullName: response.data.fullName,
+            username: this.username,
+            abilities: abilities
+          });
+          
+          // Update ability in the ACL system
+          ability.update(abilities)
+          
+          // Reset session check for new login (POS users need to check session)
+          if (response.data.role === 'POS_USER') {
+            this.$store.dispatch('pos/resetSessionCheck');
+          }
+          
+          // Redirect based on role
+          const homeRoute = getHomeRouteForLoggedInUser(response.data.role);
+          this.$router.push(homeRoute);
         } else {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Authentification invalide',
+              title: 'Authentication Failed',
               icon: 'XIcon',
-              text: 'nom d\'utilisateur ou mot de passe incorrect. Veuillez vérifier vos informations.',
+              text: 'Invalid username or password. Please check your credentials.',
               variant: 'danger',
             },
           }, {
-            timeout: 10000
+            timeout: 5000
           });
         }
-      }).catch(() => {
+      }).catch(error => {
         this.showLoading = false;
         this.$toast.clear();
+        let errorMessage = 'Invalid username or password. Please check your credentials.';
+        if (error.response && error.response.data) {
+          errorMessage = error.response.data.msg || errorMessage;
+        }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Authentification invalide',
+            title: 'Authentication Failed',
             icon: 'XIcon',
-            text: 'nom d\'utilisateur ou mot de passe incorrect. Veuillez vérifier vos informations.',
+            text: errorMessage,
             variant: 'danger',
           },
         }, {
-          timeout: 10000
+          timeout: 5000
         });
       })
     }

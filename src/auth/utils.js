@@ -13,15 +13,24 @@ export const isUserLoggedIn = () => {
 export const getUserData = () => JSON.parse(localStorage.getItem('userData'))
 
 /**
- * This function is used for demo purpose route navigation
- * In real app you won't need this function because your app will navigate to same route for each users regardless of ability
- * Please note role field is just for showing purpose it's not used by anything in frontend
- * We are checking role just for ease
- * NOTE: If you have different pages to navigate based on user ability then this function can be useful. However, you need to update it.
- * @param {String} userRole Role of user
+ * Get home route based on user role
+ * @param {String} userRole Role of user (POS_USER, ADMIN, RESPONSIBLE)
  */
 export const getHomeRouteForLoggedInUser = userRole => {
-  if (userRole === 'admin') return '/'
-  if (userRole === 'client') return { name: 'access-control' }
-  return { name: 'auth-login' }
+  if (userRole === 'POS_USER') {
+    // Check if user has open session - if not, redirect to open session page
+    // This check will be done in router guard, so we just return the item selection route
+    return { name: 'pos-item-selection' }
+  }
+  if (userRole === 'RESPONSIBLE') return { name: 'responsible-sessions' }
+  if (userRole === 'ADMIN') return { name: 'admin-sessions' }
+  return { name: 'login' }
+}
+
+/**
+ * Check if user has POS role
+ */
+export const isPosUser = () => {
+  const userData = getUserData()
+  return userData && userData.role === 'POS_USER'
 }

@@ -4,9 +4,9 @@ import Vue from 'vue'
 import axios from 'axios'
 
 const axiosIns = axios.create({
-  // baseURL: 'http://localhost:444/business_management/api/',
-  baseURL: 'http://155.133.27.175/business_management/',
-  // baseURL: '/business_management/',
+  // Update this to match your backend URL
+  // Backend runs on port 444 with context-path /pos/api
+  baseURL: process.env.VUE_APP_API_BASE_URL || 'http://localhost:444/pos/api/',
 })
 
 Vue.prototype.$http = axiosIns

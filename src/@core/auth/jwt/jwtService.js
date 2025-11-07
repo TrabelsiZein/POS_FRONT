@@ -28,7 +28,6 @@ export default class JwtService {
         if (accessToken) {
           // eslint-disable-next-line no-param-reassign
           config.headers.Authorization = `${this.jwtConfig.tokenType} ${accessToken}`;
-          config.headers["X-Company-ID"] = 1
         }
         return config
       },
@@ -119,5 +118,12 @@ export default class JwtService {
     return this.axiosIns.post(this.jwtConfig.refreshEndpoint, {
       refreshToken: this.getRefreshToken(),
     })
+  }
+
+  logout() {
+    // Remove token and user data from localStorage
+    localStorage.removeItem(this.jwtConfig.storageTokenKeyName)
+    localStorage.removeItem(this.jwtConfig.storageRefreshTokenKeyName)
+    localStorage.removeItem('userData')
   }
 }

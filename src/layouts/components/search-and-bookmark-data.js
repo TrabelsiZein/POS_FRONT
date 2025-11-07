@@ -1,57 +1,17 @@
 /* eslint-disable */
 // prettier-ignore
+// TODO: Add routes for admin and responsible roles when implemented
 export default {
   List: {
     key: 'title',
     data: [
-      { title: 'Gestion Des Roles', route: { name: 'RolesManagement_READ' }, icon: 'LockIcon' },
-      { title: 'Gestion Des Utilisateurs', route: { name: 'UsersManagement_READ' }, icon: 'UserIcon' },
-      { title: 'Unités De Mesure', route: { name: 'UnitOfMeasure_READ' }, icon: 'CodepenIcon' },
-      { title: 'Unités De Mesure Article', route: { name: 'ItemUnitOfMeasure_READ' }, icon: 'CodepenIcon' },
-      { title: 'Groupe Compta. Stock', route: { name: 'InventoryPostingGroup_READ' }, icon: 'HardDriveIcon' },
-      { title: 'Paramètres compta. Stock', route: { name: 'InventoryPostingSetup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Groupe compta. Produit TVA', route: { name: 'VatProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
-      { title: 'Groupe compta. Marché TVA', route: { name: 'VatBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
-      { title: 'Paramètres compta. TVA', route: { name: 'VatPostingSetup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Groupe compta. Produit', route: { name: 'GeneralProductPostingGroup_READ' }, icon: 'HardDriveIcon' },
-      { title: 'Groupe compta. Marché', route: { name: 'GeneralBusinessPostingGroup_READ' }, icon: 'HardDriveIcon' },
-      { title: 'Paramètres comptabilisation', route: { name: 'GeneralPostingSetup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Compte Général', route: { name: 'GeneralLedgerAccount_READ' }, icon: 'HardDriveIcon' },
-      { title: 'Devise', route: { name: 'Currency_READ' }, icon: 'DollarSignIcon' },
-      { title: 'Groupe Remises Article', route: { name: 'ItemDiscountGroup_READ' }, icon: 'PercentIcon' },
-      { title: 'Magasin', route: { name: 'Location_READ' }, icon: 'MapIcon' },
-      { title: 'Souches', route: { name: 'SeriesHeader_READ' }, icon: 'TerminalIcon' },
-      { title: 'Articles', route: { name: 'Item_READ' }, icon: 'CodesandboxIcon' },
-      { title: 'Code de suivi de l\'article', route: { name: 'ItemTrackingCode_READ' }, icon: 'CodeIcon' },
-      { title: 'Familles articles', route: { name: 'ItemFamily_READ' }, icon: 'CodepenIcon' },
-      { title: 'Sous-Familles Articles', route: { name: 'ItemSubFamily_READ' }, icon: 'CodepenIcon' },
-      { title: 'Fournisseurs', route: { name: 'Vendor_READ' }, icon: 'TruckIcon' },
-      { title: 'Secteurs', route: { name: 'Territory_READ' }, icon: 'SettingsIcon' },
-      { title: 'Mode de règlement', route: { name: 'PaymentMethod_READ' }, icon: 'SettingsIcon' },
-      { title: 'Conditions de paiement', route: { name: 'PaymentTerms_READ' }, icon: 'SettingsIcon' },
-      { title: 'Vendeur/Acheteur', route: { name: 'SalesPersonPurchaser_READ' }, icon: 'SettingsIcon' },
-      { title: 'Transporteurs', route: { name: 'ShipmentAgent_READ' }, icon: 'SettingsIcon' },
-
-      { title: 'VendorPostingGroup', route: { name: 'VendorPostingGroup_READ' }, icon: 'SettingsIcon' },
-      { title: 'CustomerPostingGroup', route: { name: 'CustomerPostingGroup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Customer', route: { name: 'Customer_READ' }, icon: 'SettingsIcon' },
-      { title: 'CustomerDiscountGroup', route: { name: 'CustomerDiscountGroup_READ' }, icon: 'SettingsIcon' },
-      { title: 'CustomerPriceGroup', route: { name: 'CustomerPriceGroup_READ' }, icon: 'SettingsIcon' },
-      { title: 'ItemVariants', route: { name: 'ItemVariants_READ' }, icon: 'SettingsIcon' },
-      { title: 'ResponsibilityCenter', route: { name: 'ResponsibilityCenter_READ' }, icon: 'SettingsIcon' },
-      { title: 'StockKeepingUnit', route: { name: 'StockKeepingUnit_READ' }, icon: 'SettingsIcon' },
-      { title: 'Commandes Vente', route: { name: 'SalesHeader_READ' }, icon: 'SettingsIcon' },
-      // { title: 'SalesLine', route: { name: 'SalesLine_READ' }, icon: 'SettingsIcon' },
-
+      // Add admin/responsible routes here when implemented
     ],
   },
   Card: {
     key: 'title',
     data: [
-      { title: 'Paramètres Stock', route: { name: 'InventorySetup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Paramètres Vente', route: { name: 'SalesSetup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Paramètres Achat', route: { name: 'PurchaseSetup_READ' }, icon: 'SettingsIcon' },
-      { title: 'Paramètres Grand Livre', route: { name: 'GeneralLedgerSetup_READ' }, icon: 'SettingsIcon' },
+      // Add admin/responsible routes here when implemented
     ],
   },
 }
