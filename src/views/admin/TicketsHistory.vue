@@ -14,15 +14,11 @@
         <b-col cols="12" md="3">
           <b-form-group label="Search" label-for="search-input">
             <b-input-group>
-              <b-form-input
-                id="search-input"
-                v-model="filters.search"
-                placeholder="Search by ticket number, customer name..."
-                @input="onFilterChange"
-              />
+              <b-form-input id="search-input" v-model="filters.search"
+                placeholder="Search by ticket number, customer name..." @input="onFilterChange" />
               <b-input-group-append>
-                <b-button variant="outline-secondary" @click="clearSearch">
-                  <feather-icon icon="XIcon"/>
+                <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
+                  <feather-icon icon="XIcon" size="14" />
                 </b-button>
               </b-input-group-append>
             </b-input-group>
@@ -30,42 +26,24 @@
         </b-col>
         <b-col cols="12" md="2">
           <b-form-group label="Date From" label-for="date-from">
-            <b-form-input
-              id="date-from"
-              v-model="filters.dateFrom"
-              type="date"
-              @input="onFilterChange"
-            />
+            <b-form-input id="date-from" v-model="filters.dateFrom" type="date" @input="onFilterChange" />
           </b-form-group>
         </b-col>
         <b-col cols="12" md="2">
           <b-form-group label="Date To" label-for="date-to">
-            <b-form-input
-              id="date-to"
-              v-model="filters.dateTo"
-              type="date"
-              @input="onFilterChange"
-            />
+            <b-form-input id="date-to" v-model="filters.dateTo" type="date" @input="onFilterChange" />
           </b-form-group>
         </b-col>
         <b-col cols="12" md="2">
           <b-form-group label="Status" label-for="status-filter">
-            <b-form-select
-              id="status-filter"
-              v-model="filters.status"
-              :options="statusOptions"
-              @input="onFilterChange"
-            />
+            <b-form-select id="status-filter" v-model="filters.status" :options="statusOptions"
+              @input="onFilterChange" />
           </b-form-group>
         </b-col>
         <b-col cols="12" md="3">
           <b-form-group label="Payment Method" label-for="payment-method-filter">
-            <b-form-select
-              id="payment-method-filter"
-              v-model="filters.paymentMethodId"
-              :options="paymentMethodOptions"
-              @input="onFilterChange"
-            />
+            <b-form-select id="payment-method-filter" v-model="filters.paymentMethodId" :options="paymentMethodOptions"
+              @input="onFilterChange" />
           </b-form-group>
         </b-col>
       </b-row>
@@ -85,19 +63,8 @@
           <strong>Total: {{ totalRows }} tickets</strong>
         </div>
       </div>
-      <b-table
-        :items="tickets"
-        :fields="ticketFields"
-        striped
-        hover
-        responsive
-        :busy="loading"
-        :sort-by="sortBy"
-        :sort-desc="sortDesc"
-        @row-clicked="viewTicketDetails"
-        class="cursor-pointer"
-        show-empty
-      >
+      <b-table :items="tickets" :fields="ticketFields" striped hover responsive :busy="loading" :sort-by="sortBy"
+        :sort-desc="sortDesc" @row-clicked="viewTicketDetails" class="cursor-pointer" show-empty>
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
@@ -145,21 +112,15 @@
           </b-badge>
         </template>
       </b-table>
-      
+
       <!-- Pagination -->
       <div class="mt-3">
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
               <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
-              <b-form-select
-                id="per-page-select"
-                v-model="perPage"
-                :options="perPageOptions"
-                size="sm"
-                style="width: auto;"
-                @change="onPerPageChange"
-              />
+              <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
+                style="width: auto;" @change="onPerPageChange" />
             </div>
           </b-col>
           <b-col cols="12" md="6">
@@ -171,25 +132,14 @@
           </b-col>
         </b-row>
         <div class="d-flex justify-content-center mt-2">
-          <b-pagination
-            v-model="currentPage"
-            :total-rows="totalRows"
-            :per-page="perPage"
-            align="center"
-          />
+          <b-pagination v-model="currentPage" :total-rows="totalRows" :per-page="perPage" align="center" />
         </div>
       </div>
     </b-card>
 
     <!-- Ticket Details Modal -->
-    <b-modal
-      id="ticket-details-modal"
-      v-model="showDetailsModal"
-      title="Ticket Details"
-      size="xl"
-      @hide="resetDetailsModal"
-      scrollable
-    >
+    <b-modal id="ticket-details-modal" v-model="showDetailsModal" title="Ticket Details" size="xl"
+      @hide="resetDetailsModal" scrollable>
       <div v-if="selectedTicket" class="ticket-details">
         <!-- Ticket Header Info -->
         <b-card class="mb-3">
@@ -224,7 +174,8 @@
               </div>
               <div class="detail-item" v-if="selectedTicket.createdByUser">
                 <strong>Cashier:</strong>
-                <span class="ml-2">{{ selectedTicket.createdByUser.fullName || selectedTicket.createdByUser.username }}</span>
+                <span class="ml-2">{{ selectedTicket.createdByUser.fullName || selectedTicket.createdByUser.username
+                  }}</span>
               </div>
               <div class="detail-item" v-if="selectedTicket.cashierSession">
                 <strong>Session:</strong>
@@ -237,13 +188,7 @@
         <!-- Sales Lines -->
         <b-card class="mb-3">
           <h5 class="mb-3">Items</h5>
-          <b-table
-            :items="selectedTicket.salesLines || []"
-            :fields="lineFields"
-            striped
-            small
-            responsive
-          >
+          <b-table :items="selectedTicket.salesLines || []" :fields="lineFields" striped small responsive>
             <template #cell(item)="row">
               <div>
                 <strong>{{ row.item.item.name }}</strong>
@@ -265,13 +210,7 @@
         <!-- Payments -->
         <b-card class="mb-3" v-if="selectedTicket.payments && selectedTicket.payments.length > 0">
           <h5 class="mb-3">Payments</h5>
-          <b-table
-            :items="selectedTicket.payments"
-            :fields="paymentFields"
-            striped
-            small
-            responsive
-          >
+          <b-table :items="selectedTicket.payments" :fields="paymentFields" striped small responsive>
             <template #cell(paymentMethod)="row">
               {{ row.item.paymentMethod ? row.item.paymentMethod.name : '-' }}
             </template>
@@ -331,7 +270,7 @@
         </b-button>
       </template>
     </b-modal>
-    
+
   </div>
 </template>
 
@@ -489,12 +428,12 @@ export default {
       if (!this.allTickets) {
         this.allTickets = []
       }
-      
+
       if (this.allTickets.length === 0) {
         this.tickets = []
         return
       }
-      
+
       // Ensure currentPage is valid
       const maxPage = Math.max(1, Math.ceil(this.allTickets.length / this.perPage))
       if (this.currentPage > maxPage) {
@@ -508,11 +447,11 @@ export default {
       if (this.currentPage < 1) {
         this.currentPage = 1
       }
-      
+
       const start = (this.currentPage - 1) * this.perPage
       const end = start + this.perPage
       this.tickets = this.allTickets.slice(start, end)
-      
+
       // Scroll to top of page on page change
       this.$nextTick(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -602,27 +541,27 @@ export default {
       if (!ticketData) return
 
       console.log('Printing duplicate ticket:', ticketData)
-      
+
       // Use Vue to create component instance
       const Vue = this.$root.constructor || this.$options._base
       const ReceiptComponent = Vue.extend(ReceiptTemplate)
-      
+
       // Create component instance with isDuplicate prop
       const instance = new ReceiptComponent({
         parent: this,
-        propsData: { 
+        propsData: {
           saleData: ticketData,
           isDuplicate: true
         }
       })
-      
+
       // Mount the component
       instance.$mount()
-      
+
       // Wait for component to mount and generate barcode
       await this.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 200))
-      
+
       // Generate barcode in the component if sales_number exists
       const barcodeValue = ticketData.salesNumber || null
       if (barcodeValue && instance.$el) {
@@ -643,7 +582,7 @@ export default {
           console.error('Error generating barcode:', error)
         }
       }
-      
+
       // Create a new window for printing
       const printWindow = window.open('', '_blank')
       if (!printWindow) {
@@ -658,7 +597,7 @@ export default {
         })
         return
       }
-      
+
       // Write receipt HTML to new window
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -722,14 +661,14 @@ export default {
         </body>
         </html>
       `)
-      
+
       printWindow.document.close()
-      
+
       // Wait for content to load, then print
       setTimeout(() => {
         printWindow.focus()
         printWindow.print()
-        
+
         // Close window after printing
         setTimeout(() => {
           printWindow.close()
@@ -800,4 +739,3 @@ export default {
   }
 }
 </style>
-

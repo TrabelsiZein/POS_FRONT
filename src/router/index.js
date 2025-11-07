@@ -124,6 +124,42 @@ const router = new VueRouter({
       }
     },
     {
+      path: '/admin/item-families',
+      name: 'admin-item-families',
+      component: () => import('@/views/admin/ItemFamiliesManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
+      path: '/admin/item-subfamilies',
+      name: 'admin-item-subfamilies',
+      component: () => import('@/views/admin/ItemSubFamiliesManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
+      path: '/admin/locations',
+      name: 'admin-locations',
+      component: () => import('@/views/admin/LocationsManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
+      path: '/admin/general-setup',
+      name: 'admin-general-setup',
+      component: () => import('@/views/admin/GeneralSetupManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
       path: '/admin/returns',
       name: 'admin-returns',
       component: () => import('@/views/admin/ReturnsManagement.vue'),

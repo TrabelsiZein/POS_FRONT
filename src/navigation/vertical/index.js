@@ -17,6 +17,20 @@ export default [
         resource: 'admin-customers',
         action: 'read',
       },
+      {
+        title: 'Locations',
+        icon: 'MapPinIcon',
+        route: { name: 'admin-locations' },
+        resource: 'admin-locations',
+        action: 'read',
+      },
+      {
+        title: 'General Setup',
+        icon: 'SlidersIcon',
+        route: { name: 'admin-general-setup' },
+        resource: 'admin-general-setup',
+        action: 'read',
+      },
     ],
   },
   {
@@ -44,6 +58,20 @@ export default [
         resource: 'admin-item-barcodes',
         action: 'read',
       },
+      {
+        title: 'Item Families',
+        icon: 'LayersIcon',
+        route: { name: 'admin-item-families' },
+        resource: 'admin-item-families',
+        action: 'read',
+      },
+      {
+        title: 'Item Subfamilies',
+        icon: 'GridIcon',
+        route: { name: 'admin-item-subfamilies' },
+        resource: 'admin-item-subfamilies',
+        action: 'read',
+      },
     ],
   },
   {
@@ -51,14 +79,14 @@ export default [
     icon: 'ClockIcon',
     children: [
       {
-        title: 'Session Dashboard',
+        title: 'Admin Dashboard',
         icon: 'StarIcon',
         route: { name: 'admin-sessions' },
         resource: 'admin-sessions',
         action: 'read',
       },
       {
-        title: 'Session Dashboard',
+        title: 'Responsible Dashboard',
         icon: 'StarIcon',
         route: { name: 'responsible-sessions' },
         resource: 'responsible-sessions',

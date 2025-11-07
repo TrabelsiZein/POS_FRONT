@@ -285,148 +285,12 @@
       <p class="text-danger">This action cannot be undone.</p>
     </b-modal>
 
-    <!-- Close Session Modal -->
-    <b-modal
-      id="close-session-modal"
-      v-model="showCloseSessionModal"
-      title="Close Cashier Session"
-      size="xl"
-      @ok="closeSession"
-      @cancel="resetCloseSessionForm"
-      @hide="resetCloseSessionForm"
-      :ok-disabled="!canCloseSession"
-    >
-      <div class="cash-count-section">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5>Cash Count Details</h5>
-          <b-button variant="primary" size="sm" @click="addCashCountLine">
-            <feather-icon icon="PlusIcon" size="14" />
-            Add Line
-          </b-button>
-        </div>
-
-        <!-- Cash Count Lines Table -->
-        <div class="cash-count-table-container">
-          <b-table
-            v-if="closeSessionData.cashCountLines.length > 0"
-            :items="closeSessionData.cashCountLines"
-            :fields="cashCountFields"
-            striped
-            bordered
-            small
-            responsive
-          >
-            <template #cell(denominationValue)="row">
-              <b-input-group prepend="$" size="sm">
-                <b-form-input
-                  v-model.number="row.item.denominationValue"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  @input="updateCashCountTotals"
-                  size="sm"
-                />
-              </b-input-group>
-            </template>
-            <template #cell(quantity)="row">
-              <b-form-input
-                v-model.number="row.item.quantity"
-                type="number"
-                min="1"
-                @input="updateCashCountTotals"
-                size="sm"
-              />
-            </template>
-            <template #cell(paymentMethod)="row">
-              <b-form-select
-                v-model="row.item.paymentMethodId"
-                :options="paymentMethodOptions"
-                value-field="id"
-                text-field="name"
-                size="sm"
-              >
-                <template #first>
-                  <b-form-select-option :value="null">Cash</b-form-select-option>
-                </template>
-              </b-form-select>
-            </template>
-            <template #cell(referenceNumber)="row">
-              <b-form-input
-                v-model="row.item.referenceNumber"
-                placeholder="Check #, Card last 4..."
-                size="sm"
-              />
-            </template>
-            <template #cell(lineTotal)="row">
-              <strong>${{ formatPrice(row.item.denominationValue * row.item.quantity) }}</strong>
-            </template>
-            <template #cell(actions)="row">
-              <b-button
-                variant="link"
-                size="sm"
-                @click="removeCashCountLine(row.index)"
-                class="text-danger p-0"
-              >
-                <feather-icon icon="XIcon" size="16" />
-              </b-button>
-            </template>
-          </b-table>
-          
-          <div v-else class="text-center text-muted py-4">
-            <p>No cash count lines added yet</p>
-            <p class="small">Click "Add Line" to start counting cash</p>
-          </div>
-        </div>
-
-        <!-- Total Summary -->
-        <div v-if="closeSessionData.cashCountLines.length > 0" class="cash-count-total mt-3">
-          <b-card class="bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-              <strong>Total Counted:</strong>
-              <strong class="text-success" style="font-size: 1.2rem;">
-                ${{ formatPrice(calculatedTotalCash) }}
-              </strong>
-            </div>
-          </b-card>
-        </div>
-
-        <!-- Manual Override -->
-        <b-form-group label="Actual Cash (Manual Override - optional)" label-for="actual-cash" class="mt-3">
-          <b-input-group prepend="$">
-            <b-form-input
-              id="actual-cash"
-              v-model.number="closeSessionData.actualCash"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="Leave empty to use calculated total"
-            />
-          </b-input-group>
-          <small class="form-text text-muted">
-            If provided, this value will override the calculated total from cash count lines
-          </small>
-        </b-form-group>
-
-        <b-form-group label="Notes (optional)" label-for="close-notes" class="mt-3">
-          <b-form-textarea
-            id="close-notes"
-            v-model="closeSessionData.notes"
-            placeholder="Enter any notes about the cash count..."
-            rows="3"
-          />
-        </b-form-group>
-      </div>
-      <template #modal-ok>
-        Close Session
-      </template>
-    </b-modal>
   </div>
 </template>
 
 <script>
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import { getUserData } from '@/auth/utils'
-import useJwt from '@/auth/jwt/useJwt'
 
 export default {
   name: 'CustomerManagement',
@@ -443,24 +307,10 @@ export default {
       ],
       showAddCustomerModal: false,
       showDeleteModal: false,
-      showCloseSessionModal: false,
       editingCustomer: null,
       customerToDelete: null,
-      closeSessionData: {
-        actualCash: null,
-        notes: '',
-        cashCountLines: []
-      },
       paymentMethods: [],
       pendingTicketsCount: 0,
-      cashCountFields: [
-        { key: 'denominationValue', label: 'Value', sortable: false },
-        { key: 'quantity', label: 'Qty', sortable: false },
-        { key: 'paymentMethod', label: 'Payment Method', sortable: false },
-        { key: 'referenceNumber', label: 'Reference', sortable: false },
-        { key: 'lineTotal', label: 'Total', sortable: false },
-        { key: 'actions', label: '', sortable: false }
-      ],
       customerForm: {
         name: '',
         email: '',
@@ -521,45 +371,16 @@ export default {
     },
     paymentMethodOptions() {
       return this.paymentMethods.filter(pm => pm.active !== false)
-    },
-    calculatedTotalCash() {
-      return this.closeSessionData.cashCountLines.reduce((total, line) => {
-        const value = parseFloat(line.denominationValue) || 0
-        const qty = parseInt(line.quantity) || 0
-        return total + (value * qty)
-      }, 0)
-    },
-    canCloseSession() {
-      // Can close if manual actualCash is provided OR cash count lines are provided
-      if (this.closeSessionData.actualCash && this.closeSessionData.actualCash > 0) {
-        return true
-      }
-      if (this.closeSessionData.cashCountLines.length > 0) {
-        // All lines must have valid denomination and quantity
-        return this.closeSessionData.cashCountLines.every(line => {
-          return line.denominationValue && line.denominationValue > 0 &&
-                 line.quantity && line.quantity > 0
-        })
-      }
-      return false
     }
   },
   mounted() {
     this.loadCustomers()
     
-    // Only load payment methods and listen for close session modal for POS users
+    // Only load payment methods for POS users
     if (this.isPosUser) {
       this.loadPaymentMethods()
       this.loadPendingTicketsCount()
-      
-      // Listen for close session modal event from navbar
-      this.$root.$on('open-close-session-modal', () => {
-        this.showCloseSessionModal = true
-      })
     }
-  },
-  beforeDestroy() {
-    this.$root.$off('open-close-session-modal')
   },
   methods: {
     async loadCustomers() {
@@ -791,125 +612,11 @@ export default {
         })
         .catch(error => {
           console.error('Error loading payment methods:', error)
-          this.paymentMethods = []
+          this.paymentMethods = [
+            { id: 1, name: 'Client Espèce', type: 'CLIENT_ESPECES', active: true },
+            { id: 2, name: 'Return Voucher', type: 'RETURN_VOUCHER', active: true }
+          ]
         })
-    },
-    addCashCountLine() {
-      this.closeSessionData.cashCountLines.push({
-        denominationValue: null,
-        quantity: null,
-        paymentMethodId: null,
-        referenceNumber: '',
-        notes: ''
-      })
-    },
-    removeCashCountLine(index) {
-      this.closeSessionData.cashCountLines.splice(index, 1)
-      this.updateCashCountTotals()
-    },
-    updateCashCountTotals() {
-      // Trigger reactivity update
-      this.$forceUpdate()
-    },
-    async closeSession() {
-      // Check for pending tickets first
-      if (this.pendingTicketsCount > 0) {
-        this.$toast({
-          component: ToastificationContent,
-          props: {
-            title: 'Cannot Close Session',
-            icon: 'AlertCircleIcon',
-            text: `You have ${this.pendingTicketsCount} pending ticket(s). Please complete or cancel all pending tickets before closing the session.`,
-            variant: 'warning'
-          }
-        })
-        this.showCloseSessionModal = false
-        return
-      }
-
-      if (!this.canCloseSession) {
-        this.$toast({
-          component: ToastificationContent,
-          props: {
-            title: 'Error',
-            icon: 'XIcon',
-            text: 'Please add cash count lines or enter actual cash amount',
-            variant: 'danger'
-          }
-        })
-        return
-      }
-
-      try {
-        // Prepare request with cash count lines
-        const requestData = {
-          notes: this.closeSessionData.notes
-        }
-
-        // Add actualCash if manually provided
-        if (this.closeSessionData.actualCash && this.closeSessionData.actualCash > 0) {
-          requestData.actualCash = this.closeSessionData.actualCash
-        }
-
-        // Add cash count lines if any
-        if (this.closeSessionData.cashCountLines.length > 0) {
-          requestData.cashCountLines = this.closeSessionData.cashCountLines.map(line => ({
-            denominationValue: parseFloat(line.denominationValue) || 0,
-            quantity: parseInt(line.quantity) || 0,
-            paymentMethodId: line.paymentMethodId || null,
-            referenceNumber: line.referenceNumber || null,
-            notes: line.notes || null
-          }))
-        }
-
-        const response = await this.$http.post('/cashier-session/close', requestData)
-
-        if (response.status === 200) {
-          this.$toast({
-            component: ToastificationContent,
-            props: {
-              title: 'Success',
-              icon: 'CheckCircleIcon',
-              text: 'Session closed successfully!',
-              variant: 'success'
-            }
-          })
-
-          // Clear session from store
-          this.$store.dispatch('pos/clearCurrentSession')
-          
-          this.resetCloseSessionForm()
-          this.showCloseSessionModal = false
-
-          // Redirect to login or open new session
-          setTimeout(() => {
-            useJwt.logout()
-            this.$router.push({ name: 'login' })
-          }, 1500)
-        }
-      } catch (error) {
-        console.error('Error closing session:', error)
-        let errorMessage = 'Failed to close session. Please try again.'
-        if (error.response && error.response.data) {
-          errorMessage = error.response.data || errorMessage
-        }
-        this.$toast({
-          component: ToastificationContent,
-          props: {
-            title: 'Error',
-            icon: 'XIcon',
-            text: errorMessage,
-            variant: 'danger'
-          }
-        })
-      }
-    },
-    resetCloseSessionForm() {
-      this.closeSessionData = {
-        actualCash: null,
-        notes: '',
-        cashCountLines: []
-      }
     },
     formatPrice(price) {
       if (!price && price !== 0) return '0.00'

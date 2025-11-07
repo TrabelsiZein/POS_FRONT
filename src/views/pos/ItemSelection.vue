@@ -64,6 +64,27 @@
 
       <!-- Cart Section -->
       <b-col cols="12" md="4" lg="3" class="cart-section">
+        <div v-if="currentSession" class="session-info-card mb-3">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="session-number">Session {{ currentSession.sessionNumber }}</div>
+              <div class="session-status">
+                <b-badge :variant="currentSession.status === 'OPENED' ? 'success' : 'secondary'">
+                  {{ currentSession.status || 'UNKNOWN' }}
+                </b-badge>
+              </div>
+              <div class="session-meta">
+                <div v-if="currentSession.openedAt">Opened: {{ formatDateTime(currentSession.openedAt) }}</div>
+                <div>Opening Cash: ${{ formatPrice(currentSession.openingCash || 0) }}</div>
+                <div>Real Cash: ${{ formatPrice(currentSession.realCash || 0) }}</div>
+              </div>
+            </div>
+            <b-button variant="outline-warning" size="sm" @click="showCloseSessionModal = true">
+              Close
+            </b-button>
+          </div>
+        </div>
+
         <div class="cart-header">
           <h4 class="cart-title">Cart</h4>
           <b-button v-if="cart.length > 0" variant="outline-secondary" size="sm" @click="clearCart">
@@ -1200,6 +1221,31 @@ export default {
     padding-left: 0;
     max-height: none;
   }
+}
+
+.session-info-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.session-number {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  color: #34495e;
+}
+
+.session-status {
+  margin-bottom: 8px;
+}
+
+.session-meta {
+  font-size: 0.85rem;
+  color: #6c757d;
+  line-height: 1.4;
 }
 
 .cart-header {
