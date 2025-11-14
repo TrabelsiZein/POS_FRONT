@@ -160,6 +160,24 @@ const router = new VueRouter({
       }
     },
     {
+      path: '/admin/erp-jobs',
+      name: 'admin-erp-jobs',
+      component: () => import('@/views/admin/ErpJobs.vue'),
+      meta: {
+        requiresAuth: true,
+        requiredRole: 'ADMIN'
+      }
+    },
+    {
+      path: '/admin/erp-communications',
+      name: 'admin-erp-communications',
+      component: () => import('@/views/admin/ErpCommunications.vue'),
+      meta: {
+        requiresAuth: true,
+        requiredRole: 'ADMIN'
+      }
+    },
+    {
       path: '/admin/returns',
       name: 'admin-returns',
       component: () => import('@/views/admin/ReturnsManagement.vue'),

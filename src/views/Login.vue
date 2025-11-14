@@ -133,6 +133,8 @@ export default {
               { action: 'read', subject: 'admin-locations' },
               { action: 'read', subject: 'admin-general-setup' },
               { action: 'read', subject: 'admin-returns' },
+              { action: 'read', subject: 'admin-erp-jobs' },
+              { action: 'read', subject: 'admin-erp-communications' },
               { action: 'write', subject: 'admin-users' },
               { action: 'delete', subject: 'admin-users' },
               { action: 'write', subject: 'admin-customers' },

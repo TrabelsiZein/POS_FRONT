@@ -31,6 +31,20 @@ export default [
         resource: 'admin-general-setup',
         action: 'read',
       },
+      {
+        title: 'ERP Jobs',
+        icon: 'RefreshCwIcon',
+        route: { name: 'admin-erp-jobs' },
+        resource: 'admin-erp-jobs',
+        action: 'read',
+      },
+      {
+        title: 'ERP Logs',
+        icon: 'ActivityIcon',
+        route: { name: 'admin-erp-communications' },
+        resource: 'admin-erp-communications',
+        action: 'read',
+      },
     ],
   },
   {
@@ -52,7 +66,7 @@ export default [
     icon: 'PackageIcon',
     children: [
       {
-        title: 'Item Barcodes',
+        title: 'Items',
         icon: 'HashIcon',
         route: { name: 'admin-item-barcodes' },
         resource: 'admin-item-barcodes',

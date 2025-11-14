@@ -22,24 +22,41 @@
     <!-- Filters -->
     <b-card class="mb-3">
       <b-row>
-        <b-col md="6">
-          <b-form-group label="Search" label-for="search-input">
-            <b-form-input
-              id="search-input"
-              v-model="searchTerm"
-              placeholder="Customer Code, Name, Email, Phone..."
-              debounce="500"
-            />
+        <b-col cols="12" lg="6">
+          <b-form-group label="Search" label-for="search-input" class="mb-lg-0">
+            <b-input-group>
+              <b-form-input
+                id="search-input"
+                v-model="searchTerm"
+                placeholder="Customer Code, Name, Email, Phone..."
+              />
+              <b-input-group-append>
+                <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
+                  <feather-icon icon="XIcon" size="14" />
+                </b-button>
+              </b-input-group-append>
+            </b-input-group>
           </b-form-group>
         </b-col>
-        <b-col md="3">
-          <b-form-group label="Filter by Status" label-for="status-filter">
-            <b-form-select
-              id="status-filter"
-              v-model="statusFilter"
-              :options="statusFilterOptions"
-            />
-          </b-form-group>
+        <b-col cols="12" lg="6">
+          <b-row>
+            <b-col cols="12" md="6">
+              <b-form-group label="Filter by Status" label-for="status-filter" class="mb-md-0">
+                <b-form-select
+                  id="status-filter"
+                  v-model="statusFilter"
+                  :options="statusFilterOptions"
+                />
+              </b-form-group>
+            </b-col>
+          </b-row>
+        </b-col>
+      </b-row>
+      <b-row class="mt-1">
+        <b-col cols="12" class="d-flex align-items-end justify-content-lg-end">
+          <small class="text-muted">
+            Showing {{ totalRows }} {{ totalRows === 1 ? 'customer' : 'customers' }}
+          </small>
         </b-col>
       </b-row>
     </b-card>
@@ -47,17 +64,25 @@
     <!-- Customers Table -->
     <b-card>
       <b-table
-        :items="filteredCustomers"
+        :items="paginatedCustomers"
         :fields="customerFields"
         striped
         hover
         responsive
         :busy="loading"
+        show-empty
       >
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
             <strong>Loading...</strong>
+          </div>
+        </template>
+
+        <template #empty>
+          <div class="text-center py-4">
+            <feather-icon icon="InboxIcon" size="48" class="text-muted mb-2" />
+            <p class="text-muted mb-0">No customers found.</p>
           </div>
         </template>
 
@@ -84,14 +109,17 @@
           </div>
           <span v-else class="text-muted small">-</span>
         </template>
-
-        <template #cell(location)="row">
-          <span v-if="row.item.city || row.item.country" class="small">
-            {{ [row.item.city, row.item.country].filter(Boolean).join(', ') }}
-          </span>
+ 
+        <template #cell(address)="row">
+          <div class="small" v-if="row.item.address || row.item.city || row.item.country">
+            <div v-if="row.item.address">{{ row.item.address }}</div>
+            <div v-if="row.item.city || row.item.country">
+              {{ [row.item.city, row.item.country].filter(Boolean).join(', ') }}
+            </div>
+          </div>
           <span v-else class="text-muted small">-</span>
         </template>
-
+ 
         <template #cell(actions)="row">
           <b-button-group size="sm">
             <b-button variant="outline-primary" @click="editCustomer(row.item)">
@@ -109,10 +137,36 @@
         </template>
       </b-table>
 
-      <div v-if="filteredCustomers.length === 0 && !loading" class="text-center py-4">
-        <feather-icon icon="InboxIcon" size="48" class="text-muted mb-3" />
-        <h5 class="text-muted">No Customers Found</h5>
-        <p class="text-muted mb-0">No customers match your search criteria.</p>
+      <div class="mt-3">
+        <b-row align-v="center">
+          <b-col cols="12" md="6" class="mb-2 mb-md-0">
+            <div class="d-flex align-items-center">
+              <label for="customers-per-page" class="mr-2 mb-0">Items per page:</label>
+              <b-form-select
+                id="customers-per-page"
+                v-model="perPage"
+                :options="perPageOptions"
+                size="sm"
+                style="width: auto;"
+              />
+            </div>
+          </b-col>
+          <b-col cols="12" md="6">
+            <div class="text-center text-md-right">
+              <small class="text-muted">
+                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} customers
+              </small>
+            </div>
+          </b-col>
+        </b-row>
+        <div class="d-flex justify-content-center mt-2">
+          <b-pagination
+            v-model="currentPage"
+            :total-rows="totalRows"
+            :per-page="perPage"
+            align="center"
+          />
+        </div>
       </div>
     </b-card>
 
@@ -305,6 +359,14 @@ export default {
         { value: 'active', text: 'Active Only' },
         { value: 'inactive', text: 'Inactive Only' }
       ],
+      currentPage: 1,
+      perPage: 10,
+      perPageOptions: [
+        { value: 10, text: '10' },
+        { value: 20, text: '20' },
+        { value: 50, text: '50' },
+        { value: 100, text: '100' }
+      ],
       showAddCustomerModal: false,
       showDeleteModal: false,
       editingCustomer: null,
@@ -327,11 +389,9 @@ export default {
         { key: 'customerCode', label: 'Code', sortable: true },
         { key: 'name', label: 'Name', sortable: true },
         { key: 'contact', label: 'Contact' },
-        { key: 'location', label: 'Location' },
-        { key: 'taxId', label: 'Tax ID' },
-        { key: 'creditLimit', label: 'Credit Limit', sortable: true },
+        { key: 'address', label: 'Address' },
         { key: 'active', label: 'Status', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false }
+        { key: 'actions', label: 'Actions', sortable: false, class: 'text-right' }
       ]
     }
   },
@@ -341,27 +401,43 @@ export default {
       return userData && userData.role === 'POS_USER'
     },
     filteredCustomers() {
-      let customers = this.customers
+      const term = this.searchTerm.trim().toLowerCase()
 
-      // Filter by status
-      if (this.statusFilter === 'active') {
-        customers = customers.filter(c => c.active !== false)
-      } else if (this.statusFilter === 'inactive') {
-        customers = customers.filter(c => c.active === false)
-      }
+      return this.customers.filter(customer => {
+        if (this.statusFilter === 'active' && customer.active === false) {
+          return false
+        }
+        if (this.statusFilter === 'inactive' && customer.active !== false) {
+          return false
+        }
 
-      // Filter by search term
-      if (this.searchTerm) {
-        const lowerSearchTerm = this.searchTerm.toLowerCase()
-        customers = customers.filter(customer =>
-          customer.customerCode?.toLowerCase().includes(lowerSearchTerm) ||
-          customer.name?.toLowerCase().includes(lowerSearchTerm) ||
-          customer.email?.toLowerCase().includes(lowerSearchTerm) ||
-          customer.phone?.toLowerCase().includes(lowerSearchTerm)
-        )
-      }
+        if (!term) {
+          return true
+        }
 
-      return customers
+        return [
+          customer.customerCode,
+          customer.name,
+          customer.email,
+          customer.phone,
+          customer.city,
+          customer.country,
+          customer.taxId
+        ].some(field => field && field.toString().toLowerCase().includes(term))
+      })
+    },
+    totalRows() {
+      return this.filteredCustomers.length
+    },
+    paginatedCustomers() {
+      const start = (this.currentPage - 1) * this.perPage
+      return this.filteredCustomers.slice(start, start + this.perPage)
+    },
+    startIndex() {
+      return this.totalRows === 0 ? 0 : (this.currentPage - 1) * this.perPage + 1
+    },
+    endIndex() {
+      return Math.min(this.currentPage * this.perPage, this.totalRows)
     },
     canSaveCustomer() {
       return this.customerForm.name && 
@@ -371,6 +447,23 @@ export default {
     },
     paymentMethodOptions() {
       return this.paymentMethods.filter(pm => pm.active !== false)
+    }
+  },
+  watch: {
+    searchTerm() {
+      this.currentPage = 1
+    },
+    statusFilter() {
+      this.currentPage = 1
+    },
+    perPage() {
+      this.currentPage = 1
+    },
+    filteredCustomers(newList) {
+      const maxPage = Math.max(1, Math.ceil(newList.length / this.perPage))
+      if (this.currentPage > maxPage) {
+        this.currentPage = maxPage
+      }
     }
   },
   mounted() {
@@ -388,6 +481,7 @@ export default {
       try {
         const response = await this.$http.get('/customer')
         this.customers = response.data
+        this.totalRows = response.data.length
       } catch (error) {
         console.error('Error loading customers:', error)
         this.$toast({
@@ -573,6 +667,9 @@ export default {
         notes: '',
         active: true
       }
+    },
+    clearSearch() {
+      this.searchTerm = ''
     },
     resetFilters() {
       this.searchTerm = ''

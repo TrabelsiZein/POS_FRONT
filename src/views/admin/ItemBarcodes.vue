@@ -9,39 +9,55 @@
     </div>
 
     <!-- Search and Filter -->
-    <b-card class="mb-4">
+    <b-card class="mb-3">
       <b-row>
-        <b-col cols="12" md="6">
-          <b-form-group label="Search Items" label-for="search-input">
+        <b-col cols="12" lg="6">
+          <b-form-group label="Search" label-for="search-input" class="mb-lg-0">
             <b-input-group>
               <b-form-input
                 id="search-input"
-                v-model="filters.search"
+                v-model="searchTerm"
                 placeholder="Search by item code, name, or barcode..."
-                @input="onFilterChange"
+                @input="scheduleSearch"
               />
               <b-input-group-append>
-                <b-button variant="outline-secondary" @click="clearSearch">
+                <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
                   <feather-icon icon="XIcon" size="16" />
                 </b-button>
               </b-input-group-append>
             </b-input-group>
           </b-form-group>
         </b-col>
-        <b-col cols="12" md="3">
-          <b-form-group label="Filter" label-for="filter-type">
+        <b-col cols="12" lg="3">
+          <b-form-group label="Has Barcode" label-for="filter-type" class="mb-lg-0">
             <b-form-select
               id="filter-type"
-              v-model="filters.filterType"
+              v-model="filterType"
               :options="filterOptions"
-              @input="onFilterChange"
             />
           </b-form-group>
         </b-col>
-        <b-col cols="12" md="3" class="text-right">
-          <b-button variant="secondary" @click="resetFilters" size="sm" class="mt-4">
-            Reset Filters
+        <b-col cols="12" lg="3" class="d-flex align-items-end justify-content-lg-end">
+          <div class="d-flex align-items-center">
+            <label for="items-per-page" class="mr-2 mb-0">Per page:</label>
+            <b-form-select
+              id="items-per-page"
+              v-model="perPage"
+              :options="perPageOptions"
+              size="sm"
+              style="width: auto;"
+            />
+          </div>
+          <b-button variant="secondary" @click="resetFilters" size="sm" class="ml-2">
+            Reset
           </b-button>
+        </b-col>
+      </b-row>
+      <b-row class="mt-1">
+        <b-col cols="12" class="d-flex align-items-end justify-content-lg-end">
+          <small class="text-muted">
+            Showing {{ startIndex }} to {{ endIndex }} of {{ totalElements }} items
+          </small>
         </b-col>
       </b-row>
     </b-card>
@@ -55,55 +71,71 @@
     </b-card>
 
     <!-- Items with Barcodes -->
-    <div v-else-if="filteredItems.length > 0">
-      <b-card
-        v-for="itemData in filteredItems"
-        :key="itemData.item.id"
-        class="mb-3 item-card"
+    <div v-else-if="items.length > 0">
+      <b-table
+        :items="tableItems"
+        :fields="itemFields"
+        hover
+        responsive
+        show-empty
+        small
       >
-        <div class="item-header">
-          <div class="item-info">
-            <h5 class="mb-1">{{ itemData.item.name }}</h5>
-            <div class="item-meta">
-              <span class="item-code"><strong>Code:</strong> {{ itemData.item.itemCode }}</span>
-              <span class="item-price"><strong>Price:</strong> ${{ formatPrice(itemData.item.unitPrice) }}</span>
-              <span class="item-stock" v-if="itemData.item.stockQuantity !== null">
-                <strong>Stock:</strong> {{ itemData.item.stockQuantity }}
-              </span>
-            </div>
-          </div>
-        </div>
+        <template #cell(unitPrice)="row">
+          ${{ formatPrice(row.item.unitPrice) }}
+        </template>
 
-        <div class="barcodes-section">
-          <h6 class="mb-3">
-            <feather-icon icon="HashIcon" size="18" class="mr-2" />
-            Barcodes ({{ itemData.barcodes.length }})
-          </h6>
-          
-          <div v-if="itemData.barcodes.length > 0">
+        <template #cell(stockQuantity)="row">
+          <span v-if="row.item.stockQuantity !== null">{{ row.item.stockQuantity }}</span>
+          <span v-else class="text-muted">-</span>
+        </template>
+
+        <template #cell(barcodeCount)="row">
+          {{ row.item.barcodeCount }}
+        </template>
+
+        <template #cell(actions)="row">
+          <b-button size="sm" variant="outline-primary" @click="row.toggleDetails">
+            <feather-icon :icon="row.detailsShowing ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="16" class="mr-50" />
+            Details
+          </b-button>
+        </template>
+
+        <template #row-details="row">
+          <b-card class="mb-2">
+            <h6 class="mb-2 d-flex align-items-center">
+              <feather-icon icon="HashIcon" size="18" class="mr-1" />
+              Barcodes ({{ row.item.barcodes.length }})
+            </h6>
             <b-table
-              :items="itemData.barcodes"
+              v-if="row.item.barcodes.length > 0"
+              :items="row.item.barcodes"
               :fields="barcodeFields"
               small
+              responsive
               striped
               hover
-              responsive
             >
-              <template #cell(isPrimary)="row">
-                <b-badge v-if="row.item.isPrimary" variant="success">Primary</b-badge>
+              <template #cell(isPrimary)="barcodeRow">
+                <b-badge v-if="barcodeRow.item.isPrimary" variant="success">Primary</b-badge>
                 <span v-else class="text-muted">-</span>
               </template>
-              <template #cell(description)="row">
-                {{ row.item.description || '-' }}
+              <template #cell(description)="barcodeRow">
+                {{ barcodeRow.item.description || '-' }}
               </template>
             </b-table>
-          </div>
-          <div v-else class="text-center py-3 text-muted">
-            <feather-icon icon="HashIcon" size="24" class="mb-2" />
-            <p class="mb-0">No barcodes assigned</p>
-          </div>
-        </div>
-      </b-card>
+            <div v-else class="text-muted">No barcodes assigned for this item.</div>
+          </b-card>
+        </template>
+      </b-table>
+
+      <div class="d-flex justify-content-center mt-3">
+        <b-pagination
+          v-model="page"
+          :per-page="perPage"
+          :total-rows="totalElements"
+          align="center"
+        />
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -122,65 +154,115 @@ export default {
   name: 'ItemBarcodes',
   data() {
     return {
-      itemsWithBarcodes: [],
+      items: [],
       loading: false,
-      filters: {
-        search: '',
-        filterType: 'all'
-      },
-      filterOptions: [
-        { value: 'all', text: 'All Items' },
-        { value: 'withBarcodes', text: 'With Barcodes Only' },
-        { value: 'withoutBarcodes', text: 'Without Barcodes Only' }
+      searchTerm: '',
+      filterType: 'all',
+      page: 1,
+      perPage: 20,
+      totalElements: 0,
+      totalPages: 0,
+      perPageOptions: [
+        { value: 10, text: '10' },
+        { value: 20, text: '20' },
+        { value: 50, text: '50' },
+        { value: 100, text: '100' },
       ],
+      debounceTimer: null,
       barcodeFields: [
         { key: 'barcode', label: 'Barcode', sortable: true },
         { key: 'isPrimary', label: 'Primary', sortable: true },
         { key: 'description', label: 'Description', sortable: true }
+      ],
+      itemFields: [
+        { key: 'itemCode', label: 'Code', sortable: true },
+        { key: 'name', label: 'Name', sortable: true },
+        { key: 'unitPrice', label: 'Price', sortable: true },
+        { key: 'stockQuantity', label: 'Stock', sortable: true },
+        { key: 'barcodeCount', label: 'Barcodes', sortable: true },
+        { key: 'actions', label: '', sortable: false, class: 'text-right' }
       ]
     }
   },
   computed: {
-    filteredItems() {
-      let filtered = this.itemsWithBarcodes
-
-      // Search filter
-      if (this.filters.search) {
-        const search = this.filters.search.toLowerCase()
-        filtered = filtered.filter(itemData => {
-          const item = itemData.item
-          const itemMatch = 
-            (item.itemCode && item.itemCode.toLowerCase().includes(search)) ||
-            (item.name && item.name.toLowerCase().includes(search))
-          
-          // Check barcodes
-          const barcodeMatch = itemData.barcodes.some(b => 
-            b.barcode && b.barcode.toLowerCase().includes(search)
-          )
-          
-          return itemMatch || barcodeMatch
-        })
+    startIndex() {
+      if (this.totalElements === 0) {
+        return 0
       }
-
-      // Filter type
-      if (this.filters.filterType === 'withBarcodes') {
-        filtered = filtered.filter(itemData => itemData.barcodes.length > 0)
-      } else if (this.filters.filterType === 'withoutBarcodes') {
-        filtered = filtered.filter(itemData => itemData.barcodes.length === 0)
+      return (this.page - 1) * this.perPage + 1
+    },
+    endIndex() {
+      if (this.totalElements === 0) {
+        return 0
       }
-
-      return filtered
+      return Math.min(this.page * this.perPage, this.totalElements)
+    },
+    tableItems() {
+      return this.items.map(({ item, barcodes }) => ({
+        id: item.id,
+        itemCode: item.itemCode,
+        name: item.name,
+        unitPrice: item.unitPrice,
+        stockQuantity: item.stockQuantity,
+        barcodeCount: barcodes.length,
+        barcodes,
+      }))
+    }
+  },
+  watch: {
+    page(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.loadData()
+      }
+    },
+    perPage(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        if (this.page === 1) {
+          this.loadData()
+        } else {
+          this.page = 1
+        }
+      }
+    },
+    filterType(newValue, oldValue) {
+      if (newValue !== oldValue) {
+        this.page = 1
+        this.loadData()
+      }
     }
   },
   mounted() {
     this.loadData()
   },
+  beforeDestroy() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer)
+    }
+  },
   methods: {
     async loadData() {
       this.loading = true
       try {
-        const response = await this.$http.get('/item-barcode/items-with-barcodes')
-        this.itemsWithBarcodes = response.data
+        const params = {
+          page: Math.max(this.page - 1, 0),
+          size: this.perPage,
+          filterType: this.filterType,
+        }
+        if (this.searchTerm) {
+          params.search = this.searchTerm
+        }
+
+        const response = await this.$http.get('/item-barcode/items-with-barcodes', { params })
+        const data = response.data || {}
+        this.items = Array.isArray(data.content) ? data.content : []
+        this.totalElements = data.totalElements || 0
+        this.totalPages = data.totalPages || 0
+
+        if (this.totalPages > 0 && this.page > this.totalPages) {
+          this.page = this.totalPages
+        } else if (this.totalPages === 0) {
+          this.page = 1
+        }
       } catch (error) {
         console.error('Error loading items with barcodes:', error)
         this.$toast({
@@ -196,17 +278,27 @@ export default {
         this.loading = false
       }
     },
-    onFilterChange() {
-      // Filtering happens in computed property
+    scheduleSearch() {
+      if (this.debounceTimer) {
+        clearTimeout(this.debounceTimer)
+      }
+      this.debounceTimer = setTimeout(() => {
+        this.page = 1
+        this.loadData()
+      }, 400)
     },
     clearSearch() {
-      this.filters.search = ''
+      if (!this.searchTerm) {
+        return
+      }
+      this.searchTerm = ''
+      this.scheduleSearch()
     },
     resetFilters() {
-      this.filters = {
-        search: '',
-        filterType: 'all'
-      }
+      this.searchTerm = ''
+      this.filterType = 'all'
+      this.page = 1
+      this.loadData()
     },
     formatPrice(price) {
       if (!price && price !== 0) return '0.00'
@@ -233,48 +325,6 @@ export default {
 }
 
 .item-card {
-  border: 1px solid #e0e0e0;
-  transition: all 0.3s ease;
-}
-
-.item-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.item-header {
-  padding-bottom: 15px;
-  border-bottom: 1px solid #f0f0f0;
-  margin-bottom: 15px;
-}
-
-.item-info h5 {
-  color: #2c3e50;
-  font-weight: 600;
-}
-
-.item-meta {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-  font-size: 0.9rem;
-}
-
-.item-code,
-.item-price,
-.item-stock {
-  color: #6c757d;
-}
-
-.barcodes-section {
-  margin-top: 15px;
-}
-
-.barcodes-section h6 {
-  color: #2c3e50;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
 }
 
 @media (max-width: 575.98px) {
