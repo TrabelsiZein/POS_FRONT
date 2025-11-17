@@ -20,7 +20,8 @@ const router = new VueRouter({
       meta: {
         requiresAuth: true,
         requiredRole: 'POS_USER',
-        skipSessionCheck: true
+        skipSessionCheck: true,
+        hideNavMenu: true,
       }
     },
     {
@@ -30,7 +31,8 @@ const router = new VueRouter({
       meta: {
         requiresAuth: true,
         requiredRole: 'POS_USER',
-        requiresSession: true
+        requiresSession: true,
+        hideNavMenu: true,
       }
     },
     {
@@ -40,7 +42,8 @@ const router = new VueRouter({
       meta: {
         requiresAuth: true,
         requiredRole: 'POS_USER',
-        requiresSession: true
+        requiresSession: true,
+        hideNavMenu: true,
       }
     },
     {
@@ -59,7 +62,8 @@ const router = new VueRouter({
       meta: {
         requiresAuth: true,
         requiredRole: 'POS_USER',
-        requiresSession: true
+        requiresSession: true,
+        hideNavMenu: true,
       }
     },
     {
@@ -69,7 +73,8 @@ const router = new VueRouter({
       meta: {
         requiresAuth: true,
         requiredRole: 'POS_USER',
-        requiresSession: true
+        requiresSession: true,
+        hideNavMenu: true,
       }
     },
     {

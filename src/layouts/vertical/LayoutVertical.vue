@@ -20,6 +20,8 @@ import LayoutVertical from '@core/layouts/layout-vertical/LayoutVertical.vue'
 // import { $themeConfig } from '@themeConfig'
 import Navbar from '../components/Navbar.vue'
 import { eventBus } from '@/main';
+import store from '@/store'
+import { getUserData } from '@/auth/utils'
 
 export default {
   components: {
@@ -32,12 +34,33 @@ export default {
       // showCustomizer: $themeConfig.layout.customizer,
     }
   },
+  computed: {
+    shouldHideNavMenu() {
+      const userData = getUserData()
+      const isCashier = userData && userData.role === 'POS_USER'
+      return isCashier && this.$route && this.$route.meta && this.$route.meta.hideNavMenu
+    },
+  },
+  watch: {
+    shouldHideNavMenu: {
+      immediate: true,
+      handler(val) {
+        store.commit('appConfig/UPDATE_NAV_MENU_HIDDEN', !!val)
+      },
+    },
+    $route() {
+      store.commit('appConfig/UPDATE_NAV_MENU_HIDDEN', !!this.shouldHideNavMenu)
+    },
+  },
   created() {
     eventBus.$on('show-sweetalert-error', error => {
       // Handle the error here (e.g., display an error message)
       console.error('Custom Event Error:', error);
       this.showErrorMessage(error)
     });
+  },
+  beforeDestroy() {
+    store.commit('appConfig/UPDATE_NAV_MENU_HIDDEN', false)
   },
   methods: {
     showErrorMessage(error) {

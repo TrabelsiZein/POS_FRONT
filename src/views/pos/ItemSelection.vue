@@ -2,189 +2,269 @@
   <div class="pos-container">
     <b-row class="pos-content">
       <!-- Items Grid -->
-      <b-col cols="12" md="8" lg="9" class="items-section">
-        <div class="items-header">
-          <!-- Barcode Scanner Input -->
-          <b-input-group class="mb-3">
-            <b-input-group-prepend>
-              <span class="input-group-text">
-                <feather-icon icon="HashIcon" size="18" />
-              </span>
-            </b-input-group-prepend>
-            <b-form-input
-              v-model="barcodeInput"
-              placeholder="Scan barcode (or type and press Enter)..."
-              @keyup.enter="handleBarcodeScan"
-              @input="onBarcodeInput"
-              ref="barcodeInput"
-              class="barcode-scanner-input"
-              :disabled="barcodeScanning"
-              autofocus
-            />
-            <b-input-group-append>
-              <b-button variant="primary" @click="handleBarcodeScan" :disabled="barcodeScanning">
-                <b-spinner v-if="barcodeScanning" small class="mr-1" />
-                <feather-icon v-else icon="SearchIcon" size="16" />
-              </b-button>
-            </b-input-group-append>
-          </b-input-group>
+      <b-col cols="12" md="8" lg="9" class="items-column">
+        <div class="items-section" :class="{ 'compact-mode': compactMode }">
+          <div class="items-header">
+            <div class="input-row">
+              <!-- Barcode Scanner Input -->
+              <div class="input-col barcode-col">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <span class="input-group-text">
+                      <feather-icon icon="HashIcon" size="16" />
+                    </span>
+                  </b-input-group-prepend>
+                  <b-form-input v-model="barcodeInput" placeholder="Scan barcode (or type and press Enter)..."
+                    @keyup.enter="handleBarcodeScan" @input="onBarcodeInput" ref="barcodeInput"
+                    class="barcode-scanner-input" :disabled="barcodeScanning" autofocus
+                    @focus="setActiveInput('barcode')" />
+                  <b-input-group-append>
+                    <b-button variant="primary" @click="handleBarcodeScan"
+                      :disabled="barcodeScanning || !barcodeInput.trim()">
+                      <b-spinner v-if="barcodeScanning" small class="mr-1" />
+                      <feather-icon v-else icon="SearchIcon" />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </div>
 
-          <!-- Regular Search Input -->
-          <b-input-group>
-            <b-input-group-prepend>
-              <span class="input-group-text">
-                <feather-icon icon="SearchIcon" size="16" />
-              </span>
-            </b-input-group-prepend>
-            <b-form-input v-model="searchQuery" placeholder="Search by name or code..." @input="filterItems" />
-            <b-input-group-append>
-              <b-button variant="outline-secondary" @click="clearSearch">
-                <feather-icon icon="XIcon" size="16" />
+              <!-- Regular Search Input -->
+              <div class="input-col search-col">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <span class="input-group-text">
+                      <feather-icon icon="SearchIcon" size="16" />
+                    </span>
+                  </b-input-group-prepend>
+                  <b-form-input v-model="searchQuery" :placeholder="searchPlaceholder" @input="handleSearchInput"
+                    @focus="setActiveInput('search')" />
+                  <b-input-group-append>
+                    <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchQuery.trim()">
+                      <feather-icon icon="XIcon" />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </div>
+            </div>
+
+            <div class="hierarchy-controls">
+              <div class="hierarchy-group">
+                <b-button v-if="canNavigateBack" size="sm" variant="outline-secondary" @click="navigateBack">
+                  <feather-icon icon="ArrowLeftIcon" size="14" class="mr-50" />
+                  Back
+                </b-button>
+                <div class="breadcrumb-trail">
+                  <span class="breadcrumb-chip" :class="{ active: isFamiliesView }" @click="resetToFamilies">
+                    <feather-icon icon="LayersIcon" size="14" class="mr-25" />
+                    Families
+                  </span>
+                  <template v-if="selectedFamily">
+                    <span class="breadcrumb-separator">
+                      <feather-icon icon="ChevronRightIcon" size="14" />
+                    </span>
+                    <span class="breadcrumb-chip" :class="{ active: isSubFamiliesView && !selectedSubFamily }"
+                      @click="returnToSelectedFamily">
+                      <feather-icon icon="GridIcon" size="14" class="mr-25" />
+                      {{ selectedFamily.name }}
+                    </span>
+                  </template>
+                  <template v-if="selectedSubFamily">
+                    <span class="breadcrumb-separator">
+                      <feather-icon icon="ChevronRightIcon" size="14" />
+                    </span>
+                    <span class="breadcrumb-chip active">
+                      <feather-icon icon="PackageIcon" size="14" class="mr-25" />
+                      {{ selectedSubFamily.name }}
+                    </span>
+                  </template>
+                </div>
+              </div>
+              <b-button size="sm" :variant="compactMode ? 'outline-primary' : 'primary'" class="compact-toggle"
+                @click="toggleCompactMode">
+                <feather-icon :icon="compactMode ? 'MaximizeIcon' : 'MinimizeIcon'" size="14" class="mr-50" />
+                {{ compactMode ? 'Comfort view' : 'Compact view' }}
               </b-button>
-            </b-input-group-append>
-          </b-input-group>
+            </div>
+          </div>
+
+          <div class="items-body">
+            <div class="items-grid-wrapper">
+              <div v-if="gridLoading" class="grid-status">
+                <b-spinner class="mb-1" />
+                <p class="mb-0">Loading {{ currentLevelLabel.toLowerCase() }}...</p>
+              </div>
+              <div v-else-if="filteredGridItems.length === 0" class="grid-status empty-state">
+                <feather-icon :icon="gridStatusIcon" size="48" class="text-muted mb-1" />
+                <p class="mb-0">No {{ currentLevelLabel.toLowerCase() }} found</p>
+                <small class="text-muted">Try a different selection or clear the search</small>
+              </div>
+              <div v-else class="items-grid">
+                <div v-for="entry in filteredGridItems" :key="entry.id" class="item-card"
+                  :class="{ 'category-card': !isItemsView }" @click="onGridEntryClick(entry)">
+                  <template v-if="isItemsView">
+                    <div class="item-image">
+                      <feather-icon icon="PackageIcon" size="34" />
+                    </div>
+                    <div class="item-details">
+                      <h5>{{ entry.name }}</h5>
+                      <p class="item-code">{{ entry.itemCode }}</p>
+                      <p class="item-price">{{ formatTunCurrency(getUnitPriceWithVat(entry)) }} TTC</p>
+                      <p v-if="entry.stockQuantity !== null" class="item-stock">
+                        Stock: {{ entry.stockQuantity }}
+                      </p>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div class="category-card-content">
+                      <div class="category-icon">
+                        <feather-icon :icon="isFamiliesView ? 'LayersIcon' : 'GridIcon'" size="26" />
+                      </div>
+                      <div class="category-title clamp-2">{{ entry.name }}</div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div class="items-grid">
-          <div v-for="item in filteredItems" :key="item.id" class="item-card" @click="addToCart(item)">
-            <div class="item-image">
-              <feather-icon icon="PackageIcon" size="40" />
-            </div>
-            <div class="item-details">
-              <h5>{{ item.name }}</h5>
-              <p class="item-code">{{ item.itemCode }}</p>
-              <p class="item-price">${{ formatPrice(item.unitPrice) }}</p>
-              <p v-if="item.stockQuantity !== null" class="item-stock">
-                Stock: {{ item.stockQuantity }}
-              </p>
-            </div>
+        <div class="actions-panel inline-panel">
+          <div class="actions-grid">
+            <b-button variant="primary" block class="action-btn" @click="proceedToPayment"
+              :disabled="cart.length === 0">
+              <feather-icon icon="CreditCardIcon" size="16" class="mr-50" />
+              Payment
+            </b-button>
+            <b-button variant="outline-primary" block class="action-btn" @click="goToCustomerManagement">
+              <feather-icon icon="UsersIcon" size="16" class="mr-50" />
+              Customers
+            </b-button>
+            <b-button variant="outline-success" block class="action-btn" @click="goToReturn">
+              <feather-icon icon="RotateCcwIcon" size="16" class="mr-50" />
+              Return Products
+            </b-button>
+            <b-button variant="outline-warning" block class="action-btn" @click="openPendingTicketsModal">
+              <feather-icon icon="ClockIcon" size="16" class="mr-50" />
+              Pending Tickets
+              <b-badge v-if="pendingTicketsCount > 0" variant="warning" class="ml-50">
+                {{ pendingTicketsCount }}
+              </b-badge>
+            </b-button>
+            <b-button variant="outline-secondary" block class="action-btn" disabled>
+              <feather-icon icon="ListIcon" size="16" class="mr-50" />
+              Tickets List (soon)
+            </b-button>
+            <b-button variant="outline-danger" block class="action-btn" @click="showCloseSessionModal = true">
+              <feather-icon icon="PowerIcon" size="16" class="mr-50" />
+              Close Session
+            </b-button>
           </div>
         </div>
       </b-col>
 
       <!-- Cart Section -->
       <b-col cols="12" md="4" lg="3" class="cart-section">
-        <div v-if="currentSession" class="session-info-card mb-3">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="session-number">Session {{ currentSession.sessionNumber }}</div>
-              <div class="session-status">
-                <b-badge :variant="currentSession.status === 'OPENED' ? 'success' : 'secondary'">
-                  {{ currentSession.status || 'UNKNOWN' }}
-                </b-badge>
-              </div>
-              <div class="session-meta">
-                <div v-if="currentSession.openedAt">Opened: {{ formatDateTime(currentSession.openedAt) }}</div>
-                <div>Opening Cash: ${{ formatPrice(currentSession.openingCash || 0) }}</div>
-                <div>Real Cash: ${{ formatPrice(currentSession.realCash || 0) }}</div>
-              </div>
-            </div>
-            <b-button variant="outline-warning" size="sm" @click="showCloseSessionModal = true">
-              Close
-            </b-button>
-          </div>
-        </div>
-
         <div class="cart-header">
-          <h4 class="cart-title">Cart</h4>
+          <div class="cart-title-wrap">
+            <h4 class="cart-title mb-0">Cart</h4>
+            <b-badge v-if="cartCount > 0" variant="light" class="cart-count-badge">{{ cartCount }}</b-badge>
+          </div>
           <b-button v-if="cart.length > 0" variant="outline-secondary" size="sm" @click="clearCart">
             Clear
           </b-button>
         </div>
 
-        <div class="cart-items">
+        <div class="cart-items" ref="cartList" :class="{ 'cart-items--scrolled': cartScrollShadow }">
           <div v-if="cart.length === 0" class="empty-cart">
-            <p>Cart is empty</p>
+            <feather-icon icon="ShoppingBagIcon" size="36" class="mb-1 text-muted" />
+            <p class="mb-25">Cart is empty</p>
+            <small class="text-muted d-block mb-1">Scan a barcode or tap a product to add it.</small>
+            <b-button v-if="pendingTicketsCount > 0" size="sm" variant="outline-primary"
+              @click="openPendingTicketsModal">
+              View Pending Tickets ({{ pendingTicketsCount }})
+            </b-button>
           </div>
-          <div v-for="(cartItem, index) in cart" :key="index" class="cart-item">
-            <div class="cart-item-info">
-              <h6>{{ cartItem.name }}</h6>
-              <p class="cart-item-code">{{ cartItem.itemCode }}</p>
-              <div class="cart-item-controls">
-                <b-button variant="outline-primary" size="sm" @click="decreaseQuantity(index)">
+          <div v-for="(cartItem, index) in cart" :key="index" class="cart-item"
+            :class="{ highlighted: highlightedItemId === cartItem.id }">
+            <div class="cart-item-header">
+              <div class="cart-item-title">
+                <h6>{{ cartItem.name }}</h6>
+              </div>
+              <div class="cart-item-total">
+                <span class="total-amount">{{ formatTunCurrency(getLineTotalWithVat(cartItem)) }}</span>
+              </div>
+            </div>
+            <div class="cart-item-breakdown">
+              <span class="chip chip--ht">{{ formatShortTun(cartItem.unitPrice) }} HT</span>
+              <span class="chip chip--vat">{{ formatVatPercentage(cartItem) }}% VAT</span>
+              <span class="chip chip--ttc">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} TTC/unit</span>
+            </div>
+            <div class="cart-item-controls">
+              <div class="quantity-controls">
+                <b-button variant="outline-primary" size="sm" class="qty-btn" @click="decreaseQuantity(index)">
                   -
                 </b-button>
                 <span class="quantity">{{ cartItem.quantity }}</span>
-                <b-button variant="outline-primary" size="sm" @click="increaseQuantity(index)">
+                <b-button variant="outline-primary" size="sm" class="qty-btn" @click="increaseQuantity(index)">
                   +
                 </b-button>
-                <b-button variant="outline-danger" size="sm" @click="removeFromCart(index)">
-                  Remove
-                </b-button>
               </div>
-            </div>
-            <div class="cart-item-total">
-              ${{ formatPrice(cartItem.unitPrice * cartItem.quantity) }}
+              <b-button variant="outline-danger" size="sm" class="remove-btn" @click="removeFromCart(index)">
+                <feather-icon icon="Trash2Icon" size="14" />
+              </b-button>
             </div>
           </div>
         </div>
 
         <div class="cart-summary">
-          <div class="summary-row">
-            <span>Subtotal:</span>
-            <span>${{ formatPrice(subtotal) }}</span>
-          </div>
-          <div class="summary-row">
-            <span>Tax:</span>
-            <span>${{ formatPrice(taxAmount) }}</span>
-          </div>
           <div class="summary-row total">
             <span>Total:</span>
-            <span>${{ formatPrice(totalAmount) }}</span>
+            <span>{{ formatTunCurrency(totalAmount) }}</span>
           </div>
         </div>
 
-        <b-button variant="success" size="lg" block :disabled="cart.length === 0" @click="proceedToPayment">
-          Proceed to Payment
-        </b-button>
-        
-          <b-button 
-            variant="outline-info" 
-            size="md" 
-            block 
-            @click="goToCustomerManagement"
-            class="mt-3"
-          >
-            <feather-icon icon="UsersIcon" size="16" class="mr-1" />
-            Customer Management
+        <div class="keyboard-toggle">
+          <b-button :variant="showKeyboard ? 'outline-secondary' : 'primary'" block @click="toggleKeyboard">
+            <feather-icon :icon="showKeyboard ? 'ChevronDownIcon' : 'KeyboardIcon'" class="mr-50" size="16" />
+            {{ showKeyboard ? 'Hide Keyboard' : 'Show Keyboard' }}
           </b-button>
+        </div>
 
-          <b-button 
-            variant="outline-warning" 
-            size="md" 
-            block 
-            @click="showPendingTicketsModal = true"
-            class="mt-2"
-          >
-            <feather-icon icon="ClockIcon" size="16" class="mr-1" />
-            Pending Tickets 
-            <b-badge v-if="pendingTicketsCount > 0" variant="warning" class="ml-2">
-              {{ pendingTicketsCount }}
-            </b-badge>
-          </b-button>
-
-          <b-button 
-            variant="outline-info" 
-            size="md" 
-            block 
-            @click="goToReturn"
-            class="mt-2"
-          >
-            <feather-icon icon="RotateCcwIcon" size="16" class="mr-1" />
-            Return Products
-          </b-button>
+        <transition name="keyboard-fade">
+          <div class="virtual-keyboard" v-if="showKeyboard">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong>Touch Keyboard</strong>
+              <b-button size="sm" variant="outline-secondary" @click="toggleKeyboard">
+                <feather-icon icon="XIcon" size="14" />
+              </b-button>
+            </div>
+            <div v-for="(row, index) in keyboardLayout" :key="`keyboard-row-${index}`" class="keyboard-row">
+              <b-button v-for="key in row" :key="key" variant="light" class="keyboard-key"
+                @click="handleKeyboardPress(key)">
+                <template v-if="key === 'BACK'">
+                  <feather-icon icon="DeleteIcon" size="16" />
+                </template>
+                <template v-else-if="key === 'SPACE'">
+                  Space
+                </template>
+                <template v-else-if="key === 'CLEAR'">
+                  Clear
+                </template>
+                <template v-else-if="key === 'ENTER'">
+                  Enter
+                </template>
+                <template v-else>
+                  {{ key }}
+                </template>
+              </b-button>
+            </div>
+          </div>
+        </transition>
       </b-col>
     </b-row>
 
     <!-- Pending Tickets Modal -->
-    <b-modal
-      id="pending-tickets-modal"
-      v-model="showPendingTicketsModal"
-      title="Pending Tickets"
-      size="xl"
-      @show="loadPendingTickets"
-      @hide="resetPendingTickets"
-    >
+    <b-modal id="pending-tickets-modal" v-model="showPendingTicketsModal" title="Pending Tickets" size="xl"
+      @show="loadPendingTickets" @hide="resetPendingTickets">
       <div v-if="loadingPendingTickets" class="text-center py-4">
         <b-spinner class="align-middle"></b-spinner>
         <p class="mt-2">Loading pending tickets...</p>
@@ -197,11 +277,7 @@
       </div>
 
       <div v-else class="pending-tickets-list">
-        <b-card
-          v-for="ticket in pendingTickets"
-          :key="ticket.id"
-          class="mb-3 ticket-card"
-        >
+        <b-card v-for="ticket in pendingTickets" :key="ticket.id" class="mb-3 ticket-card">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
               <h6 class="mb-1">Ticket: {{ ticket.salesNumber }}</h6>
@@ -238,20 +314,11 @@
           </div>
 
           <div class="mt-3 d-flex gap-2">
-            <b-button 
-              variant="primary" 
-              size="sm" 
-              class="flex-grow-1"
-              @click="retrievePendingTicket(ticket)"
-            >
+            <b-button variant="primary" size="sm" class="flex-grow-1" @click="retrievePendingTicket(ticket)">
               <feather-icon icon="ArrowRightIcon" size="14" class="mr-1" />
               Continue
             </b-button>
-            <b-button 
-              variant="danger" 
-              size="sm"
-              @click="confirmDeletePendingTicket(ticket)"
-            >
+            <b-button variant="danger" size="sm" @click="confirmDeletePendingTicket(ticket)">
               <feather-icon icon="TrashIcon" size="14" />
             </b-button>
           </div>
@@ -260,16 +327,8 @@
     </b-modal>
 
     <!-- Close Session Modal -->
-    <b-modal
-      id="close-session-modal"
-      v-model="showCloseSessionModal"
-      title="Close Cashier Session"
-      size="xl"
-      @ok="closeSession"
-      @cancel="resetCloseSessionForm"
-      @hide="resetCloseSessionForm"
-      :ok-disabled="!canCloseSession"
-    >
+    <b-modal id="close-session-modal" v-model="showCloseSessionModal" title="Close Cashier Session" size="xl"
+      @ok="closeSession" @cancel="resetCloseSessionForm" @hide="resetCloseSessionForm" :ok-disabled="!canCloseSession">
       <div class="cash-count-section">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h5>Cash Count Details</h5>
@@ -281,71 +340,39 @@
 
         <!-- Cash Count Lines Table -->
         <div class="cash-count-table-container">
-          <b-table
-            v-if="closeSessionData.cashCountLines.length > 0"
-            :items="closeSessionData.cashCountLines"
-            :fields="cashCountFields"
-            striped
-            bordered
-            small
-            responsive
-          >
+          <b-table v-if="closeSessionData.cashCountLines.length > 0" :items="closeSessionData.cashCountLines"
+            :fields="cashCountFields" striped bordered small responsive>
             <template #cell(denominationValue)="row">
               <b-input-group prepend="$" size="sm">
-                <b-form-input
-                  v-model.number="row.item.denominationValue"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  @input="updateCashCountTotals"
-                  size="sm"
-                />
+                <b-form-input v-model.number="row.item.denominationValue" type="number" step="0.01" min="0"
+                  @input="updateCashCountTotals" size="sm" />
               </b-input-group>
             </template>
             <template #cell(quantity)="row">
-              <b-form-input
-                v-model.number="row.item.quantity"
-                type="number"
-                min="1"
-                @input="updateCashCountTotals"
-                size="sm"
-              />
+              <b-form-input v-model.number="row.item.quantity" type="number" min="1" @input="updateCashCountTotals"
+                size="sm" />
             </template>
             <template #cell(paymentMethod)="row">
-              <b-form-select
-                v-model="row.item.paymentMethodId"
-                :options="paymentMethodOptions"
-                value-field="id"
-                text-field="name"
-                size="sm"
-              >
+              <b-form-select v-model="row.item.paymentMethodId" :options="paymentMethodOptions" value-field="id"
+                text-field="name" size="sm">
                 <template #first>
                   <b-form-select-option :value="null">Cash</b-form-select-option>
                 </template>
               </b-form-select>
             </template>
             <template #cell(referenceNumber)="row">
-              <b-form-input
-                v-model="row.item.referenceNumber"
-                placeholder="Check #, Card last 4..."
-                size="sm"
-              />
+              <b-form-input v-model="row.item.referenceNumber" placeholder="Check #, Card last 4..." size="sm" />
             </template>
             <template #cell(lineTotal)="row">
               <strong>${{ formatPrice(row.item.denominationValue * row.item.quantity) }}</strong>
             </template>
             <template #cell(actions)="row">
-              <b-button
-                variant="link"
-                size="sm"
-                @click="removeCashCountLine(row.index)"
-                class="text-danger p-0"
-              >
+              <b-button variant="link" size="sm" @click="removeCashCountLine(row.index)" class="text-danger p-0">
                 <feather-icon icon="XIcon" size="16" />
               </b-button>
             </template>
           </b-table>
-          
+
           <div v-else class="text-center text-muted py-4">
             <p>No cash count lines added yet</p>
             <p class="small">Click "Add Line" to start counting cash</p>
@@ -367,14 +394,8 @@
         <!-- Manual Override -->
         <b-form-group label="Actual Cash (Manual Override - optional)" label-for="actual-cash" class="mt-3">
           <b-input-group prepend="$">
-            <b-form-input
-              id="actual-cash"
-              v-model.number="closeSessionData.actualCash"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="Leave empty to use calculated total"
-            />
+            <b-form-input id="actual-cash" v-model.number="closeSessionData.actualCash" type="number" step="0.01"
+              min="0" placeholder="Leave empty to use calculated total" />
           </b-input-group>
           <small class="form-text text-muted">
             If provided, this value will override the calculated total from cash count lines
@@ -382,12 +403,8 @@
         </b-form-group>
 
         <b-form-group label="Notes (optional)" label-for="close-notes" class="mt-3">
-          <b-form-textarea
-            id="close-notes"
-            v-model="closeSessionData.notes"
-            placeholder="Enter any notes about the cash count..."
-            rows="3"
-          />
+          <b-form-textarea id="close-notes" v-model="closeSessionData.notes"
+            placeholder="Enter any notes about the cash count..." rows="3" />
         </b-form-group>
       </div>
       <template #modal-ok>
@@ -405,12 +422,19 @@ export default {
   name: 'ItemSelection',
   data() {
     return {
+      families: [],
+      subFamilies: [],
       items: [],
-      filteredItems: [],
       searchQuery: '',
       barcodeInput: '',
       barcodeScanning: false,
       itemsWithBarcodes: [], // Cache of items with their barcodes
+      currentView: 'families',
+      selectedFamily: null,
+      selectedSubFamily: null,
+      gridLoading: false,
+      subFamilyCache: {},
+      itemCache: {},
       showCloseSessionModal: false,
       showPendingTicketsModal: false,
       pendingTickets: [],
@@ -423,7 +447,20 @@ export default {
         notes: '',
         cashCountLines: []
       },
+      keyboardLayout: [
+        ['7', '8', '9'],
+        ['4', '5', '6'],
+        ['1', '2', '3'],
+        ['0', '00', '.'],
+        ['CLEAR', 'BACK', 'ENTER'],
+      ],
+      activeInput: 'barcode',
+      showKeyboard: false,
       loadingSession: false,
+      highlightedItemId: null,
+      highlightTimer: null,
+      cartScrollShadow: false,
+      compactMode: false,
       paymentMethods: [],
       cashCountFields: [
         { key: 'denominationValue', label: 'Value', sortable: false },
@@ -436,9 +473,88 @@ export default {
     }
   },
   computed: {
+    isFamiliesView() {
+      return this.currentView === 'families'
+    },
+    isSubFamiliesView() {
+      return this.currentView === 'subFamilies'
+    },
+    isItemsView() {
+      return this.currentView === 'items'
+    },
+    canNavigateBack() {
+      return !this.isFamiliesView
+    },
+    currentGridItems() {
+      if (this.isItemsView) {
+        return this.items
+      }
+      if (this.isSubFamiliesView) {
+        return this.subFamilies
+      }
+      return this.families
+    },
+    filteredGridItems() {
+      const collection = this.currentGridItems || []
+      if (!this.searchQuery) {
+        return collection
+      }
+      const query = this.searchQuery.toLowerCase()
+      if (this.isItemsView) {
+        return collection.filter(item => {
+          const matchesItem = (item.name && item.name.toLowerCase().includes(query)) ||
+            (item.itemCode && item.itemCode.toLowerCase().includes(query)) ||
+            (item.barcode && item.barcode.toLowerCase().includes(query))
+
+          const itemWithBarcodes = this.itemsWithBarcodes.find(iwb => iwb.item.id === item.id)
+          if (itemWithBarcodes && itemWithBarcodes.barcodes) {
+            const matchesBarcode = itemWithBarcodes.barcodes.some(barcode =>
+              barcode.barcode && barcode.barcode.toLowerCase().includes(query)
+            )
+            return matchesItem || matchesBarcode
+          }
+          return matchesItem
+        })
+      }
+      return collection.filter(entry => {
+        return (entry.name && entry.name.toLowerCase().includes(query)) ||
+          (entry.code && entry.code.toLowerCase().includes(query)) ||
+          (entry.description && entry.description.toLowerCase().includes(query))
+      })
+    },
+    currentLevelLabel() {
+      if (this.isItemsView) {
+        return 'Products'
+      }
+      if (this.isSubFamiliesView) {
+        return 'Sub families'
+      }
+      return 'Families'
+    },
+    searchPlaceholder() {
+      if (this.isItemsView) {
+        return 'Search products by name or code...'
+      }
+      if (this.isSubFamiliesView) {
+        return 'Search sub families...'
+      }
+      return 'Search families...'
+    },
+    gridStatusIcon() {
+      if (this.isItemsView) {
+        return 'PackageIcon'
+      }
+      if (this.isSubFamiliesView) {
+        return 'GridIcon'
+      }
+      return 'LayersIcon'
+    },
     cart() {
       // Always use store as source of truth
       return this.$store.state.pos.cart || []
+    },
+    cartCount() {
+      return this.cart.reduce((sum, item) => sum + (item.quantity || 0), 0)
     },
     subtotal() {
       return this.cart.reduce((sum, item) => {
@@ -446,9 +562,9 @@ export default {
       }, 0)
     },
     taxAmount() {
-      // If we have orderSummary from store, calculate tax from subtotal
-      // Simple 10% tax calculation (can be improved later)
-      return this.subtotal * 0.1
+      return this.cart.reduce((sum, item) => {
+        return sum + this.getLineVatAmount(item)
+      }, 0)
     },
     totalAmount() {
       return this.subtotal + this.taxAmount
@@ -478,19 +594,20 @@ export default {
         // All lines must have valid denomination and quantity
         return this.closeSessionData.cashCountLines.every(line => {
           return line.denominationValue && line.denominationValue > 0 &&
-                 line.quantity && line.quantity > 0
+            line.quantity && line.quantity > 0
         })
       }
       return false
     }
   },
   mounted() {
+    document.body.classList.add('pos-no-scroll')
     this.loadCurrentSession()
-    this.loadItems()
-    this.loadItemsWithBarcodes()
-    this.loadPaymentMethods()
+    this.loadFamilies()
+    // this.loadItemsWithBarcodes()
+    // this.loadPaymentMethods()
     this.loadPendingTicketsCount()
-    
+
     // Cart is now always loaded from store via computed property
     // Focus on barcode input when component mounts
     this.$nextTick(() => {
@@ -498,78 +615,266 @@ export default {
         this.$refs.barcodeInput.focus()
       }
     })
-    
+
     // Listen for close session modal event from navbar
     this.$root.$on('open-close-session-modal', () => {
       this.showCloseSessionModal = true
     })
-    
+
     // Refresh pending count periodically
     this.pendingTicketsInterval = setInterval(() => {
       this.loadPendingTicketsCount()
     }, 10000) // Check every 10 seconds
+
+    if (this.$refs.cartList) {
+      this.$refs.cartList.addEventListener('scroll', this.handleCartScroll, { passive: true })
+      this.$nextTick(() => {
+        this.handleCartScroll()
+      })
+    }
   },
   beforeDestroy() {
+    document.body.classList.remove('pos-no-scroll')
     if (this.pendingTicketsInterval) {
       clearInterval(this.pendingTicketsInterval)
     }
     this.$root.$off('open-close-session-modal')
+    if (this.$refs.cartList) {
+      this.$refs.cartList.removeEventListener('scroll', this.handleCartScroll)
+    }
+    if (this.highlightTimer) {
+      clearTimeout(this.highlightTimer)
+    }
   },
   methods: {
-    loadItems() {
-      this.$http.get('/item')
-        .then(response => {
-          this.items = response.data
-          this.filteredItems = this.items
-        })
-        .catch(error => {
-          console.error('Error loading items:', error)
-          this.$toast({
-            title: 'Error',
-            text: 'Failed to load items',
-            variant: 'danger'
+    toggleCompactMode() {
+      this.compactMode = !this.compactMode
+    },
+    getVatPercent(item) {
+      if (!item) return 0
+      const vat = item.defaultVAT
+      return parseFloat(vat) || 0
+    },
+    getUnitVatAmount(item) {
+      const price = parseFloat(item.unitPrice) || 0
+      const vat = this.getVatPercent(item)
+      return price * (vat / 100)
+    },
+    formatShortTun(value) {
+      const amount = parseFloat(value) || 0
+      return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    },
+    formatVatPercentage(item) {
+      const vat = this.getVatPercent(item)
+      if (!vat) return 0
+      return Number.isInteger(vat) ? vat : vat.toFixed(2)
+    },
+    getUnitPriceWithVat(item) {
+      const price = parseFloat(item.unitPrice) || 0
+      const vat = this.getVatPercent(item)
+      return price * (1 + (vat / 100))
+    },
+    getLineVatAmount(item) {
+      const price = parseFloat(item.unitPrice) || 0
+      const vat = this.getVatPercent(item)
+      const quantity = item.quantity || 0
+      return price * (vat / 100) * quantity
+    },
+    getLineTotalWithVat(item) {
+      const quantity = item.quantity || 0
+      return this.getUnitPriceWithVat(item) * quantity
+    },
+    async loadFamilies() {
+      this.gridLoading = true
+      try {
+        const response = await this.$http.get('/item-family')
+        const payload = Array.isArray(response.data) ? response.data : []
+        this.families = payload
+          .filter(family => family.active !== false)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }))
+          .sort((a, b) => {
+            const orderA = typeof a.displayOrder === 'number' ? a.displayOrder : Number.MAX_SAFE_INTEGER
+            const orderB = typeof b.displayOrder === 'number' ? b.displayOrder : Number.MAX_SAFE_INTEGER
+            return orderA - orderB
           })
+      } catch (error) {
+        console.error('Error loading item families:', error)
+        this.$toast({
+          title: 'Error',
+          text: 'Failed to load item families',
+          variant: 'danger'
         })
+      } finally {
+        this.gridLoading = false
+      }
+    },
+    async loadSubFamilies(family) {
+      if (!family) return
+      if (this.subFamilyCache[family.id]) {
+        this.subFamilies = this.subFamilyCache[family.id]
+        return
+      }
+      this.gridLoading = true
+      try {
+        const response = await this.$http.get(`/item-sub-family/by-family/${family.id}`)
+        const payload = Array.isArray(response.data) ? response.data : []
+        const list = payload
+          .filter(subFamily => subFamily.active !== false)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }))
+        this.subFamilyCache[family.id] = list
+        this.subFamilies = list
+      } catch (error) {
+        console.error('Error loading sub families:', error)
+        this.$toast({
+          title: 'Error',
+          text: 'Failed to load sub families',
+          variant: 'danger'
+        })
+      } finally {
+        this.gridLoading = false
+      }
+    },
+    async loadItemsBySubFamily(subFamily) {
+      if (!subFamily) return
+      if (this.itemCache[subFamily.id]) {
+        this.items = this.itemCache[subFamily.id]
+        return
+      }
+      this.gridLoading = true
+      try {
+        const response = await this.$http.get(`/item/by-sub-family/${subFamily.id}`);
+        const payload = Array.isArray(response.data) ? response.data : []
+        const list = payload.filter(item => item.active !== false)
+        this.itemCache[subFamily.id] = list
+        this.items = list
+      } catch (error) {
+        console.error('Error loading items by sub family:', error)
+        this.$toast({
+          title: 'Error',
+          text: 'Failed to load products for this sub family',
+          variant: 'danger'
+        })
+      } finally {
+        this.gridLoading = false
+      }
+    },
+    async selectFamily(family) {
+      if (!family) return
+      this.selectedFamily = family
+      this.selectedSubFamily = null
+      this.currentView = 'subFamilies'
+      this.searchQuery = ''
+      await this.loadSubFamilies(family)
+    },
+    async selectSubFamily(subFamily) {
+      if (!subFamily) return
+      this.selectedSubFamily = subFamily
+      this.currentView = 'items'
+      this.searchQuery = ''
+      await this.loadItemsBySubFamily(subFamily)
+    },
+    resetToFamilies() {
+      this.currentView = 'families'
+      this.selectedFamily = null
+      this.selectedSubFamily = null
+      this.subFamilies = []
+      this.items = []
+      this.searchQuery = ''
+    },
+    async returnToSelectedFamily() {
+      if (!this.selectedFamily) return
+      this.currentView = 'subFamilies'
+      this.selectedSubFamily = null
+      this.items = []
+      this.searchQuery = ''
+      if (this.subFamilyCache[this.selectedFamily.id]) {
+        this.subFamilies = this.subFamilyCache[this.selectedFamily.id]
+      } else {
+        await this.loadSubFamilies(this.selectedFamily)
+      }
+    },
+    async navigateBack() {
+      if (this.isItemsView) {
+        await this.returnToSelectedFamily()
+      } else if (this.isSubFamiliesView) {
+        this.resetToFamilies()
+      }
+    },
+    onGridEntryClick(entry) {
+      if (this.isItemsView) {
+        this.addToCart(entry)
+      } else if (this.isSubFamiliesView) {
+        this.selectSubFamily(entry)
+      } else {
+        this.selectFamily(entry)
+      }
+    },
+    handleSearchInput() {
+      // Filtering handled reactively via computed property
     },
     async loadItemsWithBarcodes() {
       try {
         // Load items with their barcodes for faster lookup
-        const response = await this.$http.get('/item-barcode/items-with-barcodes')
-        this.itemsWithBarcodes = response.data
+        const response = await this.$http.get('/item-barcode/items-with-barcodes', {
+          params: {
+            page: 0,
+            size: 5000,
+            filterType: 'withBarcodes',
+          },
+        })
+        const payload = response.data
+        if (payload && Array.isArray(payload.content)) {
+          this.itemsWithBarcodes = payload.content
+        } else {
+          this.itemsWithBarcodes = payload || []
+        }
       } catch (error) {
         console.error('Error loading items with barcodes:', error)
         // Don't show error toast as this is optional optimization
       }
-    },
-    filterItems() {
-      if (!this.searchQuery) {
-        this.filteredItems = this.items
-        return
-      }
-      const query = this.searchQuery.toLowerCase()
-      this.filteredItems = this.items.filter(item => {
-        // Check item name and code
-        const matchesItem = item.name.toLowerCase().includes(query) ||
-          item.itemCode.toLowerCase().includes(query) ||
-          (item.barcode && item.barcode.toLowerCase().includes(query))
-        
-        // Check item barcodes from ItemBarcode entity
-        const itemWithBarcodes = this.itemsWithBarcodes.find(iwb => iwb.item.id === item.id)
-        if (itemWithBarcodes && itemWithBarcodes.barcodes) {
-          const matchesBarcode = itemWithBarcodes.barcodes.some(barcode =>
-            barcode.barcode && barcode.barcode.toLowerCase().includes(query)
-          )
-          return matchesItem || matchesBarcode
-        }
-        
-        return matchesItem
-      })
     },
     onBarcodeInput() {
       // Clear search query when barcode input changes to avoid conflicts
       if (this.barcodeInput) {
         this.searchQuery = ''
       }
+    },
+    setActiveInput(field) {
+      this.activeInput = field
+    },
+    handleKeyboardPress(key) {
+      if (!this.activeInput) {
+        return
+      }
+      const targetField = this.activeInput === 'barcode' ? 'barcodeInput' : 'searchQuery'
+      const currentValue = this[targetField] || ''
+
+      if (key === 'BACK') {
+        this[targetField] = currentValue.slice(0, -1)
+      } else if (key === 'CLEAR') {
+        this[targetField] = ''
+      } else if (key === 'SPACE') {
+        this[targetField] = `${currentValue} `
+      } else if (key === 'ENTER') {
+        if (targetField === 'barcodeInput') {
+          this.handleBarcodeScan()
+        } else {
+          this.handleSearchInput()
+        }
+        return
+      } else {
+        this[targetField] = currentValue + key
+      }
+
+      if (targetField === 'searchQuery') {
+        this.handleSearchInput()
+      }
+    },
+    toggleKeyboard() {
+      this.showKeyboard = !this.showKeyboard
+    },
+    openPendingTicketsModal() {
+      this.showPendingTicketsModal = true
     },
     async handleBarcodeScan() {
       if (!this.barcodeInput || this.barcodeInput.trim() === '') {
@@ -584,7 +889,7 @@ export default {
         let foundItem = null
 
         for (const itemData of this.itemsWithBarcodes) {
-          const barcodeMatch = itemData.barcodes.find(b => 
+          const barcodeMatch = itemData.barcodes.find(b =>
             b.barcode && b.barcode.toLowerCase() === barcode.toLowerCase()
           )
           if (barcodeMatch && itemData.item.active !== false) {
@@ -595,8 +900,8 @@ export default {
 
         // If not found in cache, try the Item.barcode field (legacy support)
         if (!foundItem) {
-          foundItem = this.items.find(item => 
-            item.barcode && item.barcode.toLowerCase() === barcode.toLowerCase() && 
+          foundItem = this.items.find(item =>
+            item.barcode && item.barcode.toLowerCase() === barcode.toLowerCase() &&
             item.active !== false
           )
         }
@@ -621,7 +926,7 @@ export default {
         if (foundItem) {
           // Add item to cart
           this.addToCart(foundItem)
-          
+
           // Clear barcode input and refocus
           this.barcodeInput = ''
           this.$nextTick(() => {
@@ -669,7 +974,7 @@ export default {
     },
     clearSearch() {
       this.searchQuery = ''
-      this.filteredItems = this.items
+      this.handleSearchInput()
     },
     async loadPendingTicketsCount() {
       try {
@@ -726,7 +1031,7 @@ export default {
 
       // Close modal and stay on item selection page (so user can add more items)
       this.showPendingTicketsModal = false
-      
+
       this.$toast({
         component: ToastificationContent,
         props: {
@@ -736,7 +1041,7 @@ export default {
           variant: 'success'
         }
       })
-      
+
       // Focus on barcode input
       this.$nextTick(() => {
         if (this.$refs.barcodeInput) {
@@ -775,7 +1080,7 @@ export default {
     async deletePendingTicket(ticketId) {
       try {
         const response = await this.$http.post(`/sales-header/cancel-pending/${ticketId}`)
-        
+
         if (response.status === 200) {
           this.$toast({
             component: ToastificationContent,
@@ -786,11 +1091,11 @@ export default {
               variant: 'success'
             }
           })
-          
+
           // Reload pending tickets
           await this.loadPendingTickets()
           this.loadPendingTicketsCount()
-          
+
           // If the deleted ticket was the one we were working on, clear it
           if (this.pendingTicketId === ticketId) {
             this.$store.dispatch('pos/clearPendingTicketId')
@@ -799,11 +1104,11 @@ export default {
       } catch (error) {
         console.error('Error deleting pending ticket:', error)
         let errorMessage = 'Failed to delete pending ticket. Please try again.'
-        
+
         if (error.response && error.response.data) {
           errorMessage = error.response.data.message || error.response.data || errorMessage
         }
-        
+
         this.$toast({
           component: ToastificationContent,
           props: {
@@ -821,22 +1126,25 @@ export default {
       return date.toLocaleString()
     },
     addToCart(item) {
-      const currentCart = [...this.cart] // Create copy since computed property is readonly
-      const existingItem = currentCart.find(cartItem => cartItem.id === item.id)
-      if (existingItem) {
+      const currentCart = [...this.cart]
+      const existingIndex = currentCart.findIndex(cartItem => cartItem.id === item.id)
+      if (existingIndex !== -1) {
+        const existingItem = currentCart[existingIndex]
         existingItem.quantity += 1
+        currentCart.splice(existingIndex, 1)
+        currentCart.unshift(existingItem)
       } else {
-        // Add new item to the beginning of the cart (first row)
         currentCart.unshift({
           id: item.id,
           itemCode: item.itemCode,
           name: item.name,
           unitPrice: item.unitPrice || 0,
-          quantity: 1
+          defaultVAT: item.defaultVAT || 0,
+          quantity: 1,
         })
       }
-      // Update store
       this.$store.dispatch('pos/setCart', currentCart)
+      this.highlightCartItem(item.id)
     },
     increaseQuantity(index) {
       const currentCart = [...this.cart]
@@ -865,8 +1173,27 @@ export default {
       }
     },
     formatPrice(price) {
-      if (!price) return '0.00'
-      return parseFloat(price).toFixed(2)
+      const value = parseFloat(price) || 0
+      return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    },
+    formatTunCurrency(value) {
+      const amount = parseFloat(value) || 0
+      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return `${formatted} TND`
+    },
+    highlightCartItem(itemId) {
+      this.highlightedItemId = itemId
+      if (this.highlightTimer) {
+        clearTimeout(this.highlightTimer)
+      }
+      this.highlightTimer = setTimeout(() => {
+        this.highlightedItemId = null
+        this.highlightTimer = null
+      }, 800)
+    },
+    handleCartScroll() {
+      if (!this.$refs.cartList) return
+      this.cartScrollShadow = this.$refs.cartList.scrollTop > 0
     },
     proceedToPayment() {
       // Update order summary with current values (may have changed if items were added/removed)
@@ -880,7 +1207,7 @@ export default {
     },
     goToCustomerManagement() {
       // Navigate to customer management page with return route
-      this.$router.push({ 
+      this.$router.push({
         name: 'pos-customers',
         query: { returnTo: 'pos-item-selection' }
       })
@@ -904,15 +1231,15 @@ export default {
     },
     async loadCurrentSession() {
       this.loadingSession = true
-      
+
       // Use store to get session (checks API only if not cached)
       const session = await this.$store.dispatch('pos/checkSession')
-      
+
       if (!session) {
         // No open session, redirect to open session page
         this.$router.push({ name: 'pos-open-session' })
       }
-      
+
       this.loadingSession = false
     },
     loadPaymentMethods() {
@@ -1008,7 +1335,7 @@ export default {
 
           // Clear session from store
           this.$store.dispatch('pos/clearCurrentSession')
-          
+
           this.resetCloseSessionForm()
           this.showCloseSessionModal = false
 
@@ -1044,50 +1371,153 @@ export default {
 
 <style scoped>
 .pos-container {
-  padding: 20px;
-  min-height: calc(100vh - 60px);
+  margin-top: -1.8rem;
+  margin-left: -1.8rem;
+  margin-right: -1.8rem;
+  height: calc(100vh - 0.5rem);
+  min-height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
+
+.pos-content>[class*='col'] {
+  /* padding-left: 5px; */
+  padding-right: 5px;
+}
+
+/* .pos-content>.cart-section {
+  padding-left: 8px;
+} */
 
 @media (max-width: 575.98px) {
   .pos-container {
-    padding: 15px;
+    padding: 8px;
+    height: calc(100vh - 2rem);
   }
 }
 
 .pos-content {
   flex: 1;
   overflow: hidden;
+  padding: 0;
+  margin-right: 0rem !important;
 }
 
 @media (max-width: 767.98px) {
   .pos-content {
     overflow: visible;
+    padding: 0;
   }
 }
 
+.items-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  height: 100%;
+}
+
 .items-section {
-  border-right: 1px solid #e0e0e0;
-  padding-right: 20px;
+  border: 1px solid #ebedf5;
+  border-radius: 16px;
+  padding: 10px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  background: #fcfcff;
+}
+
+.items-section.compact-mode {
+  padding: 6px 8px;
 }
 
 @media (max-width: 767.98px) {
   .items-section {
-    border-right: none;
-    border-bottom: 1px solid #e0e0e0;
-    padding-right: 0;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
-    max-height: none;
+    border: 1px solid #ebedf5;
+    padding: 12px;
+    margin-bottom: 12px;
   }
 }
 
 .items-header {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.input-col {
+  flex: 1;
+  min-width: 220px;
+}
+
+.barcode-col {
+  flex: 3;
+}
+
+.search-col {
+  flex: 2;
+}
+
+.hierarchy-controls {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hierarchy-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.compact-toggle {
+  white-space: nowrap;
+}
+
+.breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: #f4f5f7;
+  color: #5e5873;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.82rem;
+}
+
+.breadcrumb-chip:hover {
+  background: #e7e9fc;
+  color: #7367f0;
+}
+
+.breadcrumb-chip.active {
+  background: #7367f0;
+  color: #fff;
+  cursor: default;
+}
+
+.breadcrumb-separator {
+  color: #c0c5d2;
 }
 
 .barcode-scanner-input {
@@ -1103,51 +1533,186 @@ export default {
 }
 
 @media (max-width: 575.98px) {
+
   .items-header h4,
   .cart-header h4 {
     font-size: 1rem;
   }
+
+  .barcode-col,
+  .search-col {
+    flex: 1 1 100%;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+}
+
+.items-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.items-grid-wrapper {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.items-grid-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.items-grid-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(115, 103, 240, 0.3);
+  border-radius: 6px;
+}
+
+.items-grid-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.items-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.items-grid-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.items-section.compact-mode .items-grid {
+  gap: 6px;
+}
+
+.actions-panel {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #ebedf5;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(90, 92, 145, 0.08);
+  margin-bottom: 0;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+  justify-items: stretch;
+}
+
+@media (max-width: 1500px) {
+  .actions-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1150px) {
+  .actions-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 1rem;
+  font-weight: 600;
+  border-width: 2px;
+  gap: 6px;
+  margin: 0 !important;
+}
+
+.action-btn.btn-primary {
+  border-color: transparent;
+}
+
+.grid-status {
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  color: #6c757d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.grid-status.empty-state {
+  color: #868e96;
 }
 
 .items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 18px;
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.items-section.compact-mode .items-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+@media (max-width: 1200px) {
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+}
+
+.items-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.items-grid {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 @media (max-width: 991.98px) {
   .items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
   }
 }
 
 @media (max-width: 575.98px) {
   .items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
   }
 }
 
 .item-card {
   border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 18px;
+  padding: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
 }
 
 @media (max-width: 575.98px) {
   .item-card {
-    padding: 12px;
+    padding: 10px;
   }
 
   .item-details h5 {
@@ -1161,30 +1726,67 @@ export default {
 
 .item-card:hover {
   border-color: #28a745;
-  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.25);
-  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(40, 167, 69, 0.15);
+  transform: translateY(-3px);
+}
+
+.category-card {
+  padding: 5px;
+  justify-content: center;
+}
+
+.category-card-content {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.category-icon {
+  color: #6c63ff;
+}
+
+.category-title {
+  width: 95%;
+  font-size: clamp(0.64rem, 0.85vw, 0.74rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-align: center;
+  width: 100%;
 }
 
 .item-image {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: #007bff;
 }
 
 .item-details {
   width: 100%;
-  margin-top: 12px;
+  margin-top: 5px;
 }
 
 .item-details h5 {
-  margin: 0 0 8px 0;
-  font-size: 1rem;
-  font-weight: 600;
+  /* margin: 0 0 8px 0; */
+  font-size: 0.85rem;
+  font-weight: 500;
   color: #2c3e50;
-  line-height: 1.3;
+  line-height: 1.1;
   min-height: 2.6em;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1197,10 +1799,39 @@ export default {
 }
 
 .item-price {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #28a745;
-  margin: 10px 0 5px 0;
+  margin: 0px;
+}
+
+.items-section.compact-mode .item-card {
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.items-section.compact-mode .item-image {
+  margin-bottom: 4px;
+}
+
+.items-section.compact-mode .item-details h5 {
+  font-size: 0.78rem;
+  -webkit-line-clamp: 3;
+}
+
+.items-section.compact-mode .item-code {
+  font-size: 0.72rem;
+  margin-bottom: 6px;
+}
+
+.items-section.compact-mode .item-price {
+  font-size: 0.9rem;
+}
+
+.item-vat {
+  font-size: 0.78rem;
+  color: #6c757d;
+  margin-bottom: 4px;
 }
 
 .item-stock {
@@ -1210,51 +1841,55 @@ export default {
 }
 
 .cart-section {
-  padding-left: 20px;
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #e5e7ef;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(94, 88, 115, 0.08);
+  padding: 10px;
+  /* padding-bottom: 16px; */
 }
+
+/* @media (min-width: 768px) {
+  .cart-section {
+    max-width: 360px;
+  }
+} */
 
 @media (max-width: 767.98px) {
   .cart-section {
-    padding-left: 0;
     max-height: none;
+    max-width: none;
+    box-shadow: none;
+    border-radius: 12px;
   }
-}
-
-.session-info-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 16px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.session-number {
-  font-weight: 600;
-  font-size: 1rem;
-  margin-bottom: 4px;
-  color: #34495e;
-}
-
-.session-status {
-  margin-bottom: 8px;
-}
-
-.session-meta {
-  font-size: 0.85rem;
-  color: #6c757d;
-  line-height: 1.4;
 }
 
 .cart-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f5;
+}
+
+.cart-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-count-badge {
+  font-weight: 600;
+  background: #f4f4ff;
+  color: #7367f0;
+  border-radius: 999px;
+  padding: 3px 10px;
 }
 
 .cart-title {
@@ -1267,57 +1902,173 @@ export default {
 .cart-items {
   flex: 1;
   overflow-y: auto;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.cart-items::-webkit-scrollbar {
+  display: none;
+}
+
+.cart-items::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 14px;
+  display: block;
+  background: linear-gradient(180deg, rgba(115, 103, 240, 0.18), rgba(255, 255, 255, 0));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.cart-items--scrolled::before {
+  opacity: 1;
 }
 
 .empty-cart {
   text-align: center;
-  padding: 40px;
+  padding: 40px 20px;
   color: #999;
+  border: 2px dashed #e6e9ef;
+  border-radius: 12px;
+  background: #f9fafc;
 }
 
 .cart-item {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 4px 10px 0;
+  border-bottom: 1px solid #f0f1f5;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 10px;
+}
+
+.cart-item:nth-child(even):not(.highlighted) {
+  background: #fcfcff;
+}
+
+.cart-item.highlighted {
+  background: rgba(115, 103, 240, 0.08);
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 6px 16px rgba(115, 103, 240, 0.15);
+}
+
+.cart-item-header {
+  display: flex;
   justify-content: space-between;
-  padding: 15px;
-  border-bottom: 1px solid #e0e0e0;
+  gap: 12px;
+  align-items: flex-start;
 }
 
-.cart-item-info {
-  flex: 1;
+.cart-item-title h6 {
+  margin: 0;
+  line-height: 1.2;
 }
 
-.cart-item-info h6 {
-  margin: 0 0 5px 0;
+.cart-item-total {
+  text-align: right;
+  font-weight: bold;
+  color: #28a745;
 }
 
-.cart-item-code {
-  font-size: 0.85rem;
-  color: #666;
-  margin: 0 0 10px 0;
+.cart-item-total .total-amount {
+  font-size: 0.95rem;
+  display: block;
+}
+
+.cart-item-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 0.6fr 1fr;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: #6c757d;
+}
+
+.cart-item-breakdown .chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.chip--ht {
+  background: #f4f7ff;
+  color: #5d60a6;
+}
+
+.chip--vat {
+  background: #fff6e7;
+  color: #a15c00;
+}
+
+.chip--ttc {
+  background: #e9fbf2;
+  color: #17804e;
 }
 
 .cart-item-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.cart-item-controls .quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qty-btn {
+  min-width: 28px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.remove-btn {
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 575.98px) {
   .cart-item {
+    padding: 8px 0;
+  }
+
+  .cart-item-header {
     flex-direction: column;
-    gap: 10px;
     align-items: flex-start;
   }
 
   .cart-item-total {
-    align-self: flex-end;
+    text-align: left;
   }
 
   .cart-item-controls {
     width: 100%;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .cart-item-breakdown {
+    grid-template-columns: 1fr 0.65fr 1fr;
+    font-size: 0.68rem;
   }
 }
 
@@ -1325,12 +2076,6 @@ export default {
   min-width: 30px;
   text-align: center;
   font-weight: bold;
-}
-
-.cart-item-total {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #28a745;
 }
 
 .cart-summary {
@@ -1431,5 +2176,43 @@ export default {
 
 .gap-2 {
   gap: 0.5rem;
+}
+
+.virtual-keyboard {
+  background: #f3f5f7;
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.keyboard-row:last-child {
+  margin-bottom: 0;
+}
+
+.keyboard-key {
+  min-width: 48px;
+  font-weight: 600;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.keyboard-key:active {
+  transform: translateY(1px);
+}
+</style>
+
+<style>
+body.pos-no-scroll {
+  overflow: hidden;
 }
 </style>
