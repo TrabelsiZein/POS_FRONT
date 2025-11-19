@@ -12,270 +12,242 @@
       <div></div>
     </b-overlay>
 
-    <div class="payment-header">
-      <h2>Payment</h2>
-      <b-button variant="outline-secondary" @click="goBack" :disabled="loading">
-        Back to Items
-      </b-button>
+    <!-- Panel 1: Summary Panel (Top) -->
+    <div class="panel-summary">
+      <div class="summary-left">
+        <b-button variant="outline-secondary" @click="goBack" :disabled="loading" class="back-btn">
+          <feather-icon icon="ArrowLeftIcon" size="18" class="mr-50" />
+          Back
+        </b-button>
+        <div class="summary-customer">
+          <div class="customer-info-display">
+            <strong v-if="selectedCustomer">{{ selectedCustomer.name }}</strong>
+            <strong v-else-if="passengerCustomer">{{ passengerCustomer.name }}</strong>
+            <b-badge v-if="passengerCustomer && (!selectedCustomer || selectedCustomer.customerCode === 'PASSENGER')" variant="info" class="ml-2">Default</b-badge>
+            <small class="text-muted d-block" v-if="selectedCustomer">{{ selectedCustomer.customerCode }}</small>
+            <small class="text-muted d-block" v-else-if="passengerCustomer">{{ passengerCustomer.customerCode }}</small>
+          </div>
+        </div>
+      </div>
+      <div class="summary-totals">
+        <div class="summary-item">
+          <span class="summary-label">Ticket Total:</span>
+          <span class="summary-value">{{ formatTunCurrency(orderSummary.totalAmount) }}</span>
+        </div>
+        <div class="summary-item" v-if="orderSummary.discountAmount > 0 || orderSummary.discountPercent > 0">
+          <span class="summary-label">Discount:</span>
+          <span class="summary-value">
+            <span v-if="orderSummary.discountPercent > 0">{{ orderSummary.discountPercent }}%</span>
+            <span v-if="orderSummary.discountPercent > 0 && orderSummary.discountAmount > 0"> / </span>
+            <span v-if="orderSummary.discountAmount > 0">{{ formatTunCurrency(orderSummary.discountAmount) }}</span>
+          </span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Total After Discount:</span>
+          <span class="summary-value">{{ formatTunCurrency(totalAfterDiscount) }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Total Paid:</span>
+          <span class="summary-value text-success">{{ formatTunCurrency(totalPaid) }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Remaining:</span>
+          <span class="summary-value" :class="remainingBalance > 0 ? 'text-danger' : 'text-success'">
+            {{ formatTunCurrency(Math.abs(remainingBalance)) }}
+          </span>
+        </div>
+      </div>
     </div>
 
-    <b-row class="payment-content">
-      <!-- Order Summary -->
-      <b-col cols="12" md="6" lg="6" class="order-col">
-        <b-card>
-          <h4 class="mb-3">Order Summary</h4>
-          <div class="order-items">
-            <div v-if="cart.length === 0" class="text-center text-muted py-4">
-              <p>No items in cart</p>
-            </div>
-            <div v-else v-for="(item, index) in cart" :key="index" class="order-item">
-              <div>
-                <h6>{{ item.name }}</h6>
-                <p class="text-muted">{{ item.itemCode }} - Qty: {{ item.quantity }}</p>
-              </div>
-              <div class="order-item-price">
-                ${{ formatPrice(item.unitPrice * item.quantity) }}
-              </div>
-            </div>
+    <!-- Main Content Area -->
+    <div class="payment-main-content">
+      <!-- Panel 2: Payment Classes (Left) -->
+      <div class="panel-payment-classes">
+        <div class="payment-classes-header">
+          <h5>Payment Methods</h5>
+        </div>
+        <div class="payment-classes-list">
+          <div
+            v-for="method in paymentMethods"
+            :key="method.id"
+            class="payment-class-item"
+            :class="{ active: selectedPaymentMethodId === method.id }"
+            @click="selectPaymentMethod(method.id)"
+          >
+            <span class="payment-class-name">{{ method.name }}</span>
+            <span class="payment-class-total">{{ formatTunCurrency(getTotalPaidByMethod(method.id)) }}</span>
           </div>
-          <hr>
-          <div class="order-summary">
-            <div class="summary-row">
-              <span>Subtotal:</span>
-              <span>${{ formatPrice(orderSummary.subtotal) }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Tax:</span>
-              <span>${{ formatPrice(orderSummary.taxAmount) }}</span>
-            </div>
-            <div class="summary-row total">
-              <span>Total:</span>
-              <span>${{ formatPrice(orderSummary.totalAmount) }}</span>
-            </div>
-          </div>
-        </b-card>
-      </b-col>
+        </div>
+      </div>
 
-      <!-- Payment Method Selection -->
-      <b-col cols="12" md="6" lg="6" class="payment-col">
-        <!-- Customer Selection -->
-        <b-card class="mb-3">
-          <h5 class="mb-3">Customer</h5>
-          <b-form-group label="Search Customer (Default: Passenger Customer)">
-            <div class="position-relative">
-              <b-input-group>
-                <b-form-input
-                  v-model="customerSearchTerm"
-                  placeholder="Search by name, code, phone, or email..."
-                  @input="searchCustomers"
-                  @focus="showCustomerDropdown = true"
-                  autocomplete="off"
-                />
-                <b-input-group-append>
-                  <b-button variant="outline-primary" @click="goToCustomerManagement" title="Customer Management">
-                    <feather-icon icon="UsersIcon" size="14" />
-                  </b-button>
-                </b-input-group-append>
-              </b-input-group>
-              
-              <!-- Customer Search Results Dropdown -->
-              <div v-if="showCustomerDropdown && customerSearchResults.length > 0" class="customer-search-results">
-              <b-list-group>
-                <b-list-group-item
-                  v-for="customer in customerSearchResults"
-                  :key="customer.id"
-                  button
-                  @click="selectCustomer(customer)"
-                  class="customer-search-item"
-                >
-                  <div>
-                    <strong>{{ customer.name }}</strong>
-                    <small class="text-muted d-block">{{ customer.customerCode }}</small>
-                    <small class="text-muted" v-if="customer.phone">{{ customer.phone }}</small>
+      <!-- Right Side Content -->
+      <div class="payment-right-content">
+        <!-- Panel 4: Payment Cards (Right-Top, Scrollable) -->
+        <div class="panel-payment-cards">
+          <div class="payment-cards-header">
+            <h5>Payment Details</h5>
+          </div>
+          <div class="payment-cards-container">
+            <div v-if="paymentCards.length === 0" class="empty-cards">
+              <feather-icon icon="CreditCardIcon" size="48" class="mb-2 text-muted" />
+              <p class="mb-0 text-muted">Select a payment method to add payment</p>
+            </div>
+            <div v-else class="payment-cards-list">
+              <div
+                v-for="(card, index) in paymentCards"
+                :key="card.id || index"
+                class="payment-card"
+                :class="{ selected: selectedCardIndex === index }"
+                @click="selectCard(index)"
+              >
+                <div class="payment-card-header">
+                  <div class="payment-card-title">
+                    <strong>{{ getPaymentMethodName(card.paymentMethodId) || 'Unknown Method' }}</strong>
                   </div>
-                </b-list-group-item>
-              </b-list-group>
-            </div>
-            
-              <div v-if="showCustomerDropdown && customerSearchTerm && customerSearchResults.length === 0 && !searchingCustomers" class="customer-search-results">
-                <b-list-group>
-                  <b-list-group-item class="text-muted text-center">
-                    No customers found
-                  </b-list-group-item>
-                </b-list-group>
-              </div>
-            </div>
-            
-            <small class="form-text text-muted mt-2">
-              <feather-icon icon="InfoIcon" size="12" />
-              Default: Passenger Customer (search to select different customer)
-            </small>
-          </b-form-group>
-          
-          <!-- Selected Customer Info -->
-          <div v-if="selectedCustomer && selectedCustomer.customerCode !== 'PASSENGER'" class="customer-info mt-2 p-2 bg-light rounded">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <strong>{{ selectedCustomer.name }}</strong>
-                <small class="text-muted d-block">{{ selectedCustomer.customerCode }}</small>
-                <small class="text-muted" v-if="selectedCustomer.phone">{{ selectedCustomer.phone }}</small>
-              </div>
-              <b-button variant="link" size="sm" @click="clearCustomerSelection" class="text-danger p-0">
-                <feather-icon icon="XIcon" size="16" />
-              </b-button>
-            </div>
-          </div>
-          
-          <!-- Passenger Customer Info (Default) -->
-          <div v-else-if="passengerCustomer" class="customer-info mt-2 p-2 bg-light rounded border-primary">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <strong>{{ passengerCustomer.name }}</strong> <b-badge variant="info" class="ml-2">Default</b-badge>
-                <small class="text-muted d-block">{{ passengerCustomer.customerCode }}</small>
-              </div>
-            </div>
-          </div>
-        </b-card>
-
-        <b-card>
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Payments</h4>
-            <b-button variant="primary" size="sm" @click="addPaymentEntry" :disabled="loading || isFullyPaid">
-              <feather-icon icon="PlusIcon" size="14" />
-              Add Payment
-            </b-button>
-          </div>
-
-          <!-- Payment Entries -->
-          <div v-if="paymentEntries.length === 0" class="text-center text-muted py-4">
-            <p>No payments added yet</p>
-            <p class="small">Click "Add Payment" to add a payment method</p>
-          </div>
-
-          <div v-else class="payment-entries">
-            <div v-for="(entry, index) in paymentEntries" :key="index" class="payment-entry mb-3">
-              <b-card class="bg-light">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                  <strong class="text-primary">Payment {{ index + 1 }}</strong>
-                  <b-button variant="link" size="sm" @click="removePaymentEntry(index)" class="text-danger p-0" :disabled="loading">
+                  <b-button
+                    variant="link"
+                    size="sm"
+                    @click.stop="removeCard(index)"
+                    class="card-delete-btn"
+                    :disabled="loading"
+                  >
                     <feather-icon icon="XIcon" size="16" />
                   </b-button>
                 </div>
+                <div class="payment-card-body">
+                  <!-- Return Voucher Number -->
+                  <b-form-group v-if="isReturnVoucherPayment(card)" label="Voucher Number *" class="mb-2">
+                    <b-input-group>
+                      <b-form-input
+                        v-model="card.voucherNumber"
+                        placeholder="Enter voucher number..."
+                        @keyup.enter="validateVoucher(card)"
+                        :disabled="loading"
+                        size="sm"
+                      />
+                      <b-input-group-append>
+                        <b-button variant="outline-primary" @click="validateVoucher(card)" :disabled="loading || !card.voucherNumber" size="sm">
+                          <feather-icon icon="SearchIcon" size="12" />
+                        </b-button>
+                      </b-input-group-append>
+                    </b-input-group>
+                    <small class="text-muted" v-if="card.voucherRemainingAmount !== undefined">
+                      Remaining: {{ formatTunCurrency(card.voucherRemainingAmount) }}
+                    </small>
+                  </b-form-group>
 
-                <b-form-group label="Payment Method">
-                  <b-form-select v-model="entry.paymentMethodId" :options="paymentMethodOptions" value-field="id"
-                    text-field="name" @change="onPaymentMethodChange(entry)">
-                  </b-form-select>
-                </b-form-group>
+                  <!-- Amount Input -->
+                  <b-form-group label="Amount *" class="mb-2">
+                    <b-input-group>
+                      <b-form-input
+                        v-model.number="card.amount"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        placeholder="0.00"
+                        @input="updatePaymentTotal"
+                        :disabled="isReturnVoucherPayment(card) || loading"
+                        :readonly="isReturnVoucherPayment(card)"
+                        size="sm"
+                        :ref="`amount-input-${index}`"
+                      />
+                      <b-input-group-append>
+                        <span class="input-group-text">TND</span>
+                      </b-input-group-append>
+                    </b-input-group>
+                    <small v-if="isReturnVoucherPayment(card)" class="text-muted">
+                      Amount is automatically set from voucher
+                    </small>
+                  </b-form-group>
 
-                <!-- Return Voucher Number Input (shown when RETURN_VOUCHER is selected) -->
-                <b-form-group v-if="isReturnVoucherPayment(entry)" label="Return Voucher Number *">
-                  <b-input-group>
-                    <b-form-input
-                      v-model="entry.voucherNumber"
-                      placeholder="Enter voucher number..."
-                      @keyup.enter="validateVoucher(entry)"
-                      :disabled="loading"
-                    />
-                    <b-input-group-append>
-                      <b-button variant="outline-primary" @click="validateVoucher(entry)" :disabled="loading || !entry.voucherNumber">
-                        <feather-icon icon="SearchIcon" size="14" />
-                      </b-button>
-                    </b-input-group-append>
-                  </b-input-group>
-                  <small class="text-muted" v-if="entry.voucherRemainingAmount !== undefined">
-                    Remaining amount: ${{ formatPrice(entry.voucherRemainingAmount) }}
-                  </small>
-                </b-form-group>
+                  <!-- Dynamic Required Fields -->
+                  <b-form-group v-if="requiresTitleNumber(card)" label="N° Titre *" class="mb-2">
+                    <b-form-input v-model="card.titleNumber" placeholder="N° du titre" size="sm" />
+                  </b-form-group>
 
-                <b-form-group label="Amount">
-                  <b-input-group prepend="$">
-                    <b-form-input
-                      v-model.number="entry.amount"
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      placeholder="0.00"
-                      @input="updatePaymentTotal"
-                      :disabled="isReturnVoucherPayment(entry)"
-                      :readonly="isReturnVoucherPayment(entry)"
-                    />
-                  </b-input-group>
-                  <small v-if="isReturnVoucherPayment(entry)" class="text-muted">
-                    Amount is automatically set from voucher
-                  </small>
-                </b-form-group>
+                  <b-form-group v-if="requiresDueDate(card)" label="Date Échéance *" class="mb-2">
+                    <b-form-input v-model="card.dueDate" type="date" size="sm" />
+                  </b-form-group>
 
-                <b-form-group v-if="requiresTitleNumber(entry)" label="N° Titre *">
-                  <b-form-input v-model="entry.titleNumber" placeholder="N° du titre" />
-                </b-form-group>
+                  <b-form-group v-if="requiresDrawerName(card)" label="Nom du tireur *" class="mb-2">
+                    <b-form-input v-model="card.drawerName" placeholder="Nom du tireur" size="sm" />
+                  </b-form-group>
 
-                <b-form-group v-if="requiresDueDate(entry)" label="Date Échéance *">
-                  <b-form-input v-model="entry.dueDate" type="date" />
-                </b-form-group>
-
-                <b-form-group v-if="requiresDrawerName(entry)" label="Nom du tireur *">
-                  <b-form-input v-model="entry.drawerName" placeholder="Nom du tireur" />
-                </b-form-group>
-
-                <b-form-group v-if="requiresIssuingBank(entry)" label="Banque émettrice *">
-                  <b-form-input v-model="entry.issuingBank" placeholder="Banque émettrice" />
-                </b-form-group>
-
-                <b-form-group v-if="!isReturnVoucherPayment(entry)" label="Reference (Optional)">
-                  <b-form-input v-model="entry.reference" placeholder="Check #, Card last 4, etc." />
-                </b-form-group>
-
-                <b-form-group label="Notes (Optional)">
-                  <b-form-input v-model="entry.notes" placeholder="Additional notes" />
-                </b-form-group>
-              </b-card>
+                  <b-form-group v-if="requiresIssuingBank(card)" label="Banque émettrice *" class="mb-2">
+                    <b-form-input v-model="card.issuingBank" placeholder="Banque émettrice" size="sm" />
+                  </b-form-group>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Payment Summary -->
-          <div v-if="paymentEntries.length > 0" class="payment-summary mt-3">
-            <hr>
-            <div class="summary-row">
-              <span>Total Amount:</span>
-              <span class="font-weight-bold">${{ formatPrice(orderSummary.totalAmount) }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Total Paid:</span>
-              <span class="font-weight-bold text-success">${{ formatPrice(totalPaid) }}</span>
-            </div>
-            <div class="summary-row">
-              <span>Remaining:</span>
-              <span :class="remainingBalance > 0 ? 'text-danger' : 'text-success'" class="font-weight-bold">
-                ${{ formatPrice(Math.abs(remainingBalance)) }}
-              </span>
-            </div>
-            <div v-if="remainingBalance < 0" class="summary-row total text-success">
-              <span>Change:</span>
-              <span class="font-weight-bold">${{ formatPrice(Math.abs(remainingBalance)) }}</span>
-            </div>
+        <!-- Panel 5: Numeric Keyboard (Bottom-Right) -->
+        <div class="panel-keyboard">
+          <div class="keyboard-grid">
+            <button
+              v-for="num in [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫']"
+              :key="num"
+              class="keyboard-key"
+              :class="{ 'key-decimal': num === '.', 'key-backspace': num === '⌫' }"
+              @click="handleKeyboardKey(num)"
+              :disabled="loading"
+            >
+              {{ num }}
+            </button>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <b-button variant="warning" size="lg" block :disabled="cart.length === 0 || loading"
-            @click="saveAsPending" class="mb-2 mt-3">
-            <feather-icon icon="SaveIcon" size="18" class="mr-1" />
-            <span v-if="loading">Saving...</span>
-            <span v-else>Save as Pending</span>
-          </b-button>
+    <!-- Panel 3: Actions Panel (Bottom) -->
+    <div class="panel-actions">
+      <b-button
+        variant="warning"
+        size="lg"
+        @click="saveAsPending"
+        :disabled="cart.length === 0 || loading"
+        class="action-btn"
+      >
+        <feather-icon icon="SaveIcon" size="18" class="mr-50" />
+        <span v-if="loading">Saving...</span>
+        <span v-else>Save as Pending</span>
+      </b-button>
 
-          <b-button variant="success" size="lg" block :disabled="!canCompletePayment || loading"
-            @click="completePayment" class="mb-2">
-            <span v-if="loading">Processing...</span>
-            <span v-else>Complete Payment</span>
-          </b-button>
+      <b-button
+        variant="info"
+        size="lg"
+        @click="openDiscountDialog"
+        :disabled="loading"
+        class="action-btn"
+      >
+        <feather-icon icon="PercentIcon" size="18" class="mr-50" />
+        Discount
+      </b-button>
 
-          <b-button variant="outline-secondary" size="lg" block :disabled="loading" @click="goBack">
-            Cancel
-          </b-button>
-        </b-card>
-      </b-col>
-    </b-row>
+      <b-button
+        variant="info"
+        size="lg"
+        @click="openCustomerDialog"
+        :disabled="loading"
+        class="action-btn"
+      >
+        <feather-icon icon="UsersIcon" size="18" class="mr-50" />
+        Customer
+      </b-button>
 
+      <b-button
+        variant="success"
+        size="lg"
+        @click="completePayment"
+        :disabled="!canCompletePayment || loading"
+        class="action-btn"
+      >
+        <feather-icon icon="CheckCircleIcon" size="18" class="mr-50" />
+        <span v-if="loading">Processing...</span>
+        <span v-else>Complete Payment</span>
+      </b-button>
+    </div>
   </div>
 </template>
 
@@ -291,7 +263,7 @@ export default {
       cart: [],
       orderSummary: {},
       paymentMethods: [],
-      paymentEntries: [],
+      paymentCards: [], // Replaces paymentEntries
       loading: false,
       customers: [],
       selectedCustomerId: null,
@@ -300,108 +272,107 @@ export default {
       showCustomerDropdown: false,
       searchingCustomers: false,
       passengerCustomer: null,
-      selectedCustomerObj: null, // Store the selected customer object
+      selectedCustomerObj: null,
       searchTimeout: null,
-      pendingTicketsCount: 0
+      pendingTicketsCount: 0,
+      selectedPaymentMethodId: null, // Currently selected payment method
+      selectedCardIndex: null, // Currently selected card index
+      cardIdCounter: 0 // For generating unique card IDs
     }
   },
   computed: {
     pendingTicketId() {
-      // Get pending ticket ID from store
       return this.$store.state.pos.pendingTicketId
     },
     selectedCustomer() {
       if (!this.selectedCustomerId) return this.passengerCustomer
-      // Check if it's passenger customer
       if (this.passengerCustomer && this.selectedCustomerId === this.passengerCustomer.id) {
         return this.passengerCustomer
       }
-      // Check in search results or loaded customer
-      return this.customerSearchResults.find(c => c.id === this.selectedCustomerId) || 
+      return this.customerSearchResults.find(c => c.id === this.selectedCustomerId) ||
              (this.selectedCustomerObj || null)
     },
-    paymentMethodOptions() {
-      return [{ id: null, name: 'Select payment method...' }, ...this.paymentMethods]
-    },
     totalPaid() {
-      return this.paymentEntries.reduce((sum, entry) => {
-        const amount = parseFloat(entry.amount) || 0
+      return this.paymentCards.reduce((sum, card) => {
+        const amount = parseFloat(card.amount) || 0
         return sum + amount
       }, 0)
     },
-    remainingBalance() {
+    totalAfterDiscount() {
       const total = this.orderSummary?.totalAmount || 0
-      return total - this.totalPaid
+      const discount = this.orderSummary?.discountAmount || 0
+      return total - discount
+    },
+    remainingBalance() {
+      return this.totalAfterDiscount - this.totalPaid
     },
     isFullyPaid() {
       return this.remainingBalance <= 0
     },
     canCompletePayment() {
-      if (this.paymentEntries.length === 0) return false
-      
-      // Check all entries have payment method and amount
-      const allValid = this.paymentEntries.every(entry => {
-        if (!entry.paymentMethodId) return false
+      if (this.paymentCards.length === 0) return false
 
-        const paymentMethod = this.getPaymentMethodById(entry.paymentMethodId)
+      const allValid = this.paymentCards.every(card => {
+        if (!card.paymentMethodId) return false
+
+        const paymentMethod = this.getPaymentMethodById(card.paymentMethodId)
         if (!paymentMethod) return false
 
-        const amount = parseFloat(entry.amount)
-        if (!this.isReturnVoucherPayment(entry) && (!amount || amount <= 0)) {
+        const amount = parseFloat(card.amount)
+        if (!this.isReturnVoucherPayment(card) && (!amount || amount <= 0)) {
           return false
         }
 
-        if (this.isReturnVoucherPayment(entry)) {
-          if (!entry.voucherNumber || !entry.voucherNumber.trim()) {
+        if (this.isReturnVoucherPayment(card)) {
+          if (!card.voucherNumber || !card.voucherNumber.trim()) {
             return false
           }
           if (!amount || amount <= 0) {
             return false
           }
         }
-        
-        if (paymentMethod.requireTitleNumber && (!entry.titleNumber || !entry.titleNumber.trim())) {
+
+        if (paymentMethod.requireTitleNumber && (!card.titleNumber || !card.titleNumber.trim())) {
           return false
         }
-        if (paymentMethod.requireDueDate && (!entry.dueDate || entry.dueDate === '')) {
+        if (paymentMethod.requireDueDate && (!card.dueDate || card.dueDate === '')) {
           return false
         }
-        if (paymentMethod.requireDrawerName && (!entry.drawerName || !entry.drawerName.trim())) {
+        if (paymentMethod.requireDrawerName && (!card.drawerName || !card.drawerName.trim())) {
           return false
         }
-        if (paymentMethod.requireIssuingBank && (!entry.issuingBank || !entry.issuingBank.trim())) {
+        if (paymentMethod.requireIssuingBank && (!card.issuingBank || !card.issuingBank.trim())) {
           return false
         }
-        
+
         return true
       })
-      
+
       return allValid && this.remainingBalance <= 0
     }
   },
   async mounted() {
     this.loadCartData()
-    this.loadPaymentMethods()
+    await this.loadPaymentMethods()
     await this.loadPassengerCustomer()
     this.loadPendingTicketsCount()
-    
-    // Reset customer to passenger when opening payment page
-    // (unless there's a pending ticket with a customer - handled in resetCustomerToPassenger)
-    // Always reset for fresh sales
+
     this.resetCustomerToPassenger()
-    
-    // Close customer dropdown when clicking outside
-    document.addEventListener('click', this.handleClickOutside)
+
+    // Initialize with CLIENT_ESPECES selected
+    this.initializeDefaultPayment()
+
+    // Listen for keyboard input
+    document.addEventListener('keydown', this.handleKeyboardInput)
   },
   beforeDestroy() {
-    document.removeEventListener('click', this.handleClickOutside)
+    document.removeEventListener('keydown', this.handleKeyboardInput)
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout)
     }
   },
   methods: {
     loadCartData() {
-      // Ensure we have the pos store module
       if (!this.$store.state.pos) {
         console.error('POS store module not found')
         this.$router.push({ name: 'pos-item-selection' })
@@ -409,16 +380,16 @@ export default {
       }
 
       this.cart = this.$store.state.pos.cart || []
-      
-      // Handle null orderSummary from store
+
       const storeSummary = this.$store.state.pos.orderSummary
       this.orderSummary = storeSummary || {
         subtotal: 0,
         taxAmount: 0,
-        totalAmount: 0
+        totalAmount: 0,
+        discountAmount: 0,
+        discountPercent: 0
       }
 
-      // Ensure orderSummary has valid values (handle null/undefined)
       if (this.orderSummary.subtotal === null || this.orderSummary.subtotal === undefined) {
         this.orderSummary.subtotal = 0
       }
@@ -427,6 +398,12 @@ export default {
       }
       if (this.orderSummary.totalAmount === null || this.orderSummary.totalAmount === undefined) {
         this.orderSummary.totalAmount = 0
+      }
+      if (this.orderSummary.discountAmount === null || this.orderSummary.discountAmount === undefined) {
+        this.orderSummary.discountAmount = 0
+      }
+      if (this.orderSummary.discountPercent === null || this.orderSummary.discountPercent === undefined) {
+        this.orderSummary.discountPercent = 0
       }
 
       console.log('Payment page - Cart:', this.cart)
@@ -454,14 +431,10 @@ export default {
       }
     },
     resetCustomerToPassenger() {
-      // Check if there's a pending ticket - if so, keep its customer
       if (this.pendingTicketId) {
-        // Don't reset if we're completing a pending ticket
-        // The customer from the pending ticket should be preserved
         return
       }
-      
-      // Reset to passenger customer
+
       if (this.passengerCustomer) {
         this.selectedCustomerId = this.passengerCustomer.id
         this.selectedCustomerObj = null
@@ -477,7 +450,6 @@ export default {
         const response = await this.$http.get(`/customer/${this.selectedCustomerId}`)
         if (response.status === 200 && response.data) {
           this.selectedCustomerObj = response.data
-          // Set search term to show selected customer
           this.customerSearchTerm = `${response.data.customerCode} - ${response.data.name}`
         }
       } catch (error) {
@@ -485,24 +457,20 @@ export default {
       }
     },
     searchCustomers() {
-      // Clear previous timeout
       if (this.searchTimeout) {
         clearTimeout(this.searchTimeout)
       }
-      
+
       const searchTerm = this.customerSearchTerm.trim()
-      
-      // If empty, clear results
+
       if (!searchTerm) {
         this.customerSearchResults = []
         this.showCustomerDropdown = false
         return
       }
-      
-      // Show dropdown
+
       this.showCustomerDropdown = true
-      
-      // Debounce search (wait 300ms after user stops typing)
+
       this.searchTimeout = setTimeout(async () => {
         this.searchingCustomers = true
         try {
@@ -535,116 +503,209 @@ export default {
       this.customerSearchResults = []
       this.onCustomerChange()
     },
-    handleClickOutside(event) {
-      // Close dropdown if clicking outside the customer search area
-      if (!this.$el.contains(event.target)) {
-        this.showCustomerDropdown = false
-      }
-    },
     onCustomerChange() {
-      // Store selected customer in Vuex for persistence
       if (this.$store.state.pos) {
         this.$store.dispatch('pos/setSelectedCustomerId', this.selectedCustomerId)
       }
     },
-    goToCustomerManagement() {
-      // Navigate to customer management page with return route
-      this.$router.push({ 
-        name: 'pos-customers',
-        query: { returnTo: 'pos-payment' }
+    openCustomerDialog() {
+      // Placeholder for future implementation
+      this.$toast({
+        title: 'Coming Soon',
+        text: 'Customer selection dialog will be implemented soon',
+        variant: 'info'
       })
     },
-    loadPaymentMethods() {
-      this.$http.get('/payment-method')
-        .then(response => {
-          this.paymentMethods = response.data.filter(pm => pm.active !== false)
+    openDiscountDialog() {
+      // Placeholder for future implementation
+      this.$toast({
+        title: 'Coming Soon',
+        text: 'Discount dialog will be implemented soon',
+        variant: 'info'
+      })
+    },
+    async loadPaymentMethods() {
+      try {
+        const response = await this.$http.get('/payment-method')
+        this.paymentMethods = response.data
+          .filter(pm => pm.active !== false)
+          .sort((a, b) => {
+            // Sort by displayOrder, if displayOrder is null or undefined, put it at the end
+            const orderA = a.displayOrder != null ? a.displayOrder : 999
+            const orderB = b.displayOrder != null ? b.displayOrder : 999
+            return orderA - orderB
+          })
+      } catch (error) {
+        console.error('Error loading payment methods:', error)
+        this.paymentMethods = [
+          { id: 1, name: 'Client Espèce', type: 'CLIENT_ESPECES', active: true, displayOrder: 1 },
+          { id: 2, name: 'Return Voucher', type: 'RETURN_VOUCHER', active: true, displayOrder: 8 }
+        ]
+      }
+    },
+    getClientEspecesPaymentMethod() {
+      return this.paymentMethods.find(pm => pm.type === 'CLIENT_ESPECES') || null
+    },
+    initializeDefaultPayment() {
+      const clientEspeces = this.getClientEspecesPaymentMethod()
+      if (clientEspeces) {
+        this.selectedPaymentMethodId = clientEspeces.id
+        this.addOrUpdatePaymentCard(clientEspeces.id)
+      }
+    },
+    selectPaymentMethod(methodId) {
+      this.selectedPaymentMethodId = methodId
+      this.addOrUpdatePaymentCard(methodId)
+    },
+    addOrUpdatePaymentCard(methodId) {
+      const paymentMethod = this.getPaymentMethodById(methodId)
+      if (!paymentMethod) return
+
+      // Check if CLIENT_ESPECES - only one card allowed
+      if (paymentMethod.type === 'CLIENT_ESPECES') {
+        const existingCard = this.paymentCards.find(card => {
+          const cardMethod = this.getPaymentMethodById(card.paymentMethodId)
+          return cardMethod && cardMethod.type === 'CLIENT_ESPECES'
         })
-        .catch(error => {
-          console.error('Error loading payment methods:', error)
-          // Set default payment methods if API fails
-          this.paymentMethods = [
-            { id: 1, name: 'Client Espèce', type: 'CLIENT_ESPECES', active: true },
-            { id: 2, name: 'Return Voucher', type: 'RETURN_VOUCHER', active: true }
-          ]
-        })
-    },
-    formatPrice(price) {
-      if (!price) return '0.00'
-      return parseFloat(price).toFixed(2)
-    },
-    goBack() {
-      this.$router.push({ name: 'pos-item-selection' })
-    },
-    addPaymentEntry() {
-      this.paymentEntries.push({
-        paymentMethodId: null,
+
+        if (existingCard) {
+          // Update existing card and select it
+          const index = this.paymentCards.indexOf(existingCard)
+          this.selectCard(index)
+          return
+        }
+      }
+
+      // Create new card
+      const newCard = {
+        id: `card-${++this.cardIdCounter}`,
+        paymentMethodId: methodId,
         amount: null,
-        reference: '',
-        notes: '',
         voucherNumber: '',
         voucherRemainingAmount: undefined,
         titleNumber: '',
         dueDate: '',
         drawerName: '',
         issuingBank: ''
-      })
+      }
+
+      this.paymentCards.unshift(newCard)
+      this.selectedCardIndex = 0
       this.updatePaymentTotal()
+
+      // Focus amount input
+      this.$nextTick(() => {
+        this.focusAmountInput(0)
+      })
+    },
+    selectCard(index) {
+      if (index < 0 || index >= this.paymentCards.length) return
+
+      // Move card to top
+      const card = this.paymentCards[index]
+      this.paymentCards.splice(index, 1)
+      this.paymentCards.unshift(card)
+
+      // Select the card (now at index 0)
+      this.selectedCardIndex = 0
+      this.updatePaymentTotal()
+
+      // Focus amount input
+      this.$nextTick(() => {
+        this.focusAmountInput(0)
+      })
+    },
+    removeCard(index) {
+      if (index < 0 || index >= this.paymentCards.length) return
+
+      this.paymentCards.splice(index, 1)
+
+      // Adjust selected index
+      if (this.selectedCardIndex === index) {
+        if (this.paymentCards.length > 0) {
+          this.selectedCardIndex = 0
+        } else {
+          this.selectedCardIndex = null
+        }
+      } else if (this.selectedCardIndex > index) {
+        this.selectedCardIndex--
+      }
+
+      // If no cards left and CLIENT_ESPECES is selected, create default card
+      if (this.paymentCards.length === 0 && this.selectedPaymentMethodId) {
+        const method = this.getPaymentMethodById(this.selectedPaymentMethodId)
+        if (method && method.type === 'CLIENT_ESPECES') {
+          this.addOrUpdatePaymentCard(this.selectedPaymentMethodId)
+        }
+      }
+
+      this.updatePaymentTotal()
+    },
+    getTotalPaidByMethod(methodId) {
+      return this.paymentCards
+        .filter(card => card.paymentMethodId === methodId)
+        .reduce((sum, card) => {
+          const amount = parseFloat(card.amount) || 0
+          return sum + amount
+        }, 0)
+    },
+    getPaymentMethodName(paymentMethodId) {
+      if (!paymentMethodId) return null
+      const method = this.paymentMethods.find(pm => pm.id === paymentMethodId)
+      return method ? method.name : null
     },
     getPaymentMethodById(id) {
       if (!id) return null
       return this.paymentMethods.find(pm => pm.id === id) || null
     },
-    isReturnVoucherPayment(entry) {
-      const paymentMethod = this.getPaymentMethodById(entry ? entry.paymentMethodId : null)
+    isReturnVoucherPayment(card) {
+      const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.type === 'RETURN_VOUCHER'
     },
-    requiresTitleNumber(entry) {
-      const paymentMethod = this.getPaymentMethodById(entry ? entry.paymentMethodId : null)
+    requiresTitleNumber(card) {
+      const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.requireTitleNumber
     },
-    requiresDueDate(entry) {
-      const paymentMethod = this.getPaymentMethodById(entry ? entry.paymentMethodId : null)
+    requiresDueDate(card) {
+      const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.requireDueDate
     },
-    requiresDrawerName(entry) {
-      const paymentMethod = this.getPaymentMethodById(entry ? entry.paymentMethodId : null)
+    requiresDrawerName(card) {
+      const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.requireDrawerName
     },
-    requiresIssuingBank(entry) {
-      const paymentMethod = this.getPaymentMethodById(entry ? entry.paymentMethodId : null)
+    requiresIssuingBank(card) {
+      const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.requireIssuingBank
     },
-    onPaymentMethodChange(entry) {
-      // Reset voucher-related fields when payment method changes
-      if (!this.isReturnVoucherPayment(entry)) {
-        entry.voucherNumber = ''
-        entry.voucherRemainingAmount = undefined
-        entry.reference = ''
-        // Reset amount if it was set by voucher
-        if (entry.amount && entry.amount > 0) {
-          entry.amount = 0
+    onPaymentMethodChange(card) {
+      if (!this.isReturnVoucherPayment(card)) {
+        card.voucherNumber = ''
+        card.voucherRemainingAmount = undefined
+        if (card.amount && card.amount > 0) {
+          card.amount = 0
         }
       }
-      entry.titleNumber = ''
-      entry.dueDate = ''
-      entry.drawerName = ''
-      entry.issuingBank = ''
+      card.titleNumber = ''
+      card.dueDate = ''
+      card.drawerName = ''
+      card.issuingBank = ''
       this.updatePaymentTotal()
     },
-    async validateVoucher(entry) {
-      if (!entry.voucherNumber || !entry.voucherNumber.trim()) {
+    async validateVoucher(card) {
+      if (!card.voucherNumber || !card.voucherNumber.trim()) {
         return
       }
 
       this.loading = true
       try {
         const response = await this.$http.get('/return-voucher/validate', {
-          params: { voucherNumber: entry.voucherNumber.trim() }
+          params: { voucherNumber: card.voucherNumber.trim() }
         })
 
         if (response.status === 200) {
           const voucherData = response.data
-          
+
           if (!voucherData.isValid) {
             this.$toast({
               component: ToastificationContent,
@@ -655,30 +716,24 @@ export default {
                 variant: 'danger'
               }
             })
-            entry.voucherRemainingAmount = 0
-            entry.amount = 0
-            entry.reference = ''
+            card.voucherRemainingAmount = 0
+            card.amount = 0
             return
           }
 
-          // Set voucher remaining amount
-          entry.voucherRemainingAmount = voucherData.remainingAmount
-          
-          // Auto-set amount to remaining amount (or order total if less)
+          card.voucherRemainingAmount = voucherData.remainingAmount
+
           const remainingBalance = this.remainingBalance
-          entry.amount = Math.min(voucherData.remainingAmount, remainingBalance)
-          
-          // Set reference to voucher number
-          entry.reference = entry.voucherNumber.trim()
-          
+          card.amount = Math.min(voucherData.remainingAmount, remainingBalance)
+
           this.updatePaymentTotal()
-          
+
           this.$toast({
             component: ToastificationContent,
             props: {
               title: 'Voucher Validated',
               icon: 'CheckCircleIcon',
-              text: `Voucher validated. Remaining amount: $${this.formatPrice(voucherData.remainingAmount)}`,
+              text: `Voucher validated. Remaining amount: ${this.formatTunCurrency(voucherData.remainingAmount)}`,
               variant: 'success'
             }
           })
@@ -689,7 +744,7 @@ export default {
         if (error.response && error.response.data) {
           errorMessage = error.response.data.message || error.response.data || errorMessage
         }
-        
+
         this.$toast({
           component: ToastificationContent,
           props: {
@@ -699,41 +754,109 @@ export default {
             variant: 'danger'
           }
         })
-        
-        entry.voucherRemainingAmount = undefined
-        entry.amount = 0
-        entry.reference = ''
+
+        card.voucherRemainingAmount = undefined
+        card.amount = 0
         this.updatePaymentTotal()
       } finally {
         this.loading = false
       }
     },
-    removePaymentEntry(index) {
-      this.paymentEntries.splice(index, 1)
-      this.updatePaymentTotal()
+    focusAmountInput(index) {
+      const inputRef = this.$refs[`amount-input-${index}`]
+      if (inputRef && inputRef.length > 0) {
+        inputRef[0].focus()
+      } else if (inputRef) {
+        inputRef.focus()
+      }
+    },
+    handleKeyboardInput(event) {
+      // Only handle numeric keys when not typing in an input field
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
+        return
+      }
+
+      // Handle numeric keys (0-9) and decimal point
+      if ((event.key >= '0' && event.key <= '9') || event.key === '.') {
+        event.preventDefault()
+        this.handleKeyboardKey(event.key)
+      }
+
+      // Handle Backspace
+      if (event.key === 'Backspace') {
+        event.preventDefault()
+        this.handleKeyboardKey('⌫')
+      }
+
+      // Handle Enter key to complete payment if fully paid
+      if (event.key === 'Enter' && this.canCompletePayment) {
+        this.completePayment()
+      }
+    },
+    handleKeyboardKey(key) {
+      if (this.selectedCardIndex === null || this.selectedCardIndex >= this.paymentCards.length) {
+        // If no card selected, select CLIENT_ESPECES or create one
+        const clientEspeces = this.getClientEspecesPaymentMethod()
+        if (clientEspeces) {
+          this.selectedPaymentMethodId = clientEspeces.id
+          this.addOrUpdatePaymentCard(clientEspeces.id)
+        } else {
+          return
+        }
+      }
+
+      const card = this.paymentCards[this.selectedCardIndex]
+      if (!card || this.isReturnVoucherPayment(card)) {
+        return
+      }
+
+      if (key === '⌫') {
+        // Backspace - remove last character
+        const currentAmount = card.amount ? String(card.amount) : ''
+        if (currentAmount.length > 0) {
+          const newAmount = currentAmount.slice(0, -1)
+          card.amount = newAmount ? parseFloat(newAmount) : null
+          this.updatePaymentTotal()
+        }
+      } else if (key === '.') {
+        // Decimal point - add if not present
+        const currentAmount = card.amount ? String(card.amount) : '0'
+        if (!currentAmount.includes('.')) {
+          card.amount = parseFloat(currentAmount + '.') || 0
+          this.updatePaymentTotal()
+        }
+      } else if (key >= '0' && key <= '9') {
+        // Number - append to current amount
+        const currentAmount = card.amount ? String(card.amount) : '0'
+        const newAmount = currentAmount === '0' ? key : currentAmount + key
+        card.amount = parseFloat(newAmount) || 0
+        this.updatePaymentTotal()
+      }
     },
     updatePaymentTotal() {
-      // This method is called when payment entries change
-      // Force reactivity update
       this.$forceUpdate()
+    },
+    formatTunCurrency(value) {
+      const amount = parseFloat(value) || 0
+      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return `${formatted} TND`
+    },
+    goBack() {
+      this.$router.push({ name: 'pos-item-selection' })
     },
     async printReceipt(saleData) {
       console.log('Printing receipt with data:', saleData)
-      
-      // Use Vue to create component instance
+
       const Vue = this.$root.constructor || this.$options._base
       const ReceiptComponent = Vue.extend(ReceiptTemplate)
-      
-      // Create component instance
+
       const instance = new ReceiptComponent({
         parent: this,
         propsData: { saleData }
       })
-      
-      // Mount the component
+
       instance.$mount()
-      
-      // Create a new window for printing
+
       const printWindow = window.open('', '_blank')
       if (!printWindow) {
         this.$toast({
@@ -743,12 +866,10 @@ export default {
         })
         return
       }
-      
-      // Wait for component to mount and generate barcode
+
       await this.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 200))
-      
-      // Generate barcode in the component if sales_number exists
+
       const barcodeValue = saleData.salesNumber || null
       if (barcodeValue && instance.$el) {
         try {
@@ -768,8 +889,7 @@ export default {
           console.error('Error generating barcode:', error)
         }
       }
-      
-      // Write receipt HTML to new window
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -821,15 +941,13 @@ export default {
         </body>
         </html>
       `)
-      
+
       printWindow.document.close()
-      
-      // Wait for content to load and barcode to generate, then print
+
       setTimeout(() => {
         printWindow.focus()
         printWindow.print()
-        
-        // Close window after printing
+
         setTimeout(() => {
           printWindow.close()
           if (instance && instance.$el) {
@@ -844,32 +962,30 @@ export default {
       this.loading = true
 
       try {
-        // Prepare payments array
-        const payments = this.paymentEntries
-          .filter(entry => entry.paymentMethodId)
-          .map(entry => {
+        const payments = this.paymentCards
+          .filter(card => card.paymentMethodId)
+          .map(card => {
             // For return voucher, use voucher number as reference
-            const reference = this.isReturnVoucherPayment(entry) 
-              ? (entry.voucherNumber || entry.reference || '')
-              : (entry.reference || null)
-            
+            const reference = this.isReturnVoucherPayment(card)
+              ? (card.voucherNumber || null)
+              : null
+
             return {
-              paymentMethodId: entry.paymentMethodId,
-              amount: parseFloat(entry.amount),
+              paymentMethodId: card.paymentMethodId,
+              amount: parseFloat(card.amount),
               reference: reference,
-              notes: entry.notes || null,
-              titleNumber: entry.titleNumber ? entry.titleNumber.trim() : null,
-              dueDate: entry.dueDate || null,
-              drawerName: entry.drawerName ? entry.drawerName.trim() : null,
-              issuingBank: entry.issuingBank ? entry.issuingBank.trim() : null
+              notes: null,
+              titleNumber: card.titleNumber ? card.titleNumber.trim() : null,
+              dueDate: card.dueDate || null,
+              drawerName: card.drawerName ? card.drawerName.trim() : null,
+              issuingBank: card.issuingBank ? card.issuingBank.trim() : null
             }
           })
 
-        // Prepare complete sale request
         const saleRequest = {
           subtotal: this.orderSummary.subtotal,
           taxAmount: this.orderSummary.taxAmount,
-          discountAmount: 0,
+          discountAmount: this.orderSummary.discountAmount || 0,
           totalAmount: this.orderSummary.totalAmount,
           paidAmount: this.totalPaid,
           changeAmount: this.remainingBalance < 0 ? Math.abs(this.remainingBalance) : 0,
@@ -884,36 +1000,28 @@ export default {
           payments: payments
         }
 
-        // If completing a pending ticket, use complete-pending endpoint (updates existing ticket)
-        // Otherwise, create a new sale (creates new ticket)
         const isPendingTicket = !!this.pendingTicketId
-        
+
         console.log('=== Payment Processing ===')
         console.log('Pending Ticket ID:', this.pendingTicketId)
         console.log('Is Pending Ticket:', isPendingTicket)
-        console.log('Cart items:', this.cart.length)
-        
+
         let response
         if (isPendingTicket) {
-          console.log(`✓ Completing pending ticket ${this.pendingTicketId} - will UPDATE existing ticket`)
-          console.log(`✓ Ticket will keep same sales number`)
+          console.log(`✓ Completing pending ticket ${this.pendingTicketId}`)
           response = await this.$http.post(`/sales-header/complete-pending/${this.pendingTicketId}`, saleRequest)
         } else {
-          console.log('✗ Creating NEW sale - will CREATE new ticket with new number')
+          console.log('✗ Creating NEW sale')
           response = await this.$http.post('/sales-header/process-sale', saleRequest)
         }
-        
+
         console.log('✓ Payment Response - Sales Number:', response.data?.salesNumber)
-        console.log('✓ Payment Response - Status:', response.data?.status)
-        console.log('✓ Payment Response - ID:', response.data?.id)
 
         if (response.status === 200) {
-          // Clear cart, order summary, and pending ticket ID
           this.$store.dispatch('pos/clearCart')
           this.$store.dispatch('pos/clearOrderSummary')
           this.$store.dispatch('pos/clearPendingTicketId')
-          
-          // Reset customer to passenger for next sale
+
           this.resetCustomerToPassenger()
 
           this.$toast({
@@ -926,10 +1034,8 @@ export default {
             }
           })
 
-          // Print receipt
           this.printReceipt(response.data)
 
-          // Return to item selection
           setTimeout(() => {
             this.$router.push({ name: 'pos-item-selection' })
           }, 2000)
@@ -958,11 +1064,10 @@ export default {
       this.loading = true
 
       try {
-        // Prepare sale request (without payments for pending)
         const saleRequest = {
           subtotal: this.orderSummary.subtotal,
           taxAmount: this.orderSummary.taxAmount,
-          discountAmount: 0,
+          discountAmount: this.orderSummary.discountAmount || 0,
           totalAmount: this.orderSummary.totalAmount,
           paidAmount: 0,
           changeAmount: 0,
@@ -974,31 +1079,27 @@ export default {
             unitPrice: item.unitPrice,
             lineTotal: item.unitPrice * item.quantity
           })),
-          payments: [] // No payments for pending sales
+          payments: []
         }
 
-        // Save as pending sale
         const response = await this.$http.post('/sales-header/save-pending', saleRequest)
 
         if (response.status === 200) {
-          // Clear cart and show success
           this.$store.dispatch('pos/clearCart')
           this.$store.dispatch('pos/clearOrderSummary')
-          
-          // Reset customer to passenger for next sale
+
           this.resetCustomerToPassenger()
 
-        this.$toast({
-          component: ToastificationContent,
-          props: {
-            title: 'Success',
-            icon: 'CheckCircleIcon',
-            text: `Pending ticket ${response.data.salesNumber} saved!`,
-            variant: 'success'
-          }
-        })
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: 'Success',
+              icon: 'CheckCircleIcon',
+              text: `Pending ticket ${response.data.salesNumber} saved!`,
+              variant: 'success'
+            }
+          })
 
-          // Return to item selection
           setTimeout(() => {
             this.$router.push({ name: 'pos-item-selection' })
           }, 1500)
@@ -1042,44 +1143,482 @@ export default {
 
 <style scoped>
 .payment-container {
-  padding: 20px;
-  min-height: 100vh;
-  position: relative;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "summary"
+    "main"
+    "actions";
+  background: #f5f5f5;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
 }
 
-.payment-header {
+/* Panel 1: Summary Panel (Top) */
+.panel-summary {
+  grid-area: summary;
+  background: #fff;
+  border-bottom: 2px solid #e0e0e0;
+  padding: 12px 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 15px;
-  margin-bottom: 20px;
+  height: auto;
+  max-height: 120px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
-.payment-header h2 {
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 0 0 auto;
+}
+
+.back-btn {
+  min-width: 100px;
+  height: 40px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.summary-customer {
+  flex: 0 0 auto;
+}
+
+.customer-info-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.customer-info-display strong {
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.customer-info-display small {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.summary-totals {
+  flex: 1;
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+/* Main Content Area */
+.payment-main-content {
+  grid-area: main;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-areas: "classes content";
+  overflow: hidden;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Panel 2: Payment Classes (Left) */
+.panel-payment-classes {
+  grid-area: classes;
+  background: #fff;
+  border-right: 2px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.payment-classes-header {
+  padding: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.payment-classes-header h5 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
 }
 
-@media (max-width: 575.98px) {
-  .payment-container {
-    padding: 15px;
-  }
-
-  .payment-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .payment-header h2 {
-    font-size: 1.25rem;
-  }
-
-  .payment-header .btn {
-    width: 100%;
-  }
+.payment-classes-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  box-sizing: border-box;
+  /* Hide scrollbar but keep touch scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
+.payment-classes-list::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.payment-class-item {
+  padding: 12px 10px;
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 50px;
+  touch-action: manipulation;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.payment-class-item:hover {
+  background: #e9ecef;
+  border-color: #7367f0;
+  transform: translateX(2px);
+}
+
+.payment-class-item.active {
+  background: #f0f4ff;
+  border-color: #7367f0;
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(115, 103, 240, 0.2);
+}
+
+.payment-class-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.95rem;
+  flex: 1;
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payment-class-total {
+  font-weight: bold;
+  color: #28a745;
+  font-size: 0.9rem;
+  margin-left: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Right Side Content */
+.payment-right-content {
+  grid-area: content;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    "cards"
+    "keyboard";
+  overflow: hidden;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Panel 4: Payment Cards (Right-Top, Scrollable) */
+.panel-payment-cards {
+  grid-area: cards;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.payment-cards-header {
+  padding: 15px;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.payment-cards-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.payment-cards-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  box-sizing: border-box;
+  /* Hide scrollbar but keep touch scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.payment-cards-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.empty-cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #999;
+  text-align: center;
+}
+
+.payment-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.payment-card {
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.payment-card:hover {
+  border-color: #7367f0;
+  box-shadow: 0 2px 8px rgba(115, 103, 240, 0.15);
+}
+
+.payment-card.selected {
+  background: #f0f4ff;
+  border-color: #7367f0;
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(115, 103, 240, 0.25);
+}
+
+.payment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.payment-card-title {
+  flex: 1;
+}
+
+.payment-card-title strong {
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.card-delete-btn {
+  color: #dc3545;
+  padding: 4px 8px;
+}
+
+.card-delete-btn:hover {
+  color: #c82333;
+}
+
+.payment-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.payment-card-body .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.payment-card-body input,
+.payment-card-body select,
+.payment-card-body .input-group {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Panel 5: Numeric Keyboard (Bottom-Right) */
+.panel-keyboard {
+  grid-area: keyboard;
+  background: #fff;
+  border-top: 2px solid #e0e0e0;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
+  min-height: 180px;
+  max-height: 220px;
+}
+
+.keyboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-width: 400px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.keyboard-key {
+  min-height: 50px;
+  height: 50px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keyboard-key:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #7367f0;
+  transform: scale(0.98);
+}
+
+.keyboard-key:active:not(:disabled) {
+  transform: scale(0.95);
+  background: #e0e0e0;
+}
+
+.keyboard-key:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.key-decimal {
+  font-size: 1.2rem;
+}
+
+.key-backspace {
+  background: #ffc107;
+  color: #000;
+  font-weight: bold;
+}
+
+.key-backspace:hover:not(:disabled) {
+  background: #ffb300;
+}
+
+/* Panel 3: Actions Panel (Bottom) */
+.panel-actions {
+  grid-area: actions;
+  background: #fff;
+  border-top: 2px solid #e0e0e0;
+  padding: 12px 15px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
+  height: auto;
+  max-height: 90px;
+}
+
+.action-btn {
+  min-width: 150px;
+  height: 45px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  touch-action: manipulation;
+  padding: 8px 15px;
+}
+
+.action-btn:disabled {
+  opacity: 0.6;
+}
+
+/* Loading Overlay */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -1094,184 +1633,45 @@ export default {
   pointer-events: auto;
 }
 
-.payment-content {
-  margin-top: 20px;
-}
+/* Scrollbars are hidden but scrolling still works via touch/drag */
 
-@media (max-width: 767.98px) {
-  .order-col {
-    margin-bottom: 20px;
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1200px) {
+  .payment-main-content {
+    grid-template-columns: 250px 1fr;
   }
 
-  .payment-col {
-    margin-bottom: 20px;
-  }
-}
-
-.order-items {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 767.98px) {
-  .order-items {
-    max-height: 300px;
+  .summary-totals {
+    gap: 20px;
   }
 }
 
-.order-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 15px;
-  border-bottom: 1px solid #e0e0e0;
-}
+@media (max-width: 768px) {
+  .payment-main-content {
+    grid-template-columns: 1fr;
+    grid-template-areas: "content";
+  }
 
-@media (max-width: 575.98px) {
-  .order-item {
+  .panel-payment-classes {
+    display: none; /* Hide on mobile, can be shown via toggle later */
+  }
+
+  .summary-totals {
     flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
   }
 
-  .order-item-price {
-    text-align: left;
-  }
-}
-
-.order-item-price {
-  font-weight: bold;
-  color: #28a745;
-}
-
-.order-summary {
-  margin-top: 20px;
-}
-
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.summary-row.total {
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-top: 1px solid #e0e0e0;
-  padding-top: 10px;
-}
-
-.payment-amount-section {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 5px;
-}
-
-.change-amount {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: #d4edda;
-  border-radius: 5px;
-  color: #155724;
-}
-
-@media (max-width: 575.98px) {
-  .payment-amount-section {
-    margin-top: 15px;
-    padding: 10px;
+  .summary-item {
+    align-items: flex-start;
   }
 
-  .order-summary {
-    font-size: 0.9rem;
+  .panel-actions {
+    flex-direction: column;
   }
 
-  .summary-row.total {
-    font-size: 1.1rem;
+  .action-btn {
+    width: 100%;
   }
-}
-
-.payment-entries {
-  max-height: 500px;
-  overflow-y: auto;
-}
-
-.payment-entry {
-  animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.payment-entry .card {
-  border-left: 3px solid #007bff;
-}
-
-.payment-summary {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 5px;
-}
-
-.payment-summary .summary-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 1rem;
-}
-
-.payment-summary .summary-row.total {
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-top: 2px solid #28a745;
-  padding-top: 10px;
-  margin-top: 10px;
-}
-
-@media (max-width: 575.98px) {
-  .payment-entries {
-    max-height: 400px;
-  }
-  
-  .payment-entry .card {
-    padding: 10px;
-  }
-}
-
-.customer-info {
-  margin-top: 10px;
-}
-
-.customer-search-results {
-  position: absolute;
-  z-index: 1000;
-  width: 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 0.25rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-top: 2px;
-}
-
-.customer-search-item {
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.customer-search-item:hover {
-  background-color: #f8f9fa;
-}
-
-.customer-search-item small {
-  font-size: 0.875rem;
 }
 </style>
