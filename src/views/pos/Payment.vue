@@ -23,7 +23,8 @@
           <div class="customer-info-display">
             <strong v-if="selectedCustomer">{{ selectedCustomer.name }}</strong>
             <strong v-else-if="passengerCustomer">{{ passengerCustomer.name }}</strong>
-            <b-badge v-if="passengerCustomer && (!selectedCustomer || selectedCustomer.customerCode === 'PASSENGER')" variant="info" class="ml-2">Default</b-badge>
+            <b-badge v-if="passengerCustomer && (!selectedCustomer || selectedCustomer.customerCode === 'PASSENGER')"
+              variant="info" class="ml-2">Default</b-badge>
             <small class="text-muted d-block" v-if="selectedCustomer">{{ selectedCustomer.customerCode }}</small>
             <small class="text-muted d-block" v-else-if="passengerCustomer">{{ passengerCustomer.customerCode }}</small>
           </div>
@@ -67,13 +68,8 @@
           <h5>Payment Methods</h5>
         </div>
         <div class="payment-classes-list">
-          <div
-            v-for="method in paymentMethods"
-            :key="method.id"
-            class="payment-class-item"
-            :class="{ active: selectedPaymentMethodId === method.id }"
-            @click="selectPaymentMethod(method.id)"
-          >
+          <div v-for="method in paymentMethods" :key="method.id" class="payment-class-item"
+            :class="{ active: selectedPaymentMethodId === method.id }" @click="selectPaymentMethod(method.id)">
             <span class="payment-class-name">{{ method.name }}</span>
             <span class="payment-class-total">{{ formatTunCurrency(getTotalPaidByMethod(method.id)) }}</span>
           </div>
@@ -93,24 +89,14 @@
               <p class="mb-0 text-muted">Select a payment method to add payment</p>
             </div>
             <div v-else class="payment-cards-list">
-              <div
-                v-for="(card, index) in paymentCards"
-                :key="card.id || index"
-                class="payment-card"
-                :class="{ selected: selectedCardIndex === index }"
-                @click="selectCard(index)"
-              >
+              <div v-for="(card, index) in paymentCards" :key="card.id || index" class="payment-card"
+                :class="{ selected: selectedCardIndex === index }" @click="selectCard(index)">
                 <div class="payment-card-header">
                   <div class="payment-card-title">
                     <strong>{{ getPaymentMethodName(card.paymentMethodId) || 'Unknown Method' }}</strong>
                   </div>
-                  <b-button
-                    variant="link"
-                    size="sm"
-                    @click.stop="removeCard(index)"
-                    class="card-delete-btn"
-                    :disabled="loading"
-                  >
+                  <b-button variant="link" size="sm" @click.stop="removeCard(index)" class="card-delete-btn"
+                    :disabled="loading">
                     <feather-icon icon="XIcon" size="16" />
                   </b-button>
                 </div>
@@ -118,15 +104,11 @@
                   <!-- Return Voucher Number -->
                   <b-form-group v-if="isReturnVoucherPayment(card)" label="Voucher Number *" class="mb-2">
                     <b-input-group>
-                      <b-form-input
-                        v-model="card.voucherNumber"
-                        placeholder="Enter voucher number..."
-                        @keyup.enter="validateVoucher(card)"
-                        :disabled="loading"
-                        size="sm"
-                      />
+                      <b-form-input v-model="card.voucherNumber" placeholder="Enter voucher number..."
+                        @keyup.enter="validateVoucher(card)" :disabled="loading" size="sm" />
                       <b-input-group-append>
-                        <b-button variant="outline-primary" @click="validateVoucher(card)" :disabled="loading || !card.voucherNumber" size="sm">
+                        <b-button variant="outline-primary" @click="validateVoucher(card)"
+                          :disabled="loading || !card.voucherNumber" size="sm">
                           <feather-icon icon="SearchIcon" size="12" />
                         </b-button>
                       </b-input-group-append>
@@ -139,18 +121,9 @@
                   <!-- Amount Input -->
                   <b-form-group label="Amount *" class="mb-2">
                     <b-input-group>
-                      <b-form-input
-                        v-model.number="card.amount"
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        placeholder="0.00"
-                        @input="updatePaymentTotal"
-                        :disabled="isReturnVoucherPayment(card) || loading"
-                        :readonly="isReturnVoucherPayment(card)"
-                        size="sm"
-                        :ref="`amount-input-${index}`"
-                      />
+                      <b-form-input v-model.number="card.amount" type="number" step="0.01" min="0.01" placeholder="0.00"
+                        @input="updatePaymentTotal" :disabled="isReturnVoucherPayment(card) || loading"
+                        :readonly="isReturnVoucherPayment(card)" size="" :ref="`amount-input-${index}`" />
                       <b-input-group-append>
                         <span class="input-group-text">TND</span>
                       </b-input-group-append>
@@ -185,14 +158,9 @@
         <!-- Panel 5: Numeric Keyboard (Bottom-Right) -->
         <div class="panel-keyboard">
           <div class="keyboard-grid">
-            <button
-              v-for="num in [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫']"
-              :key="num"
-              class="keyboard-key"
-              :class="{ 'key-decimal': num === '.', 'key-backspace': num === '⌫' }"
-              @click="handleKeyboardKey(num)"
-              :disabled="loading"
-            >
+            <button v-for="num in [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫']" :key="num" class="keyboard-key"
+              :class="{ 'key-decimal': num === '.', 'key-backspace': num === '⌫' }" @click="handleKeyboardKey(num)"
+              :disabled="loading">
               {{ num }}
             </button>
           </div>
@@ -202,47 +170,25 @@
 
     <!-- Panel 3: Actions Panel (Bottom) -->
     <div class="panel-actions">
-      <b-button
-        variant="warning"
-        size="lg"
-        @click="saveAsPending"
-        :disabled="cart.length === 0 || loading"
-        class="action-btn"
-      >
+      <b-button variant="warning" size="lg" @click="saveAsPending" :disabled="cart.length === 0 || loading"
+        class="action-btn">
         <feather-icon icon="SaveIcon" size="18" class="mr-50" />
         <span v-if="loading">Saving...</span>
         <span v-else>Save as Pending</span>
       </b-button>
 
-      <b-button
-        variant="info"
-        size="lg"
-        @click="openDiscountDialog"
-        :disabled="loading"
-        class="action-btn"
-      >
+      <b-button variant="info" size="lg" @click="openDiscountDialog" :disabled="loading" class="action-btn">
         <feather-icon icon="PercentIcon" size="18" class="mr-50" />
         Discount
       </b-button>
 
-      <b-button
-        variant="info"
-        size="lg"
-        @click="openCustomerDialog"
-        :disabled="loading"
-        class="action-btn"
-      >
+      <b-button variant="info" size="lg" @click="openCustomerDialog" :disabled="loading" class="action-btn">
         <feather-icon icon="UsersIcon" size="18" class="mr-50" />
         Customer
       </b-button>
 
-      <b-button
-        variant="success"
-        size="lg"
-        @click="completePayment"
-        :disabled="!canCompletePayment || loading"
-        class="action-btn"
-      >
+      <b-button variant="success" size="lg" @click="completePayment" :disabled="!canCompletePayment || loading"
+        class="action-btn">
         <feather-icon icon="CheckCircleIcon" size="18" class="mr-50" />
         <span v-if="loading">Processing...</span>
         <span v-else>Complete Payment</span>
@@ -290,7 +236,7 @@ export default {
         return this.passengerCustomer
       }
       return this.customerSearchResults.find(c => c.id === this.selectedCustomerId) ||
-             (this.selectedCustomerObj || null)
+        (this.selectedCustomerObj || null)
     },
     totalPaid() {
       return this.paymentCards.reduce((sum, card) => {
@@ -307,7 +253,9 @@ export default {
       return this.totalAfterDiscount - this.totalPaid
     },
     isFullyPaid() {
-      return this.remainingBalance <= 0
+      // Fully paid when remaining balance is 0 or negative (overpaid)
+      // Use a small tolerance for floating point comparison
+      return this.remainingBalance <= 0.01
     },
     canCompletePayment() {
       if (this.paymentCards.length === 0) return false
@@ -348,7 +296,9 @@ export default {
         return true
       })
 
-      return allValid && this.remainingBalance <= 0
+      // Enable when fully paid (0) or overpaid (negative), with tolerance for floating point
+      // Use <= 0.01 instead of <= 0 to handle floating point precision issues
+      return allValid && this.remainingBalance <= 0.01
     }
   },
   async mounted() {
@@ -991,12 +941,41 @@ export default {
           changeAmount: this.remainingBalance < 0 ? Math.abs(this.remainingBalance) : 0,
           customerId: this.selectedCustomerId || null,
           notes: `Payment via ${payments.length} method(s)`,
-          lines: this.cart.map(item => ({
-            itemId: item.id,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            lineTotal: item.unitPrice * item.quantity
-          })),
+          lines: this.cart.map(item => {
+            const lineTotal = item.unitPrice * item.quantity
+            const vatPercent = item.defaultVAT || 0
+            const originalLineTotalIncludingVat = lineTotal * (1 + (vatPercent / 100))
+            
+            // Calculate discount - discount is applied to total including VAT
+            let discountAmount = 0
+            if (item.discountPercentage) {
+              discountAmount = originalLineTotalIncludingVat * (item.discountPercentage / 100)
+            } else if (item.discountAmount) {
+              discountAmount = item.discountAmount
+            }
+            
+            // Calculate totals after discount
+            const lineTotalIncludingVat = Math.max(0, originalLineTotalIncludingVat - discountAmount)
+            
+            // Calculate excluding VAT total from including VAT total
+            const discountedLineTotal = lineTotalIncludingVat / (1 + (vatPercent / 100))
+            const vatAmount = lineTotalIncludingVat - discountedLineTotal
+            
+            const unitPriceIncludingVat = item.unitPrice * (1 + (vatPercent / 100))
+            
+            return {
+              itemId: item.id,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              lineTotal: discountedLineTotal,
+              discountPercentage: item.discountPercentage || null,
+              discountAmount: discountAmount || null,
+              vatAmount: vatAmount,
+              vatPercent: vatPercent,
+              unitPriceIncludingVat: unitPriceIncludingVat,
+              lineTotalIncludingVat: lineTotalIncludingVat
+            }
+          }),
           payments: payments
         }
 
@@ -1073,12 +1052,41 @@ export default {
           changeAmount: 0,
           customerId: this.selectedCustomerId || null,
           notes: 'Pending sale - customer will return',
-          lines: this.cart.map(item => ({
-            itemId: item.id,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            lineTotal: item.unitPrice * item.quantity
-          })),
+          lines: this.cart.map(item => {
+            const lineTotal = item.unitPrice * item.quantity
+            const vatPercent = item.defaultVAT || 0
+            const originalLineTotalIncludingVat = lineTotal * (1 + (vatPercent / 100))
+            
+            // Calculate discount - discount is applied to total including VAT
+            let discountAmount = 0
+            if (item.discountPercentage) {
+              discountAmount = originalLineTotalIncludingVat * (item.discountPercentage / 100)
+            } else if (item.discountAmount) {
+              discountAmount = item.discountAmount
+            }
+            
+            // Calculate totals after discount
+            const lineTotalIncludingVat = Math.max(0, originalLineTotalIncludingVat - discountAmount)
+            
+            // Calculate excluding VAT total from including VAT total
+            const discountedLineTotal = lineTotalIncludingVat / (1 + (vatPercent / 100))
+            const vatAmount = lineTotalIncludingVat - discountedLineTotal
+            
+            const unitPriceIncludingVat = item.unitPrice * (1 + (vatPercent / 100))
+            
+            return {
+              itemId: item.id,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              lineTotal: discountedLineTotal,
+              discountPercentage: item.discountPercentage || null,
+              discountAmount: discountAmount || null,
+              vatAmount: vatAmount,
+              vatPercent: vatPercent,
+              unitPriceIncludingVat: unitPriceIncludingVat,
+              lineTotalIncludingVat: lineTotalIncludingVat
+            }
+          }),
           payments: []
         }
 
@@ -1301,12 +1309,15 @@ export default {
   min-width: 0;
   box-sizing: border-box;
   /* Hide scrollbar but keep touch scrolling */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 .payment-classes-list::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .payment-class-item {
@@ -1412,12 +1423,15 @@ export default {
   min-width: 0;
   box-sizing: border-box;
   /* Hide scrollbar but keep touch scrolling */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 .payment-cards-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .empty-cards {
@@ -1653,7 +1667,8 @@ export default {
   }
 
   .panel-payment-classes {
-    display: none; /* Hide on mobile, can be shown via toggle later */
+    display: none;
+    /* Hide on mobile, can be shown via toggle later */
   }
 
   .summary-totals {

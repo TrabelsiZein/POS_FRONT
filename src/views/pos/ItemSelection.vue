@@ -190,13 +190,21 @@
                 <h6>{{ cartItem.name }}</h6>
               </div>
               <div class="cart-item-total">
-                <span class="total-amount">{{ formatTunCurrency(getLineTotalWithVat(cartItem)) }}</span>
+                <div v-if="cartItem.discountPercentage || cartItem.discountAmount" class="discounted-total">
+                  <span class="original-amount">{{ formatTunCurrency(getLineTotalWithVat(cartItem, false)) }}</span>
+                  <span class="total-amount">{{ formatTunCurrency(getLineTotalWithVat(cartItem, true)) }}</span>
+                </div>
+                <span v-else class="total-amount">{{ formatTunCurrency(getLineTotalWithVat(cartItem, true)) }}</span>
               </div>
             </div>
             <div class="cart-item-breakdown">
               <span class="chip chip--ht">{{ formatShortTun(cartItem.unitPrice) }} HT</span>
               <span class="chip chip--vat">{{ formatVatPercentage(cartItem) }}% VAT</span>
               <span class="chip chip--ttc">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} TTC/unit</span>
+              <span v-if="cartItem.discountPercentage || cartItem.discountAmount" class="chip chip--discount">
+                <feather-icon icon="PercentIcon" size="12" class="mr-25" />
+                {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' : formatShortTun(cartItem.discountAmount) }}
+              </span>
             </div>
             <div class="cart-item-controls">
               <div class="quantity-controls">
@@ -208,9 +216,18 @@
                   +
                 </b-button>
               </div>
-              <b-button variant="outline-danger" size="sm" class="remove-btn" @click="removeFromCart(index)">
-                <feather-icon icon="Trash2Icon" size="14" />
-              </b-button>
+              <div class="action-buttons">
+                <b-button variant="outline-info" size="sm" class="discount-btn" @click="openLineDiscountModal(index)"
+                  :title="cartItem.discountPercentage || cartItem.discountAmount ? 'Edit discount' : 'Add discount'">
+                  <feather-icon icon="PercentIcon" size="14" />
+                  <span v-if="cartItem.discountPercentage || cartItem.discountAmount" class="discount-badge">
+                    {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' : formatShortTun(cartItem.discountAmount) }}
+                  </span>
+                </b-button>
+                <b-button variant="outline-danger" size="sm" class="remove-btn" @click="removeFromCart(index)">
+                  <feather-icon icon="Trash2Icon" size="14" />
+                </b-button>
+              </div>
             </div>
           </div>
         </div>
@@ -411,6 +428,60 @@
         Close Session
       </template>
     </b-modal>
+
+    <!-- Discount Modal -->
+    <b-modal id="discount-modal" v-model="showDiscountModal" title="Apply Discount" size="md"
+      @ok="applyLineDiscount" @hide="resetDiscountForm" :ok-disabled="!canApplyDiscount">
+      <div v-if="discountModalItemIndex !== null">
+        <div class="mb-3" v-if="getDiscountModalItem()">
+          <strong>{{ getDiscountModalItem().name }}</strong>
+          <div class="text-muted small">Original Line Total: {{ formatTunCurrency(getOriginalLineTotal()) }}</div>
+        </div>
+
+        <!-- Discount Type Toggle -->
+        <b-form-group label="Discount Type">
+          <b-form-radio-group v-model="discountType" :options="[
+            { text: 'Percentage (%)', value: 'percentage' },
+            { text: 'Amount (TND)', value: 'amount' }
+          ]" />
+        </b-form-group>
+
+        <!-- Discount Input -->
+        <b-form-group :label="discountType === 'percentage' ? 'Discount Percentage' : 'Discount Amount'">
+          <b-input-group>
+            <b-form-input v-model.number="discountValue" type="number" step="0.01" :min="0"
+              :max="discountType === 'percentage' ? 100 : getOriginalLineTotal()"
+              :placeholder="discountType === 'percentage' ? '0.00' : '0.00'" />
+            <b-input-group-append>
+              <span class="input-group-text">{{ discountType === 'percentage' ? '%' : 'TND' }}</span>
+            </b-input-group-append>
+          </b-input-group>
+        </b-form-group>
+
+        <!-- Preview -->
+        <b-alert variant="info" show class="mt-3">
+          <div class="d-flex justify-content-between mb-1">
+            <span>Original Total:</span>
+            <strong>{{ formatTunCurrency(getOriginalLineTotal()) }}</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-1">
+            <span>Discount:</span>
+            <strong class="text-danger">-{{ formatTunCurrency(getCalculatedDiscount()) }}</strong>
+          </div>
+          <hr class="my-2" />
+          <div class="d-flex justify-content-between">
+            <span><strong>New Line Total:</strong></span>
+            <strong class="text-success">{{ formatTunCurrency(getNewLineTotal()) }}</strong>
+          </div>
+        </b-alert>
+      </div>
+      <template #modal-ok>
+        Apply Discount
+      </template>
+      <template #modal-cancel>
+        Cancel
+      </template>
+    </b-modal>
   </div>
 </template>
 
@@ -437,6 +508,10 @@ export default {
       itemCache: {},
       showCloseSessionModal: false,
       showPendingTicketsModal: false,
+      showDiscountModal: false,
+      discountModalItemIndex: null,
+      discountType: 'percentage', // 'percentage' or 'amount'
+      discountValue: null,
       pendingTickets: [],
       loadingPendingTickets: false,
       pendingTicketsCount: 0,
@@ -557,17 +632,57 @@ export default {
       return this.cart.reduce((sum, item) => sum + (item.quantity || 0), 0)
     },
     subtotal() {
+      // Subtotal is the sum of all line totals excluding VAT, after discount
       return this.cart.reduce((sum, item) => {
-        return sum + (item.unitPrice * item.quantity)
+        const lineTotal = item.unitPrice * item.quantity
+        // If discount is a percentage, calculate discount amount from line total excluding VAT
+        let discount = 0
+        if (item.discountPercentage) {
+          discount = lineTotal * (item.discountPercentage / 100)
+        } else if (item.discountAmount) {
+          // If discount is an amount, need to calculate what portion applies to excluding VAT
+          // The discountAmount stored is for the total including VAT, so we need to convert it
+          const vat = this.getVatPercent(item)
+          // Calculate the excluding VAT portion of the discount
+          discount = item.discountAmount / (1 + (vat / 100))
+        }
+        return sum + (lineTotal - discount)
       }, 0)
     },
     taxAmount() {
+      // Tax is calculated on the discounted amount excluding VAT
       return this.cart.reduce((sum, item) => {
-        return sum + this.getLineVatAmount(item)
+        const lineTotal = item.unitPrice * item.quantity
+        let discount = 0
+        if (item.discountPercentage) {
+          discount = lineTotal * (item.discountPercentage / 100)
+        } else if (item.discountAmount) {
+          const vat = this.getVatPercent(item)
+          discount = item.discountAmount / (1 + (vat / 100))
+        }
+        const discountedTotal = lineTotal - discount
+        const vat = this.getVatPercent(item)
+        return sum + (discountedTotal * (vat / 100))
       }, 0)
     },
     totalAmount() {
-      return this.subtotal + this.taxAmount
+      // Total amount should be sum of all line totals including VAT, with discounts applied
+      return this.cart.reduce((sum, item) => {
+        return sum + this.getLineTotalWithVat(item, true)
+      }, 0)
+    },
+    canApplyDiscount() {
+      if (this.discountModalItemIndex === null || this.discountValue === null || this.discountValue <= 0) {
+        return false
+      }
+      if (this.discountType === 'percentage' && this.discountValue > 100) {
+        return false
+      }
+      if (this.discountType === 'amount') {
+        const originalTotal = this.getOriginalLineTotal()
+        return this.discountValue <= originalTotal
+      }
+      return true
     },
     pendingTicketId() {
       return this.$store.state.pos.pendingTicketId
@@ -669,6 +784,11 @@ export default {
       if (!vat) return 0
       return Number.isInteger(vat) ? vat : vat.toFixed(2)
     },
+    formatDiscountPercentage(value) {
+      if (!value && value !== 0) return '0'
+      const num = parseFloat(value) || 0
+      return num.toFixed(3)
+    },
     getUnitPriceWithVat(item) {
       const price = parseFloat(item.unitPrice) || 0
       const vat = this.getVatPercent(item)
@@ -680,9 +800,21 @@ export default {
       const quantity = item.quantity || 0
       return price * (vat / 100) * quantity
     },
-    getLineTotalWithVat(item) {
+    getLineTotalWithVat(item, applyDiscount = true) {
       const quantity = item.quantity || 0
-      return this.getUnitPriceWithVat(item) * quantity
+      const lineTotalWithVat = this.getUnitPriceWithVat(item) * quantity
+      
+      if (applyDiscount && (item.discountPercentage || item.discountAmount)) {
+        let discountAmount = 0
+        if (item.discountAmount) {
+          discountAmount = item.discountAmount
+        } else if (item.discountPercentage) {
+          discountAmount = lineTotalWithVat * (item.discountPercentage / 100)
+        }
+        return Math.max(0, lineTotalWithVat - discountAmount)
+      }
+      
+      return lineTotalWithVat
     },
     async loadFamilies() {
       this.gridLoading = true
@@ -1014,7 +1146,10 @@ export default {
         itemCode: line.item.itemCode,
         name: line.item.name,
         unitPrice: line.unitPrice,
-        quantity: line.quantity
+        quantity: line.quantity,
+        defaultVAT: line.item.defaultVAT || 0,
+        discountPercentage: line.discountPercentage || null,
+        discountAmount: line.discountAmount || null
       }))
 
       // Set cart and order summary
@@ -1141,6 +1276,8 @@ export default {
           unitPrice: item.unitPrice || 0,
           defaultVAT: item.defaultVAT || 0,
           quantity: 1,
+          discountPercentage: null,
+          discountAmount: null,
         })
       }
       this.$store.dispatch('pos/setCart', currentCart)
@@ -1364,6 +1501,83 @@ export default {
         notes: '',
         cashCountLines: []
       }
+    },
+    openLineDiscountModal(index) {
+      if (index < 0 || index >= this.cart.length) return
+      
+      this.discountModalItemIndex = index
+      const item = this.cart[index]
+      
+      // Initialize with existing discount if any
+      if (item.discountPercentage) {
+        this.discountType = 'percentage'
+        this.discountValue = item.discountPercentage
+      } else if (item.discountAmount) {
+        this.discountType = 'amount'
+        this.discountValue = item.discountAmount
+      } else {
+        this.discountType = 'percentage'
+        this.discountValue = null
+      }
+      
+      this.showDiscountModal = true
+    },
+    getDiscountModalItem() {
+      if (this.discountModalItemIndex === null || this.discountModalItemIndex >= this.cart.length) {
+        return null
+      }
+      return this.cart[this.discountModalItemIndex]
+    },
+    getOriginalLineTotal() {
+      const item = this.getDiscountModalItem()
+      if (!item) return 0
+      return this.getLineTotalWithVat(item, false)
+    },
+    getCalculatedDiscount() {
+      if (!this.discountValue || this.discountValue <= 0) return 0
+      
+      const originalTotal = this.getOriginalLineTotal()
+      
+      if (this.discountType === 'percentage') {
+        return originalTotal * (this.discountValue / 100)
+      } else {
+        return Math.min(this.discountValue, originalTotal)
+      }
+    },
+    getNewLineTotal() {
+      const originalTotal = this.getOriginalLineTotal()
+      const discount = this.getCalculatedDiscount()
+      return Math.max(0, originalTotal - discount)
+    },
+    applyLineDiscount() {
+      if (!this.canApplyDiscount || this.discountModalItemIndex === null) return
+      
+      const cart = [...this.cart]
+      const item = cart[this.discountModalItemIndex]
+      const originalTotal = this.getLineTotalWithVat(item, false)
+      
+      let discountPercentage = null
+      let discountAmount = null
+      
+      if (this.discountType === 'percentage') {
+        discountPercentage = this.discountValue
+        discountAmount = originalTotal * (this.discountValue / 100)
+      } else {
+        discountAmount = Math.min(this.discountValue, originalTotal)
+        discountPercentage = originalTotal > 0 ? (discountAmount / originalTotal) * 100 : 0
+      }
+      
+      item.discountPercentage = discountPercentage
+      item.discountAmount = discountAmount
+      
+      this.$store.dispatch('pos/setCart', cart)
+      this.resetDiscountForm()
+    },
+    resetDiscountForm() {
+      this.showDiscountModal = false
+      this.discountModalItemIndex = null
+      this.discountType = 'percentage'
+      this.discountValue = null
     },
   }
 }
@@ -2032,12 +2246,51 @@ export default {
   color: #17804e;
 }
 
+.chip--discount {
+  background: #fff3e0;
+  color: #e65100;
+}
+
 .cart-item-controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   flex-wrap: nowrap;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.discount-btn {
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+}
+
+.discount-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.discounted-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.original-amount {
+  font-size: 0.85rem;
+  color: #999;
+  text-decoration: line-through;
 }
 
 .cart-item-controls .quantity-controls {
