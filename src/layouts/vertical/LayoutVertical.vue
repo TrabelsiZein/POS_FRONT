@@ -40,6 +40,10 @@ export default {
       const isCashier = userData && userData.role === 'POS_USER'
       return isCashier && this.$route && this.$route.meta && this.$route.meta.hideNavMenu
     },
+    isPosUser() {
+      const userData = getUserData()
+      return userData && userData.role === 'POS_USER'
+    },
   },
   watch: {
     shouldHideNavMenu: {
@@ -48,8 +52,17 @@ export default {
         store.commit('appConfig/UPDATE_NAV_MENU_HIDDEN', !!val)
       },
     },
+    isPosUser: {
+      immediate: true,
+      handler(isPos) {
+        // Hide navbar for POS users, use default (sticky) for others
+        store.commit('appConfig/UPDATE_NAVBAR_CONFIG', { type: isPos ? 'hidden' : 'sticky' })
+      },
+    },
     $route() {
       store.commit('appConfig/UPDATE_NAV_MENU_HIDDEN', !!this.shouldHideNavMenu)
+      // Update navbar based on user role
+      store.commit('appConfig/UPDATE_NAVBAR_CONFIG', { type: this.isPosUser ? 'hidden' : 'sticky' })
     },
   },
   created() {
@@ -61,6 +74,7 @@ export default {
   },
   beforeDestroy() {
     store.commit('appConfig/UPDATE_NAV_MENU_HIDDEN', false)
+    store.commit('appConfig/UPDATE_NAVBAR_CONFIG', { type: 'sticky' })
   },
   methods: {
     showErrorMessage(error) {

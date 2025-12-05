@@ -35,12 +35,18 @@
           <span class="summary-label">Ticket Total:</span>
           <span class="summary-value">{{ formatTunCurrency(orderSummary.totalAmount) }}</span>
         </div>
-        <div class="summary-item" v-if="orderSummary.discountAmount > 0 || orderSummary.discountPercent > 0">
+        <div class="summary-item" v-if="headerDiscountAmount > 0">
           <span class="summary-label">Discount:</span>
-          <span class="summary-value">
-            <span v-if="orderSummary.discountPercent > 0">{{ orderSummary.discountPercent }}%</span>
-            <span v-if="orderSummary.discountPercent > 0 && orderSummary.discountAmount > 0"> / </span>
-            <span v-if="orderSummary.discountAmount > 0">{{ formatTunCurrency(orderSummary.discountAmount) }}</span>
+          <span class="summary-value text-danger">
+            <template v-if="orderSummary && (orderSummary.discountPercent > 0 || orderSummary.discountAmount > 0)">
+              <span v-if="orderSummary.discountPercent > 0">
+                {{ orderSummary.discountPercent.toFixed(3) }}%
+              </span>
+              <span v-if="orderSummary.discountPercent > 0 && orderSummary.discountAmount > 0"> / </span>
+              <span v-if="orderSummary.discountAmount > 0">
+                {{ formatTunCurrency(orderSummary.discountAmount) }}
+              </span>
+            </template>
           </span>
         </div>
         <div class="summary-item">
@@ -105,7 +111,7 @@
                   <b-form-group v-if="isReturnVoucherPayment(card)" label="Voucher Number *" class="mb-2">
                     <b-input-group>
                       <b-form-input v-model="card.voucherNumber" placeholder="Enter voucher number..."
-                        @keyup.enter="validateVoucher(card)" :disabled="loading" size="sm" />
+                        @keyup.enter="validateVoucher(card)" @click.stop :disabled="loading" size="sm" />
                       <b-input-group-append>
                         <b-button variant="outline-primary" @click="validateVoucher(card)"
                           :disabled="loading || !card.voucherNumber" size="sm">
@@ -122,7 +128,7 @@
                   <b-form-group label="Amount *" class="mb-2">
                     <b-input-group>
                       <b-form-input v-model.number="card.amount" type="number" step="0.01" min="0.01" placeholder="0.00"
-                        @input="updatePaymentTotal" :disabled="isReturnVoucherPayment(card) || loading"
+                        @input="updatePaymentTotal" @click.stop :disabled="isReturnVoucherPayment(card) || loading"
                         :readonly="isReturnVoucherPayment(card)" size="" :ref="`amount-input-${index}`" />
                       <b-input-group-append>
                         <span class="input-group-text">TND</span>
@@ -135,19 +141,19 @@
 
                   <!-- Dynamic Required Fields -->
                   <b-form-group v-if="requiresTitleNumber(card)" label="N° Titre *" class="mb-2">
-                    <b-form-input v-model="card.titleNumber" placeholder="N° du titre" size="sm" />
+                    <b-form-input v-model="card.titleNumber" placeholder="N° du titre" @click.stop size="sm" />
                   </b-form-group>
 
                   <b-form-group v-if="requiresDueDate(card)" label="Date Échéance *" class="mb-2">
-                    <b-form-input v-model="card.dueDate" type="date" size="sm" />
+                    <b-form-input v-model="card.dueDate" type="date" @click.stop size="sm" />
                   </b-form-group>
 
                   <b-form-group v-if="requiresDrawerName(card)" label="Nom du tireur *" class="mb-2">
-                    <b-form-input v-model="card.drawerName" placeholder="Nom du tireur" size="sm" />
+                    <b-form-input v-model="card.drawerName" placeholder="Nom du tireur" @click.stop size="sm" />
                   </b-form-group>
 
                   <b-form-group v-if="requiresIssuingBank(card)" label="Banque émettrice *" class="mb-2">
-                    <b-form-input v-model="card.issuingBank" placeholder="Banque émettrice" size="sm" />
+                    <b-form-input v-model="card.issuingBank" placeholder="Banque émettrice" @click.stop size="sm" />
                   </b-form-group>
                 </div>
               </div>
@@ -194,6 +200,85 @@
         <span v-else>Complete Payment</span>
       </b-button>
     </div>
+
+    <!-- Discount Dialog -->
+    <b-modal
+      v-model="showDiscountDialog"
+      title="Apply Header Discount"
+      hide-footer
+      centered
+      size="md"
+      no-close-on-backdrop
+      @hide="showDiscountDialog = false"
+    >
+      <div class="discount-dialog">
+        <!-- Discount Type Selection -->
+        <b-form-group label="Discount Type" class="mb-3">
+          <b-form-radio-group
+            v-model="discountType"
+            :options="[
+              { text: 'Percentage (%)', value: 'percentage' },
+              { text: 'Amount (TND)', value: 'amount' }
+            ]"
+            class="discount-type-radio"
+          ></b-form-radio-group>
+        </b-form-group>
+
+        <!-- Discount Value Input -->
+        <b-form-group :label="discountType === 'percentage' ? 'Discount Percentage' : 'Discount Amount'" class="mb-3">
+          <b-input-group>
+            <b-form-input
+              v-model.number="discountValue"
+              type="number"
+              :step="discountType === 'percentage' ? 0.01 : 0.01"
+              :min="0"
+              :max="discountType === 'percentage' ? 100 : orderSummary.totalAmount"
+              :placeholder="discountType === 'percentage' ? 'Enter percentage...' : 'Enter amount...'"
+              @input="updateDiscountPreview"
+            />
+            <b-input-group-append v-if="discountType === 'percentage'">
+              <span class="input-group-text">%</span>
+            </b-input-group-append>
+            <b-input-group-append v-else>
+              <span class="input-group-text">TND</span>
+            </b-input-group-append>
+          </b-input-group>
+        </b-form-group>
+
+        <!-- Discount Preview -->
+        <div v-if="discountValue" class="discount-preview mb-3 p-3" style="background: #f8f9fa; border-radius: 8px;">
+          <div class="d-flex justify-content-between mb-2">
+            <span>Ticket Total:</span>
+            <strong>{{ formatTunCurrency(orderSummary.totalAmount) }}</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span>Discount:</span>
+            <strong class="text-danger">
+              {{ formatTunCurrency(calculatePreviewDiscount()) }}
+              <span v-if="discountType === 'percentage'">({{ discountValue }}%)</span>
+            </strong>
+          </div>
+          <hr />
+          <div class="d-flex justify-content-between">
+            <span><strong>Total After Discount:</strong></span>
+            <strong class="text-success">{{ formatTunCurrency(calculatePreviewTotal()) }}</strong>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-end">
+          <b-button variant="secondary" @click="showDiscountDialog = false" class="mr-2">
+            Cancel
+          </b-button>
+          <b-button variant="danger" @click="clearHeaderDiscount" v-if="orderSummary.discountAmount > 0 || orderSummary.discountPercent > 0" class="mr-2">
+            Clear Discount
+          </b-button>
+          <b-button variant="primary" @click="applyHeaderDiscount" :disabled="!discountValue || discountValue <= 0">
+            Apply Discount
+          </b-button>
+        </div>
+      </div>
+    </b-modal>
   </div>
 </template>
 
@@ -223,7 +308,10 @@ export default {
       pendingTicketsCount: 0,
       selectedPaymentMethodId: null, // Currently selected payment method
       selectedCardIndex: null, // Currently selected card index
-      cardIdCounter: 0 // For generating unique card IDs
+      cardIdCounter: 0, // For generating unique card IDs
+      showDiscountDialog: false,
+      discountType: 'percentage', // 'percentage' or 'amount'
+      discountValue: null
     }
   },
   computed: {
@@ -244,10 +332,25 @@ export default {
         return sum + amount
       }, 0)
     },
+    headerDiscountAmount() {
+      // Read from store first, then fallback to local orderSummary
+      const summary = this.$store.state.pos?.orderSummary || this.orderSummary
+      if (!summary || !summary.totalAmount) return 0
+      const total = summary.totalAmount
+      
+      // Prefer discountAmount if available (more accurate)
+      if (summary.discountAmount && summary.discountAmount > 0) {
+        return summary.discountAmount
+      } else if (summary.discountPercent && summary.discountPercent > 0) {
+        return total * (summary.discountPercent / 100)
+      }
+      return 0
+    },
     totalAfterDiscount() {
-      const total = this.orderSummary?.totalAmount || 0
-      const discount = this.orderSummary?.discountAmount || 0
-      return total - discount
+      const summary = this.$store.state.pos?.orderSummary || this.orderSummary
+      const total = summary?.totalAmount || 0
+      const discount = this.headerDiscountAmount
+      return Math.max(0, total - discount)
     },
     remainingBalance() {
       return this.totalAfterDiscount - this.totalPaid
@@ -299,6 +402,17 @@ export default {
       // Enable when fully paid (0) or overpaid (negative), with tolerance for floating point
       // Use <= 0.01 instead of <= 0 to handle floating point precision issues
       return allValid && this.remainingBalance <= 0.01
+    }
+  },
+  watch: {
+    '$store.state.pos.orderSummary': {
+      handler(newSummary) {
+        if (newSummary) {
+          this.orderSummary = { ...newSummary }
+        }
+      },
+      deep: true,
+      immediate: true
     }
   },
   async mounted() {
@@ -467,12 +581,90 @@ export default {
       })
     },
     openDiscountDialog() {
-      // Placeholder for future implementation
-      this.$toast({
-        title: 'Coming Soon',
-        text: 'Discount dialog will be implemented soon',
-        variant: 'info'
-      })
+      // Initialize dialog with existing discount values
+      if (this.orderSummary && this.orderSummary.discountPercent && this.orderSummary.discountPercent > 0) {
+        this.discountType = 'percentage'
+        this.discountValue = this.orderSummary.discountPercent
+      } else if (this.orderSummary && this.orderSummary.discountAmount && this.orderSummary.discountAmount > 0) {
+        this.discountType = 'amount'
+        this.discountValue = this.orderSummary.discountAmount
+      } else {
+        this.discountType = 'percentage'
+        this.discountValue = null
+      }
+      this.showDiscountDialog = true
+    },
+    applyHeaderDiscount() {
+      const summary = this.$store.state.pos?.orderSummary || this.orderSummary
+      const total = summary?.totalAmount || 0
+      if (!total || !this.discountValue || this.discountValue <= 0) {
+        this.clearHeaderDiscount()
+        return
+      }
+      
+      let discountPercentage = null
+      let discountAmount = null
+      
+      if (this.discountType === 'percentage') {
+        const percentage = Math.min(100, Math.max(0, parseFloat(this.discountValue) || 0))
+        discountPercentage = percentage
+        discountAmount = total * (percentage / 100)
+      } else {
+        const amount = Math.min(parseFloat(this.discountValue) || 0, total)
+        discountAmount = amount
+        discountPercentage = total > 0 ? (discountAmount / total) * 100 : 0
+      }
+      
+      // Update order summary in store - watcher will sync to local orderSummary
+      if (this.$store.state.pos) {
+        this.$store.dispatch('pos/updateOrderSummary', {
+          discountAmount: discountAmount,
+          discountPercent: discountPercentage
+        })
+      } else {
+        // Fallback: update local object directly
+        this.$set(this.orderSummary, 'discountAmount', discountAmount)
+        this.$set(this.orderSummary, 'discountPercent', discountPercentage)
+      }
+      
+      this.showDiscountDialog = false
+      this.discountValue = null
+    },
+    clearHeaderDiscount() {
+      if (this.$store.state.pos) {
+        this.$store.dispatch('pos/updateOrderSummary', {
+          discountAmount: 0,
+          discountPercent: 0
+        })
+      } else {
+        // Fallback: update local object directly
+        this.$set(this.orderSummary, 'discountAmount', 0)
+        this.$set(this.orderSummary, 'discountPercent', 0)
+      }
+      
+      this.showDiscountDialog = false
+      this.discountValue = null
+    },
+    calculatePreviewDiscount() {
+      if (!this.discountValue || !this.orderSummary?.totalAmount) return 0
+      const total = this.orderSummary.totalAmount
+      
+      if (this.discountType === 'percentage') {
+        const percentage = Math.min(100, Math.max(0, parseFloat(this.discountValue) || 0))
+        return total * (percentage / 100)
+      } else {
+        const amount = Math.min(parseFloat(this.discountValue) || 0, total)
+        return amount
+      }
+    },
+    calculatePreviewTotal() {
+      const total = this.orderSummary?.totalAmount || 0
+      const discount = this.calculatePreviewDiscount()
+      return Math.max(0, total - discount)
+    },
+    updateDiscountPreview() {
+      // Force reactivity update
+      this.$forceUpdate()
     },
     async loadPaymentMethods() {
       try {
@@ -560,10 +752,7 @@ export default {
       this.selectedCardIndex = 0
       this.updatePaymentTotal()
 
-      // Focus amount input
-      this.$nextTick(() => {
-        this.focusAmountInput(0)
-      })
+      // Don't auto-focus - let user click on the field they want
     },
     removeCard(index) {
       if (index < 0 || index >= this.paymentCards.length) return
@@ -936,7 +1125,8 @@ export default {
           subtotal: this.orderSummary.subtotal,
           taxAmount: this.orderSummary.taxAmount,
           discountAmount: this.orderSummary.discountAmount || 0,
-          totalAmount: this.orderSummary.totalAmount,
+          discountPercentage: this.orderSummary.discountPercent || null,
+          totalAmount: this.totalAfterDiscount,
           paidAmount: this.totalPaid,
           changeAmount: this.remainingBalance < 0 ? Math.abs(this.remainingBalance) : 0,
           customerId: this.selectedCustomerId || null,
@@ -1047,7 +1237,8 @@ export default {
           subtotal: this.orderSummary.subtotal,
           taxAmount: this.orderSummary.taxAmount,
           discountAmount: this.orderSummary.discountAmount || 0,
-          totalAmount: this.orderSummary.totalAmount,
+          discountPercentage: this.orderSummary.discountPercent || null,
+          totalAmount: this.totalAfterDiscount,
           paidAmount: 0,
           changeAmount: 0,
           customerId: this.selectedCustomerId || null,

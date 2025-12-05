@@ -9,60 +9,114 @@
     </div>
 
     <!-- Filters and Search -->
-    <b-card class="mb-4">
-      <b-row>
-        <b-col cols="12" md="3">
-          <b-form-group label="Search" label-for="search-input">
-            <b-input-group>
-              <b-form-input id="search-input" v-model="filters.search"
-                placeholder="Search by ticket number, customer name..." @input="onFilterChange" />
-              <b-input-group-append>
-                <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
-                  <feather-icon icon="XIcon" size="14" />
-                </b-button>
-              </b-input-group-append>
-            </b-input-group>
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Date From" label-for="date-from">
-            <b-form-input id="date-from" v-model="filters.dateFrom" type="date" @input="onFilterChange" />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Date To" label-for="date-to">
-            <b-form-input id="date-to" v-model="filters.dateTo" type="date" @input="onFilterChange" />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Status" label-for="status-filter">
-            <b-form-select id="status-filter" v-model="filters.status" :options="statusOptions"
-              @input="onFilterChange" />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="3">
-          <b-form-group label="Payment Method" label-for="payment-method-filter">
-            <b-form-select id="payment-method-filter" v-model="filters.paymentMethodId" :options="paymentMethodOptions"
-              @input="onFilterChange" />
-          </b-form-group>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col cols="12" class="text-right">
-          <b-button variant="secondary" @click="resetFilters" size="sm">
-            Reset Filters
-          </b-button>
-        </b-col>
-      </b-row>
+    <b-card class="mb-2">
+      <div @click="toggleFilters" role="button" tabindex="0" @keyup.enter="toggleFilters">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
+            <h6 class="mb-0 text-primary font-weight-bold">
+              Filters
+              <span class="text-muted font-weight-normal ml-2">(Total: {{ totalRows }} {{ totalRows === 1 ? 'ticket' : 'tickets' }})</span>
+            </h6>
+          </div>
+          <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
+        </div>
+      </div>
+      <b-collapse v-model="filtersExpanded" id="filters-collapse">
+        <div class="pt-2">
+          <!-- First Row: Search and Date Filters -->
+          <b-row>
+            <b-col cols="12" sm="6" md="6" lg="6" class="mb-2">
+              <b-form-group label="Search" label-for="search-input" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="SearchIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="search-input" v-model="filters.search"
+                    placeholder="Search by ticket number, customer name..." @input="onFilterChange" />
+                  <b-input-group-append>
+                    <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
+                      <feather-icon icon="XIcon" size="14" />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Date From" label-for="date-from" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CalendarIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="date-from" v-model="filters.dateFrom" type="date" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Date To" label-for="date-to" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CalendarIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="date-to" v-model="filters.dateTo" type="date" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+          <!-- Second Row: Status Filters -->
+          <b-row>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Status" label-for="status-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="TagIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="status-filter" v-model="filters.status" :options="statusOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Sync Status" label-for="sync-status-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CloudIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="sync-status-filter" v-model="filters.syncStatus" :options="syncStatusOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Payment Method" label-for="payment-method-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CreditCardIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="payment-method-filter" v-model="filters.paymentMethodId" :options="paymentMethodOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+        </div>
+      </b-collapse>
     </b-card>
 
     <!-- Tickets Table -->
     <b-card>
-      <div class="table-header mb-3">
-        <div>
-          <strong>Total: {{ totalRows }} tickets</strong>
-        </div>
-      </div>
       <b-table :items="tickets" :fields="ticketFields" striped hover responsive :busy="loading" :sort-by="sortBy"
         :sort-desc="sortDesc" @row-clicked="viewTicketDetails" class="cursor-pointer" show-empty>
         <template #table-busy>
@@ -95,21 +149,26 @@
           <span v-else class="text-muted">-</span>
         </template>
 
-        <template #cell(createdByUser)="row">
-          <div v-if="row.item.createdByUser">
-            {{ row.item.createdByUser.fullName || row.item.createdByUser.username }}
-          </div>
-          <span v-else class="text-muted">-</span>
-        </template>
-
         <template #cell(totalAmount)="row">
-          <strong>${{ formatPrice(row.item.totalAmount) }}</strong>
+          <strong>{{ formatPrice(row.item.totalAmount) }} TND</strong>
         </template>
 
         <template #cell(status)="row">
           <b-badge :variant="getStatusVariant(row.item.status)">
             {{ row.item.status }}
           </b-badge>
+        </template>
+
+        <template #cell(synchronizationStatus)="row">
+          <div class="sync-status-cell">
+            <b-badge :variant="getSyncStatusVariant(row.item.synchronizationStatus)" class="sync-badge">
+              <feather-icon :icon="getSyncStatusIcon(row.item.synchronizationStatus)" size="12" class="mr-1" />
+              {{ formatSyncStatus(row.item.synchronizationStatus) }}
+            </b-badge>
+            <small v-if="row.item.erpNo" class="text-muted d-block mt-1">
+              ERP: {{ row.item.erpNo }}
+            </small>
+          </div>
         </template>
       </b-table>
 
@@ -185,10 +244,48 @@
           </b-row>
         </b-card>
 
+        <!-- Synchronization Information -->
+        <b-card class="mb-3 sync-info-card">
+          <div class="d-flex align-items-center mb-3">
+            <feather-icon icon="CloudIcon" size="20" class="mr-2 text-primary" />
+            <h5 class="mb-0">ERP Synchronization</h5>
+          </div>
+          <b-row>
+            <b-col md="6">
+              <div class="sync-detail-item">
+                <label class="sync-label">Synchronization Status</label>
+                <div class="sync-value">
+                  <b-badge :variant="getSyncStatusVariant(selectedTicket.synchronizationStatus)" class="sync-badge-large">
+                    <feather-icon :icon="getSyncStatusIcon(selectedTicket.synchronizationStatus)" size="14" class="mr-1" />
+                    {{ formatSyncStatus(selectedTicket.synchronizationStatus) }}
+                  </b-badge>
+                </div>
+              </div>
+            </b-col>
+            <b-col md="6">
+              <div class="sync-detail-item">
+                <label class="sync-label">ERP Document Number</label>
+                <div class="sync-value">
+                  <code v-if="selectedTicket.erpNo" class="erp-number">{{ selectedTicket.erpNo }}</code>
+                  <span v-else class="text-muted">Not synchronized</span>
+                </div>
+              </div>
+            </b-col>
+          </b-row>
+          <div v-if="selectedTicket.salesLines" class="mt-3">
+            <div class="sync-summary">
+              <small class="text-muted">
+                Lines synchronized: 
+                <strong>{{ getSyncedLinesCount(selectedTicket.salesLines) }} / {{ selectedTicket.salesLines.length }}</strong>
+              </small>
+            </div>
+          </div>
+        </b-card>
+
         <!-- Sales Lines -->
         <b-card class="mb-3">
           <h5 class="mb-3">Items</h5>
-          <b-table :items="selectedTicket.salesLines || []" :fields="lineFields" striped small responsive>
+          <b-table :items="selectedTicket.salesLines || []" :fields="lineFields" striped small responsive class="sales-lines-table">
             <template #cell(item)="row">
               <div>
                 <strong>{{ row.item.item.name }}</strong>
@@ -199,10 +296,41 @@
               {{ row.item.quantity }}
             </template>
             <template #cell(unitPrice)="row">
-              ${{ formatPrice(row.item.unitPrice) }}
+              {{ formatPrice(row.item.unitPrice) }} TND
             </template>
-            <template #cell(lineTotal)="row">
-              <strong>${{ formatPrice(row.item.lineTotal) }}</strong>
+            <template #cell(discount)="row">
+              <div v-if="row.item.discountPercentage || row.item.discountAmount">
+                <div v-if="row.item.discountPercentage" class="text-primary">
+                  {{ formatPrice(row.item.discountPercentage) }}%
+                </div>
+                <div v-if="row.item.discountAmount" class="text-muted small">
+                  -{{ formatPrice(row.item.discountAmount) }} TND
+                </div>
+              </div>
+              <span v-else class="text-muted">—</span>
+            </template>
+            <template #cell(vat)="row">
+              <div v-if="row.item.vatPercent || row.item.vatAmount">
+                <div v-if="row.item.vatPercent" class="text-info">
+                  {{ row.item.vatPercent }}%
+                </div>
+                <div v-if="row.item.vatAmount" class="text-muted small">
+                  {{ formatPrice(row.item.vatAmount) }} TND
+                </div>
+              </div>
+              <span v-else class="text-muted">—</span>
+            </template>
+            <template #cell(unitPriceIncludingVat)="row">
+              <strong>{{ formatPrice(row.item.unitPriceIncludingVat) }} TND</strong>
+            </template>
+            <template #cell(lineTotalIncludingVat)="row">
+              <strong class="text-success">{{ formatPrice(row.item.lineTotalIncludingVat) }} TND</strong>
+            </template>
+            <template #cell(synched)="row">
+              <b-badge :variant="row.item.synched ? 'success' : 'secondary'" class="sync-indicator">
+                <feather-icon :icon="row.item.synched ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
+                {{ row.item.synched ? 'Synced' : 'Not Synced' }}
+              </b-badge>
             </template>
           </b-table>
         </b-card>
@@ -215,10 +343,16 @@
               {{ row.item.paymentMethod ? row.item.paymentMethod.name : '-' }}
             </template>
             <template #cell(amount)="row">
-              <strong>${{ formatPrice(row.item.amount) }}</strong>
+              <strong>{{ formatPrice(row.item.totalAmount) }} TND</strong>
             </template>
             <template #cell(reference)="row">
-              {{ row.item.reference || '-' }}
+              {{ row.item.paymentReference || '-' }}
+            </template>
+            <template #cell(synched)="row">
+              <b-badge :variant="row.item.synched ? 'success' : 'secondary'" class="sync-indicator">
+                <feather-icon :icon="row.item.synched ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
+                {{ row.item.synched ? 'Synced' : 'Not Synced' }}
+              </b-badge>
             </template>
           </b-table>
         </b-card>
@@ -230,27 +364,27 @@
             <b-col md="6" offset-md="6">
               <div class="summary-row">
                 <span>Subtotal:</span>
-                <span>${{ formatPrice(selectedTicket.subtotal) }}</span>
+                <span>{{ formatPrice(selectedTicket.subtotal) }} TND</span>
               </div>
               <div class="summary-row" v-if="selectedTicket.taxAmount">
                 <span>Tax:</span>
-                <span>${{ formatPrice(selectedTicket.taxAmount) }}</span>
+                <span>{{ formatPrice(selectedTicket.taxAmount) }} TND</span>
               </div>
               <div class="summary-row" v-if="selectedTicket.discountAmount">
                 <span>Discount:</span>
-                <span>-${{ formatPrice(selectedTicket.discountAmount) }}</span>
+                <span>-{{ formatPrice(selectedTicket.discountAmount) }} TND</span>
               </div>
               <div class="summary-row total">
                 <span><strong>Total:</strong></span>
-                <span><strong>${{ formatPrice(selectedTicket.totalAmount) }}</strong></span>
+                <span><strong>{{ formatPrice(selectedTicket.totalAmount) }} TND</strong></span>
               </div>
               <div class="summary-row" v-if="selectedTicket.paidAmount">
                 <span>Paid:</span>
-                <span class="text-success">${{ formatPrice(selectedTicket.paidAmount) }}</span>
+                <span class="text-success">{{ formatPrice(selectedTicket.paidAmount) }} TND</span>
               </div>
               <div class="summary-row" v-if="selectedTicket.changeAmount">
                 <span>Change:</span>
-                <span class="text-info">${{ formatPrice(selectedTicket.changeAmount) }}</span>
+                <span class="text-info">{{ formatPrice(selectedTicket.changeAmount) }} TND</span>
               </div>
             </b-col>
           </b-row>
@@ -294,6 +428,7 @@ export default {
       sortDesc: true,
       showDetailsModal: false,
       selectedTicket: null,
+      filtersExpanded: false,
       currentPage: 1,
       perPage: 10,
       perPageOptions: [
@@ -308,6 +443,7 @@ export default {
         dateFrom: todayStr,
         dateTo: todayStr,
         status: 'all',
+        syncStatus: 'all',
         paymentMethodId: 'all'
       },
       statusOptions: [
@@ -316,25 +452,36 @@ export default {
         { value: 'PENDING', text: 'Pending' },
         { value: 'CANCELLED', text: 'Cancelled' }
       ],
+      syncStatusOptions: [
+        { value: 'all', text: 'All' },
+        { value: 'NOT_SYNCHED', text: 'Not Synced' },
+        { value: 'PARTIALLY_SYNCHED', text: 'Partially Synced' },
+        { value: 'TOTALLY_SYNCHED', text: 'Totally Synced' }
+      ],
       ticketFields: [
         { key: 'salesNumber', label: 'Ticket #', sortable: true },
         { key: 'salesDate', label: 'Date', sortable: true },
         { key: 'customer', label: 'Customer', sortable: false },
-        { key: 'createdByUser', label: 'Cashier', sortable: false },
         { key: 'totalAmount', label: 'Total', sortable: true },
-        { key: 'status', label: 'Status', sortable: true }
+        { key: 'status', label: 'Status', sortable: true },
+        { key: 'synchronizationStatus', label: 'Sync Status', sortable: true }
       ],
       lineFields: [
         { key: 'item', label: 'Item' },
         { key: 'quantity', label: 'Qty' },
-        { key: 'unitPrice', label: 'Unit Price' },
-        { key: 'lineTotal', label: 'Total' }
+        { key: 'unitPrice', label: 'Unit Price HT' },
+        { key: 'discount', label: 'Discount' },
+        { key: 'vat', label: 'VAT' },
+        { key: 'unitPriceIncludingVat', label: 'Unit Price TTC' },
+        { key: 'lineTotalIncludingVat', label: 'Total TTC' },
+        { key: 'synched', label: 'Synced', class: 'text-center' }
       ],
       paymentFields: [
         { key: 'paymentMethod', label: 'Payment Method' },
         { key: 'amount', label: 'Amount' },
         { key: 'reference', label: 'Reference' },
-        { key: 'notes', label: 'Notes' }
+        { key: 'notes', label: 'Notes' },
+        { key: 'synched', label: 'Synced', class: 'text-center' }
       ]
     }
   },
@@ -394,6 +541,7 @@ export default {
         if (this.filters.dateFrom) params.dateFrom = this.filters.dateFrom
         if (this.filters.dateTo) params.dateTo = this.filters.dateTo
         if (this.filters.status && this.filters.status !== 'all') params.status = this.filters.status
+        if (this.filters.syncStatus && this.filters.syncStatus !== 'all') params.syncStatus = this.filters.syncStatus
         if (this.filters.paymentMethodId && this.filters.paymentMethodId !== 'all') params.paymentMethodId = this.filters.paymentMethodId
 
         const response = await this.$http.get('/sales-header/history', { params })
@@ -495,6 +643,9 @@ export default {
       this.filters.search = ''
       this.loadTickets()
     },
+    toggleFilters() {
+      this.filtersExpanded = !this.filtersExpanded
+    },
     resetFilters() {
       const today = new Date()
       const todayStr = today.toISOString().split('T')[0]
@@ -503,6 +654,7 @@ export default {
         dateFrom: todayStr,
         dateTo: todayStr,
         status: 'all',
+        syncStatus: 'all',
         paymentMethodId: 'all'
       }
       this.loadTickets()
@@ -532,6 +684,43 @@ export default {
         default:
           return 'secondary'
       }
+    },
+    formatSyncStatus(status) {
+      if (!status) return 'Not Synced'
+      return status
+        .split('_')
+        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+        .join(' ')
+    },
+    getSyncStatusVariant(status) {
+      if (!status) return 'secondary'
+      switch (status) {
+        case 'TOTALLY_SYNCHED':
+          return 'success'
+        case 'PARTIALLY_SYNCHED':
+          return 'warning'
+        case 'NOT_SYNCHED':
+          return 'secondary'
+        default:
+          return 'secondary'
+      }
+    },
+    getSyncStatusIcon(status) {
+      if (!status) return 'XIcon'
+      switch (status) {
+        case 'TOTALLY_SYNCHED':
+          return 'CheckCircleIcon'
+        case 'PARTIALLY_SYNCHED':
+          return 'AlertCircleIcon'
+        case 'NOT_SYNCHED':
+          return 'XCircleIcon'
+        default:
+          return 'XCircleIcon'
+      }
+    },
+    getSyncedLinesCount(lines) {
+      if (!lines || !Array.isArray(lines)) return 0
+      return lines.filter(line => line.synched === true).length
     },
     printTicket() {
       if (!this.selectedTicket) return
@@ -698,12 +887,6 @@ export default {
   margin: 0;
 }
 
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .cursor-pointer {
   cursor: pointer;
 }
@@ -727,6 +910,94 @@ export default {
   font-size: 1.1rem;
 }
 
+.sync-status-cell {
+  min-width: 120px;
+}
+
+.sync-badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sync-indicator {
+  font-size: 11px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sync-info-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+}
+
+.sync-detail-item {
+  margin-bottom: 15px;
+}
+
+.sync-label {
+  font-size: 12px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.sync-value {
+  font-size: 14px;
+  color: #212529;
+}
+
+.sync-badge-large {
+  font-size: 13px;
+  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.erp-number {
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  font-size: 13px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.sync-summary {
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Sales lines table enhancements */
+.sales-lines-table {
+  font-size: 13px;
+}
+
+.sales-lines-table .table td {
+  vertical-align: middle;
+  padding: 10px 8px;
+}
+
+.sales-lines-table .text-primary {
+  font-weight: 600;
+}
+
+.sales-lines-table .text-info {
+  font-weight: 600;
+}
+
+.sales-lines-table .text-success {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+
 @media (max-width: 575.98px) {
   .page-header {
     flex-direction: column;
@@ -736,6 +1007,10 @@ export default {
 
   .page-header .btn {
     width: 100%;
+  }
+
+  .sync-status-cell {
+    min-width: auto;
   }
 }
 </style>

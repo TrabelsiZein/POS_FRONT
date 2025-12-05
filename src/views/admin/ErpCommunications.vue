@@ -13,11 +13,8 @@
         <b-col cols="12" lg="4">
           <b-form-group label="Search" label-for="communication-search" class="mb-lg-0">
             <b-input-group>
-              <b-form-input
-                id="communication-search"
-                v-model="searchTerm"
-                placeholder="Search by reference, error message, payload..."
-              />
+              <b-form-input id="communication-search" v-model="searchTerm"
+                placeholder="Search by URL, error message, payload..." />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
                   <feather-icon icon="XIcon" size="14" />
@@ -28,38 +25,22 @@
         </b-col>
         <b-col cols="12" lg="2">
           <b-form-group label="Status" label-for="status-filter" class="mb-lg-0">
-            <b-form-select
-              id="status-filter"
-              v-model="statusFilter"
-              :options="statusOptions"
-            />
+            <b-form-select id="status-filter" v-model="statusFilter" :options="statusOptions" />
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
           <b-form-group label="Operation" label-for="operation-filter" class="mb-lg-0">
-            <b-form-select
-              id="operation-filter"
-              v-model="operationFilter"
-              :options="operationOptions"
-            />
+            <b-form-select id="operation-filter" v-model="operationFilter" :options="operationOptions" />
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
           <b-form-group label="From" label-for="from-date" class="mb-lg-0">
-            <b-form-input
-              id="from-date"
-              type="date"
-              v-model="fromDate"
-            />
+            <b-form-input id="from-date" type="date" v-model="fromDate" />
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
           <b-form-group label="To" label-for="to-date" class="mb-0">
-            <b-form-input
-              id="to-date"
-              type="date"
-              v-model="toDate"
-            />
+            <b-form-input id="to-date" type="date" v-model="toDate" />
           </b-form-group>
         </b-col>
       </b-row>
@@ -73,15 +54,7 @@
     </b-card>
 
     <b-card>
-      <b-table
-        :items="paginatedCommunications"
-        :fields="fields"
-        striped
-        hover
-        responsive
-        show-empty
-        :busy="loading"
-      >
+      <b-table :items="paginatedCommunications" :fields="fields" striped hover responsive show-empty :busy="loading">
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle" />
@@ -137,13 +110,8 @@
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
               <label for="communications-per-page" class="mr-2 mb-0">Items per page:</label>
-              <b-form-select
-                id="communications-per-page"
-                v-model="perPage"
-                :options="perPageOptions"
-                size="sm"
-                style="width: auto;"
-              />
+              <b-form-select id="communications-per-page" v-model="perPage" :options="perPageOptions" size="sm"
+                style="width: auto;" />
             </div>
           </b-col>
           <b-col cols="12" md="6">
@@ -155,56 +123,112 @@
           </b-col>
         </b-row>
         <div class="d-flex justify-content-center mt-2">
-          <b-pagination
-            v-model="currentPage"
-            :total-rows="totalRows"
-            :per-page="perPage"
-            align="center"
-          />
+          <b-pagination v-model="currentPage" :total-rows="totalRows" :per-page="perPage" align="center" />
         </div>
       </div>
     </b-card>
 
-    <b-modal
-      id="communication-details"
-      v-model="showDetailsModal"
-      size="lg"
-      title="Communication Details"
-      ok-only
-      ok-title="Close"
-    >
+    <b-modal id="communication-details" v-model="showDetailsModal" size="xl" title="Communication Details" ok-only
+      ok-title="Close" ok-variant="primary">
       <div v-if="selectedCommunication">
-        <b-row>
-          <b-col cols="12" md="6">
-            <p><strong>Operation:</strong> {{ selectedCommunication.operation }}</p>
-            <p>
-              <strong>Status:</strong>
-              <b-badge :variant="statusVariant(selectedCommunication.status)">
-                {{ selectedCommunication.status }}
-              </b-badge>
-            </p>
-            <p><strong>Reference:</strong> {{ selectedCommunication.externalReference || '—' }}</p>
-          </b-col>
-          <b-col cols="12" md="6">
-            <p><strong>Started:</strong> {{ formatDateTime(selectedCommunication.startedAt) || '—' }}</p>
-            <p><strong>Completed:</strong> {{ formatDateTime(selectedCommunication.completedAt) || '—' }}</p>
-            <p><strong>Duration:</strong>
-              <span v-if="selectedCommunication.durationMs != null">
-                {{ (selectedCommunication.durationMs / 1000).toFixed(2) }}s
-              </span>
-              <span v-else>—</span>
-            </p>
-          </b-col>
-        </b-row>
-        <b-alert variant="danger" show v-if="selectedCommunication.errorMessage">
-          <strong>Error:</strong> {{ selectedCommunication.errorMessage }}
+        <!-- URL Section - Full Width -->
+        <b-card class="mb-3 url-card" v-if="selectedCommunication.url">
+          <div class="d-flex align-items-center mb-2">
+            <feather-icon icon="LinkIcon" size="18" class="mr-2 text-primary" />
+            <strong class="text-primary">Endpoint URL</strong>
+          </div>
+          <div class="url-container">
+            <code class="url-text">{{ selectedCommunication.url }}</code>
+            <b-button size="sm" variant="outline-primary" class="copy-btn"
+              @click="copyToClipboard(selectedCommunication.url)" v-b-tooltip.hover title="Copy URL">
+              <feather-icon icon="CopyIcon" size="14" />
+            </b-button>
+          </div>
+        </b-card>
+
+        <!-- Operation Details Section -->
+        <b-card class="mb-3">
+          <h6 class="section-title mb-3">
+            <feather-icon icon="InfoIcon" size="16" class="mr-2" />
+            Operation Details
+          </h6>
+          <b-row>
+            <b-col cols="12" md="6">
+              <div class="detail-item mb-3">
+                <label class="detail-label">Operation</label>
+                <div class="detail-value">{{ formatOperation(selectedCommunication.operation) }}</div>
+              </div>
+              <div class="detail-item mb-3">
+                <label class="detail-label">Status</label>
+                <div class="detail-value">
+                  <b-badge :variant="statusVariant(selectedCommunication.status)" class="status-badge">
+                    {{ selectedCommunication.status }}
+                  </b-badge>
+                </div>
+              </div>
+            </b-col>
+            <b-col cols="12" md="6">
+              <div class="detail-item mb-3">
+                <label class="detail-label">Started</label>
+                <div class="detail-value">{{ formatDateTime(selectedCommunication.startedAt) || '—' }}</div>
+              </div>
+              <div class="detail-item mb-3">
+                <label class="detail-label">Completed</label>
+                <div class="detail-value">{{ formatDateTime(selectedCommunication.completedAt) || '—' }}</div>
+              </div>
+              <div class="detail-item mb-3">
+                <label class="detail-label">Duration</label>
+                <div class="detail-value">
+                  <span v-if="selectedCommunication.durationMs != null">
+                    {{ (selectedCommunication.durationMs / 1000).toFixed(2) }}s
+                  </span>
+                  <span v-else>—</span>
+                </div>
+              </div>
+            </b-col>
+          </b-row>
+        </b-card>
+
+        <!-- Error Message Section -->
+        <b-alert variant="danger" show v-if="selectedCommunication.errorMessage" class="mb-3">
+          <div class="d-flex align-items-start">
+            <feather-icon icon="AlertCircleIcon" size="20" class="mr-2 mt-1" />
+            <div>
+              <strong class="d-block mb-1">Error Message</strong>
+              <div>{{ selectedCommunication.errorMessage }}</div>
+            </div>
+          </div>
         </b-alert>
-        <b-card class="mb-2">
-          <h6>Request Payload</h6>
+
+        <!-- Request Payload Section -->
+        <b-card class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="section-title mb-0">
+              <feather-icon icon="SendIcon" size="16" class="mr-2" />
+              Request Payload
+            </h6>
+            <b-button size="sm" variant="outline-secondary"
+              @click="copyToClipboard(selectedCommunication.requestPayload)" v-b-tooltip.hover title="Copy Request">
+              <feather-icon icon="CopyIcon" size="14" class="mr-1" />
+              Copy
+            </b-button>
+          </div>
           <pre class="payload">{{ formatJson(selectedCommunication.requestPayload) }}</pre>
         </b-card>
+
+        <!-- Response Payload Section -->
         <b-card>
-          <h6>Response Payload</h6>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="section-title mb-0">
+              <feather-icon icon="InboxIcon" size="16" class="mr-2" />
+              Response Payload
+            </h6>
+            <b-button size="sm" variant="outline-secondary"
+              @click="copyToClipboard(selectedCommunication.responsePayload)" v-b-tooltip.hover title="Copy Response">
+              <feather-icon icon="CopyIcon" size="14" class="mr-1" />
+              Copy
+            </b-button>
+          </div>
           <pre class="payload">{{ formatJson(selectedCommunication.responsePayload) }}</pre>
         </b-card>
       </div>
@@ -247,11 +271,10 @@ export default {
       fields: [
         { key: 'operation', label: 'Operation', sortable: true },
         { key: 'status', label: 'Status', sortable: true },
-        { key: 'externalReference', label: 'Reference', sortable: true },
         { key: 'startedAt', label: 'Started', sortable: true },
         { key: 'completedAt', label: 'Completed', sortable: true },
         { key: 'durationMs', label: 'Duration', sortable: true },
-        { key: 'errorMessage', label: 'Message', sortable: false },
+        { key: 'errorMessage', label: 'Error', sortable: false },
         { key: 'actions', label: '', sortable: false, class: 'text-right' },
       ],
     }
@@ -283,7 +306,7 @@ export default {
           return true
         }
         return [
-          comm.externalReference,
+          comm.url,
           comm.errorMessage,
           comm.requestPayload,
           comm.responsePayload,
@@ -413,6 +436,32 @@ export default {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ')
     },
+    async copyToClipboard(text) {
+      if (!text) return
+      try {
+        await navigator.clipboard.writeText(text)
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Copied!',
+            icon: 'CheckIcon',
+            text: 'Content copied to clipboard',
+            variant: 'success',
+          },
+        })
+      } catch (error) {
+        console.error('Failed to copy:', error)
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'AlertCircleIcon',
+            text: 'Failed to copy to clipboard',
+            variant: 'danger',
+          },
+        })
+      }
+    },
   },
 }
 </script>
@@ -434,11 +483,81 @@ export default {
 }
 
 .payload {
-  max-height: 240px;
+  max-height: 300px;
   overflow: auto;
   background: #f8f9fa;
   padding: 12px;
   border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  border: 1px solid #e9ecef;
+}
+
+.url-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+}
+
+.url-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.url-text {
+  flex: 1;
+  word-break: break-all;
+  font-size: 13px;
+  color: #495057;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.copy-btn {
+  flex-shrink: 0;
+  padding: 4px 8px;
+}
+
+.section-title {
+  color: #495057;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.detail-item {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.detail-value {
+  font-size: 14px;
+  color: #212529;
+  font-weight: 500;
+}
+
+.status-badge {
+  font-size: 12px;
+  padding: 4px 10px;
 }
 
 @media (max-width: 575.98px) {
@@ -453,5 +572,3 @@ export default {
   }
 }
 </style>
-
-

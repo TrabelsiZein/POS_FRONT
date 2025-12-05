@@ -156,6 +156,15 @@ const router = new VueRouter({
       }
     },
     {
+      path: '/admin/payment-methods',
+      name: 'admin-payment-methods',
+      component: () => import('@/views/admin/PaymentMethodsManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
       path: '/admin/general-setup',
       name: 'admin-general-setup',
       component: () => import('@/views/admin/GeneralSetupManagement.vue'),
@@ -168,6 +177,15 @@ const router = new VueRouter({
       path: '/admin/erp-jobs',
       name: 'admin-erp-jobs',
       component: () => import('@/views/admin/ErpJobs.vue'),
+      meta: {
+        requiresAuth: true,
+        requiredRole: 'ADMIN'
+      }
+    },
+    {
+      path: '/admin/erp-jobs/statistics/:jobId?',
+      name: 'erp-job-statistics',
+      component: () => import('@/views/admin/ErpJobStatistics.vue'),
       meta: {
         requiresAuth: true,
         requiredRole: 'ADMIN'

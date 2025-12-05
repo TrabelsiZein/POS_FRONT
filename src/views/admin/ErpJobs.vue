@@ -78,7 +78,9 @@
         </template>
 
         <template #cell(cronExpression)="row">
-          <code v-if="row.item.cronExpression">{{ row.item.cronExpression }}</code>
+          <div v-if="row.item.cronDescription" class="text-primary">
+            {{ row.item.cronDescription }}
+          </div>
           <span v-else class="text-muted">—</span>
         </template>
 
@@ -119,41 +121,103 @@
         </div>
       </div>
 
-      <b-modal v-model="showDetailsModal" title="Job Details" size="lg" @hide="selectedJob = null">
+      <b-modal v-model="showDetailsModal" :title="isEditMode ? 'Edit Job' : 'Job Details'" size="lg"
+        @hide="handleModalHide">
         <div v-if="selectedJob">
-          <b-row>
-            <b-col cols="12" md="6">
-              <p><strong>Job:</strong> {{ formatJobType(selectedJob.jobType) }}</p>
-              <p><strong>Description:</strong> {{ selectedJob.description || '—' }}</p>
-              <p>
-                <strong>Last Status:</strong>
-                <b-badge :variant="statusVariant(selectedJob.lastStatus)">
-                  {{ formatStatusText(selectedJob.lastStatus) }}
-                </b-badge>
-              </p>
-              <p><strong>Enabled:</strong> {{ selectedJob.enabled ? 'Yes' : 'No' }}</p>
-            </b-col>
-            <b-col cols="12" md="6">
-              <p><strong>Cron:</strong> {{ selectedJob.cronExpression || '—' }}</p>
-              <p><strong>Last Run:</strong> {{ formatDateTime(selectedJob.lastRunAt) || '—' }}</p>
-              <p><strong>Next Run:</strong> {{ formatDateTime(selectedJob.nextRunAt) || '—' }}</p>
-              <p><strong>Checkpoint:</strong> {{ selectedJob.checkpointValue || '—' }}</p>
-              <p><strong>Last Checkpoint:</strong> {{ formatDateTime(selectedJob.lastCheckpointAt) || '—' }}</p>
-            </b-col>
-          </b-row>
+          <!-- View Mode -->
+          <div v-if="!isEditMode">
+            <b-row>
+              <b-col cols="12" md="6">
+                <p><strong>Job:</strong> {{ formatJobType(selectedJob.jobType) }}</p>
+                <p><strong>Description:</strong> {{ selectedJob.description || '—' }}</p>
+                <p>
+                  <strong>Last Status: </strong>
+                  <b-badge :variant="statusVariant(selectedJob.lastStatus)">
+                    {{ formatStatusText(selectedJob.lastStatus) }}
+                  </b-badge>
+                </p>
+                <p>
+                  <strong>Enabled: </strong>
+                  <b-badge :variant="selectedJob.enabled ? 'success' : 'secondary'" class="mr-2">
+                    {{ selectedJob.enabled ? 'Enabled' : 'Disabled' }}
+                  </b-badge>
+                  <b-button variant="link" size="sm" @click="toggleEnabled(selectedJob)" class="p-0">
+                    {{ selectedJob.enabled ? 'Disable' : 'Enable' }}
+                  </b-button>
+                </p>
+              </b-col>
+              <b-col cols="12" md="6">
+                <p v-if="selectedJob.cronDescription">
+                  <strong>Schedule:</strong> {{ selectedJob.cronDescription }}
+                </p>
+                <p><strong>Last Run:</strong> {{ formatDateTime(selectedJob.lastRunAt) || '—' }}</p>
+                <p><strong>Next Run:</strong> {{ formatDateTime(selectedJob.nextRunAt) || '—' }}</p>
+                <p>
+                  <strong>Checkpoint:</strong> 
+                  <span v-if="selectedJob.checkpointValue">{{ selectedJob.checkpointValue }}</span>
+                  <span v-else class="text-muted">—</span>
+                </p>
+                <p>
+                  <strong>Last Checkpoint:</strong> 
+                  {{ formatDateTime(selectedJob.lastCheckpointAt) || '—' }}
+                </p>
+              </b-col>
+            </b-row>
+          </div>
+
+          <!-- Edit Mode -->
+          <div v-else>
+            <b-form-group label="Description" label-for="job-description">
+              <b-form-input id="job-description" v-model="editedJob.description" />
+            </b-form-group>
+
+            <b-form-group label="Enabled" label-for="job-enabled-toggle">
+              <b-form-checkbox id="job-enabled-toggle" v-model="editedJob.enabled" switch>
+                {{ editedJob.enabled ? 'Enabled' : 'Disabled' }}
+              </b-form-checkbox>
+            </b-form-group>
+
+            <CronBuilder v-model="editedJob.cronExpression" />
+          </div>
         </div>
 
         <template #modal-footer>
-          <b-button variant="secondary" @click="showDetailsModal = false">Close</b-button>
-          <b-button variant="primary" @click="handleRunClick" :disabled="isAnyJobRunning || !selectedJob">
-            <template v-if="selectedJob && isRunning(selectedJob.id)">
-              <b-spinner small class="mr-50" />
-            </template>
-            <template v-else>
-              <feather-icon icon="PlayCircleIcon" size="16" class="mr-50" />
-            </template>
-            Run Now
-          </b-button>
+          <div class="w-100 d-flex justify-content-between">
+            <div>
+              <b-button v-if="!isEditMode && selectedJob" variant="link" size="sm"
+                @click="goToStatistics">
+                <feather-icon icon="BarChartIcon" size="16" class="mr-50" />
+                View Statistics
+              </b-button>
+            </div>
+            <div class="d-flex align-items-center">
+              <b-button v-if="isEditMode" variant="secondary" @click="cancelEdit" :disabled="saving" class="mr-2">
+                Cancel
+              </b-button>
+              <b-button v-if="!isEditMode" variant="secondary" @click="showDetailsModal = false" class="mr-2">
+                Close
+              </b-button>
+              <b-button v-if="isEditMode" variant="primary" @click="saveJob" :disabled="saving">
+                <b-spinner v-if="saving" small class="mr-50" />
+                Save
+              </b-button>
+              <b-button v-if="!isEditMode && selectedJob" variant="outline-primary" @click="startEdit"
+                class="mr-2">
+                <feather-icon icon="EditIcon" size="16" class="mr-50" />
+                Edit
+              </b-button>
+              <b-button v-if="!isEditMode && selectedJob" variant="primary" @click="handleRunClick"
+                :disabled="isAnyJobRunning">
+                <template v-if="selectedJob && isRunning(selectedJob.id)">
+                  <b-spinner small class="mr-50" />
+                </template>
+                <template v-else>
+                  <feather-icon icon="PlayCircleIcon" size="16" class="mr-50" />
+                </template>
+                Run Now
+              </b-button>
+            </div>
+          </div>
         </template>
       </b-modal>
     </b-card>
@@ -163,9 +227,13 @@
 <script>
 import moment from 'moment'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import CronBuilder from '@/components/CronBuilder.vue'
 
 export default {
   name: 'ErpJobs',
+  components: {
+    CronBuilder,
+  },
   data() {
     return {
       jobs: [],
@@ -199,6 +267,13 @@ export default {
       ],
       showDetailsModal: false,
       selectedJob: null,
+      isEditMode: false,
+      editedJob: {
+        description: '',
+        cronExpression: '',
+        enabled: false,
+      },
+      saving: false,
     }
   },
   computed: {
@@ -441,7 +516,7 @@ export default {
     },
     formatDateTime(value) {
       if (!value) return '—'
-      return moment(value).format('YYYY-MM-DD HH:mm')
+      return moment(value).format('YYYY-MM-DD HH:mm:ss')
     },
     statusVariant(status) {
       const normalized = (status || '').toUpperCase()
@@ -449,6 +524,140 @@ export default {
       if (normalized === 'FAILED' || normalized === 'ERROR') return 'danger'
       if (normalized === 'RUNNING' || normalized === 'IN_PROGRESS') return 'warning'
       return 'secondary'
+    },
+    startEdit() {
+      if (!this.selectedJob) return
+      this.editedJob = {
+        description: this.selectedJob.description || '',
+        cronExpression: this.selectedJob.cronExpression || '',
+        enabled: Boolean(this.selectedJob.enabled),
+      }
+      this.isEditMode = true
+    },
+    cancelEdit() {
+      this.isEditMode = false
+      this.editedJob = {
+        description: '',
+        cronExpression: '',
+        enabled: false,
+      }
+    },
+    handleModalHide() {
+      this.isEditMode = false
+      this.selectedJob = null
+      this.editedJob = {
+        description: '',
+        cronExpression: '',
+        enabled: false,
+      }
+    },
+    async saveJob() {
+      if (!this.selectedJob) return
+
+      this.saving = true
+      try {
+        const response = await this.$http.put(`/admin/erp/jobs/${this.selectedJob.id}`, {
+          description: this.editedJob.description,
+          cronExpression: this.editedJob.cronExpression,
+          enabled: this.editedJob.enabled,
+        })
+
+        const updatedJob = response && response.data ? response.data : null
+
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Success',
+            icon: 'CheckCircleIcon',
+            text: 'Job updated successfully',
+            variant: 'success',
+          },
+        })
+
+        if (updatedJob) {
+          const existingIndex = this.jobs.findIndex(item => item.id === this.selectedJob.id)
+          if (existingIndex !== -1) {
+            this.$set(this.jobs, existingIndex, updatedJob)
+          }
+          this.selectedJob = updatedJob
+        } else {
+          await this.loadJobs()
+        }
+
+        this.isEditMode = false
+      } catch (error) {
+        console.error('Error updating job:', error)
+        let errorMessage = 'Failed to update job'
+        if (error.response && error.response.data) {
+          if (error.response.data.error) {
+            errorMessage = error.response.data.error
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message
+          }
+        }
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'XIcon',
+            text: errorMessage,
+            variant: 'danger',
+          },
+        })
+      } finally {
+        this.saving = false
+      }
+    },
+    async toggleEnabled(job) {
+      if (!job) return
+
+      try {
+        const response = await this.$http.patch(`/admin/erp/jobs/${job.id}`, {
+          enabled: !job.enabled,
+        })
+
+        const updatedJob = response && response.data ? response.data : null
+
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Success',
+            icon: 'CheckCircleIcon',
+            text: `Job ${updatedJob && updatedJob.enabled ? 'enabled' : 'disabled'} successfully`,
+            variant: 'success',
+          },
+        })
+
+        if (updatedJob) {
+          const existingIndex = this.jobs.findIndex(item => item.id === job.id)
+          if (existingIndex !== -1) {
+            this.$set(this.jobs, existingIndex, updatedJob)
+          }
+          if (this.selectedJob && this.selectedJob.id === updatedJob.id) {
+            this.selectedJob = updatedJob
+          }
+        } else {
+          await this.loadJobs()
+        }
+      } catch (error) {
+        console.error('Error toggling job enabled status:', error)
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'XIcon',
+            text: 'Failed to update job status',
+            variant: 'danger',
+          },
+        })
+      }
+    },
+    goToStatistics() {
+      if (!this.selectedJob) return
+      this.$router.push({
+        name: 'erp-job-statistics',
+        params: { jobId: this.selectedJob.id },
+      })
     },
   },
 }

@@ -25,6 +25,13 @@ export default [
         action: 'read',
       },
       {
+        title: 'Payment Methods',
+        icon: 'CreditCardIcon',
+        route: { name: 'admin-payment-methods' },
+        resource: 'admin-payment-methods',
+        action: 'read',
+      },
+      {
         title: 'General Setup',
         icon: 'SlidersIcon',
         route: { name: 'admin-general-setup' },

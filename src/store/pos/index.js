@@ -52,6 +52,10 @@ export default {
     setOrderSummary({ commit }, summary) {
       commit('SET_ORDER_SUMMARY', summary)
     },
+    updateOrderSummary({ commit, state }, updates) {
+      const currentSummary = state.orderSummary || {}
+      commit('SET_ORDER_SUMMARY', { ...currentSummary, ...updates })
+    },
     clearCart({ commit }) {
       commit('CLEAR_CART')
     },

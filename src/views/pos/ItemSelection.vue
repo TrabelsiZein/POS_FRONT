@@ -109,7 +109,9 @@
                       <h5>{{ entry.name }}</h5>
                       <p class="item-code">{{ entry.itemCode }}</p>
                       <p class="item-price">{{ formatTunCurrency(getUnitPriceWithVat(entry)) }} TTC</p>
-                      <p v-if="entry.stockQuantity !== null" class="item-stock">
+                      <p v-if="entry.stockQuantity !== null" class="item-stock"
+                        :class="getStockClass(entry.stockQuantity)">
+                        <feather-icon :icon="getStockIcon(entry.stockQuantity)" size="12" class="mr-25" />
                         Stock: {{ entry.stockQuantity }}
                       </p>
                     </div>
@@ -163,16 +165,6 @@
 
       <!-- Cart Section -->
       <b-col cols="12" md="4" lg="3" class="cart-section">
-        <div class="cart-header">
-          <div class="cart-title-wrap">
-            <h4 class="cart-title mb-0">Cart</h4>
-            <b-badge v-if="cartCount > 0" variant="light" class="cart-count-badge">{{ cartCount }}</b-badge>
-          </div>
-          <b-button v-if="cart.length > 0" variant="outline-secondary" size="sm" @click="clearCart">
-            Clear
-          </b-button>
-        </div>
-
         <div class="cart-items" ref="cartList" :class="{ 'cart-items--scrolled': cartScrollShadow }">
           <div v-if="cart.length === 0" class="empty-cart">
             <feather-icon icon="ShoppingBagIcon" size="36" class="mb-1 text-muted" />
@@ -198,13 +190,20 @@
               </div>
             </div>
             <div class="cart-item-breakdown">
-              <span class="chip chip--ht">{{ formatShortTun(cartItem.unitPrice) }} HT</span>
-              <span class="chip chip--vat">{{ formatVatPercentage(cartItem) }}% VAT</span>
-              <span class="chip chip--ttc">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} TTC/unit</span>
-              <span v-if="cartItem.discountPercentage || cartItem.discountAmount" class="chip chip--discount">
-                <feather-icon icon="PercentIcon" size="12" class="mr-25" />
-                {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' : formatShortTun(cartItem.discountAmount) }}
-              </span>
+              <div class="breakdown-row">
+                <span class="breakdown-label">Unit Price:</span>
+                <span class="breakdown-value">{{ formatShortTun(cartItem.unitPrice) }} HT</span>
+                <span class="breakdown-value secondary">{{ formatVatPercentage(cartItem) }}% VAT</span>
+                <span class="breakdown-value primary">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} TTC</span>
+              </div>
+              <div v-if="cartItem.discountPercentage || cartItem.discountAmount" class="breakdown-row discount-row">
+                <feather-icon icon="PercentIcon" size="14" class="breakdown-icon" />
+                <span class="breakdown-label">Discount:</span>
+                <span class="breakdown-value discount">
+                  {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' :
+                    formatShortTun(cartItem.discountAmount) }}
+                </span>
+              </div>
             </div>
             <div class="cart-item-controls">
               <div class="quantity-controls">
@@ -221,7 +220,8 @@
                   :title="cartItem.discountPercentage || cartItem.discountAmount ? 'Edit discount' : 'Add discount'">
                   <feather-icon icon="PercentIcon" size="14" />
                   <span v-if="cartItem.discountPercentage || cartItem.discountAmount" class="discount-badge">
-                    {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' : formatShortTun(cartItem.discountAmount) }}
+                    {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' :
+                      formatShortTun(cartItem.discountAmount) }}
                   </span>
                 </b-button>
                 <b-button variant="outline-danger" size="sm" class="remove-btn" @click="removeFromCart(index)">
@@ -233,6 +233,29 @@
         </div>
 
         <div class="cart-summary">
+          <div class="cart-summary-header">
+            <span class="cart-summary-title">Cart {{ cartCount > 0 ? `(${cartCount})` : '' }}</span>
+            <b-button v-if="cart.length > 0" variant="outline-secondary" size="sm" @click="clearCart"
+              class="cart-clear-btn">
+              Clear
+            </b-button>
+          </div>
+          <div class="summary-row">
+            <span>Items:</span>
+            <span>{{ cart.length }} ({{ cartCount }} units)</span>
+          </div>
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span>{{ formatTunCurrency(subtotal) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>Tax:</span>
+            <span>{{ formatTunCurrency(taxAmount) }}</span>
+          </div>
+          <div v-if="headerDiscountAmount > 0" class="summary-row discount-row">
+            <span>Discount:</span>
+            <span class="text-danger">-{{ formatTunCurrency(headerDiscountAmount) }}</span>
+          </div>
           <div class="summary-row total">
             <span>Total:</span>
             <span>{{ formatTunCurrency(totalAmount) }}</span>
@@ -240,39 +263,41 @@
         </div>
 
         <div class="keyboard-toggle">
-          <b-button :variant="showKeyboard ? 'outline-secondary' : 'primary'" block @click="toggleKeyboard">
-            <feather-icon :icon="showKeyboard ? 'ChevronDownIcon' : 'KeyboardIcon'" class="mr-50" size="16" />
+          <b-button variant="outline-secondary" block @click="toggleKeyboard" class="keyboard-toggle-btn"
+            :class="{ 'keyboard-active': showKeyboard }">
+            <feather-icon :icon="showKeyboard ? 'ChevronDownIcon' : 'ChevronUpIcon'" class="mr-50" size="16" />
             {{ showKeyboard ? 'Hide Keyboard' : 'Show Keyboard' }}
           </b-button>
         </div>
 
         <transition name="keyboard-fade">
           <div class="virtual-keyboard" v-if="showKeyboard">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <strong>Touch Keyboard</strong>
-              <b-button size="sm" variant="outline-secondary" @click="toggleKeyboard">
+            <div class="keyboard-header">
+              <strong>Numeric Keyboard</strong>
+              <b-button size="sm" variant="outline-secondary" @click="toggleKeyboard" class="keyboard-close-btn">
                 <feather-icon icon="XIcon" size="14" />
               </b-button>
             </div>
-            <div v-for="(row, index) in keyboardLayout" :key="`keyboard-row-${index}`" class="keyboard-row">
-              <b-button v-for="key in row" :key="key" variant="light" class="keyboard-key"
-                @click="handleKeyboardPress(key)">
-                <template v-if="key === 'BACK'">
-                  <feather-icon icon="DeleteIcon" size="16" />
-                </template>
-                <template v-else-if="key === 'SPACE'">
-                  Space
-                </template>
-                <template v-else-if="key === 'CLEAR'">
-                  Clear
-                </template>
-                <template v-else-if="key === 'ENTER'">
-                  Enter
-                </template>
-                <template v-else>
-                  {{ key }}
-                </template>
-              </b-button>
+            <div class="keyboard-grid">
+              <button v-for="num in [1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0, '⌫']" :key="num" class="keyboard-key"
+                :class="{ 'key-decimal': num === '.', 'key-backspace': num === '⌫' }" @click="handleKeyboardPress(num)"
+                type="button">
+                {{ num }}
+              </button>
+            </div>
+            <div class="keyboard-actions">
+              <button class="keyboard-action-btn" @click="handleKeyboardPress('CLEAR')" type="button">
+                Clear
+              </button>
+              <button class="keyboard-action-btn" @click="handleKeyboardPress('BACK')" type="button">
+                <feather-icon icon="DeleteIcon" size="16" />
+                Back
+              </button>
+              <button class="keyboard-action-btn keyboard-action-enter" @click="handleKeyboardPress('ENTER')"
+                type="button">
+                <feather-icon icon="CheckIcon" size="16" />
+                Enter
+              </button>
             </div>
           </div>
         </transition>
@@ -430,8 +455,8 @@
     </b-modal>
 
     <!-- Discount Modal -->
-    <b-modal id="discount-modal" v-model="showDiscountModal" title="Apply Discount" size="md"
-      @ok="applyLineDiscount" @hide="resetDiscountForm" :ok-disabled="!canApplyDiscount">
+    <b-modal id="discount-modal" v-model="showDiscountModal" title="Apply Discount" size="md" @ok="applyLineDiscount"
+      @hide="resetDiscountForm" :ok-disabled="!canApplyDiscount">
       <div v-if="discountModalItemIndex !== null">
         <div class="mb-3" v-if="getDiscountModalItem()">
           <strong>{{ getDiscountModalItem().name }}</strong>
@@ -671,6 +696,18 @@ export default {
         return sum + this.getLineTotalWithVat(item, true)
       }, 0)
     },
+    headerDiscountAmount() {
+      const orderSummary = this.$store.state.pos?.orderSummary
+      if (!orderSummary) return 0
+      const total = this.totalAmount
+
+      if (orderSummary.discountPercent && orderSummary.discountPercent > 0) {
+        return total * (orderSummary.discountPercent / 100)
+      } else if (orderSummary.discountAmount && orderSummary.discountAmount > 0) {
+        return orderSummary.discountAmount
+      }
+      return 0
+    },
     canApplyDiscount() {
       if (this.discountModalItemIndex === null || this.discountValue === null || this.discountValue <= 0) {
         return false
@@ -762,6 +799,18 @@ export default {
     }
   },
   methods: {
+    getStockClass(stock) {
+      if (stock === null || stock === undefined) return 'stock-unknown'
+      if (stock === 0) return 'stock-out'
+      if (stock < 10) return 'stock-low'
+      return 'stock-ok'
+    },
+    getStockIcon(stock) {
+      if (stock === null || stock === undefined) return 'HelpCircleIcon'
+      if (stock === 0) return 'XCircleIcon'
+      if (stock < 10) return 'AlertTriangleIcon'
+      return 'CheckCircleIcon'
+    },
     toggleCompactMode() {
       this.compactMode = !this.compactMode
     },
@@ -803,7 +852,7 @@ export default {
     getLineTotalWithVat(item, applyDiscount = true) {
       const quantity = item.quantity || 0
       const lineTotalWithVat = this.getUnitPriceWithVat(item) * quantity
-      
+
       if (applyDiscount && (item.discountPercentage || item.discountAmount)) {
         let discountAmount = 0
         if (item.discountAmount) {
@@ -813,7 +862,7 @@ export default {
         }
         return Math.max(0, lineTotalWithVat - discountAmount)
       }
-      
+
       return lineTotalWithVat
     },
     async loadFamilies() {
@@ -981,20 +1030,33 @@ export default {
       const targetField = this.activeInput === 'barcode' ? 'barcodeInput' : 'searchQuery'
       const currentValue = this[targetField] || ''
 
-      if (key === 'BACK') {
+      if (key === 'BACK' || key === '⌫') {
+        // Backspace - remove last character
         this[targetField] = currentValue.slice(0, -1)
       } else if (key === 'CLEAR') {
+        // Clear - empty the field
         this[targetField] = ''
       } else if (key === 'SPACE') {
+        // Space - add space
         this[targetField] = `${currentValue} `
       } else if (key === 'ENTER') {
+        // Enter - submit
         if (targetField === 'barcodeInput') {
           this.handleBarcodeScan()
         } else {
           this.handleSearchInput()
         }
         return
+      } else if (key === '.') {
+        // Decimal point - add if not present
+        if (!currentValue.includes('.')) {
+          this[targetField] = currentValue + '.'
+        }
+      } else if (key >= '0' && key <= '9') {
+        // Number - append
+        this[targetField] = currentValue + key
       } else {
+        // Other characters (like '00')
         this[targetField] = currentValue + key
       }
 
@@ -1158,6 +1220,7 @@ export default {
         subtotal: ticket.subtotal,
         taxAmount: ticket.taxAmount,
         discountAmount: ticket.discountAmount || 0,
+        discountPercent: ticket.discountPercentage || 0,
         totalAmount: ticket.totalAmount
       })
 
@@ -1282,6 +1345,26 @@ export default {
       }
       this.$store.dispatch('pos/setCart', currentCart)
       this.highlightCartItem(item.id)
+
+      // Add visual feedback - scroll to top of cart and highlight
+      this.$nextTick(() => {
+        if (this.$refs.cartList) {
+          this.$refs.cartList.scrollTop = 0
+        }
+      })
+
+      // Show toast notification
+      this.$toast({
+        component: ToastificationContent,
+        props: {
+          title: 'Added to Cart',
+          icon: 'CheckIcon',
+          text: `${item.name} added to cart`,
+          variant: 'success'
+        },
+      }, {
+        position: 'top-left', // ⬅️ here
+      })
     },
     increaseQuantity(index) {
       const currentCart = [...this.cart]
@@ -1504,10 +1587,10 @@ export default {
     },
     openLineDiscountModal(index) {
       if (index < 0 || index >= this.cart.length) return
-      
+
       this.discountModalItemIndex = index
       const item = this.cart[index]
-      
+
       // Initialize with existing discount if any
       if (item.discountPercentage) {
         this.discountType = 'percentage'
@@ -1519,7 +1602,7 @@ export default {
         this.discountType = 'percentage'
         this.discountValue = null
       }
-      
+
       this.showDiscountModal = true
     },
     getDiscountModalItem() {
@@ -1535,9 +1618,9 @@ export default {
     },
     getCalculatedDiscount() {
       if (!this.discountValue || this.discountValue <= 0) return 0
-      
+
       const originalTotal = this.getOriginalLineTotal()
-      
+
       if (this.discountType === 'percentage') {
         return originalTotal * (this.discountValue / 100)
       } else {
@@ -1551,14 +1634,14 @@ export default {
     },
     applyLineDiscount() {
       if (!this.canApplyDiscount || this.discountModalItemIndex === null) return
-      
+
       const cart = [...this.cart]
       const item = cart[this.discountModalItemIndex]
       const originalTotal = this.getLineTotalWithVat(item, false)
-      
+
       let discountPercentage = null
       let discountAmount = null
-      
+
       if (this.discountType === 'percentage') {
         discountPercentage = this.discountValue
         discountAmount = originalTotal * (this.discountValue / 100)
@@ -1566,10 +1649,10 @@ export default {
         discountAmount = Math.min(this.discountValue, originalTotal)
         discountPercentage = originalTotal > 0 ? (discountAmount / originalTotal) * 100 : 0
       }
-      
+
       item.discountPercentage = discountPercentage
       item.discountAmount = discountAmount
-      
+
       this.$store.dispatch('pos/setCart', cart)
       this.resetDiscountForm()
     },
@@ -1605,11 +1688,13 @@ export default {
 .pos-content {
   flex: 1;
   overflow: hidden;
-  padding: 0 0 0 10px;
+  padding: 0 0px;
   display: flex;
   gap: 0;
   min-width: 0;
   box-sizing: border-box;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .pos-content>[class*='col'] {
@@ -1619,7 +1704,7 @@ export default {
 @media (max-width: 767.98px) {
   .pos-content {
     flex-direction: column;
-    padding: 0 0 0 10px;
+    padding: 0 10px;
     gap: 0;
   }
 }
@@ -1784,12 +1869,15 @@ export default {
   min-width: 0;
   box-sizing: border-box;
   /* Hide scrollbar but keep touch scrolling */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 .items-grid-wrapper::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .items-grid {
@@ -1884,18 +1972,18 @@ export default {
 .items-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+  gap: 6px;
 }
 
 .items-section.compact-mode .items-grid {
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 6px;
+  gap: 4px;
 }
 
 @media (max-width: 1200px) {
   .items-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 8px;
+    gap: 5px;
   }
 }
 
@@ -1908,24 +1996,45 @@ export default {
   scrollbar-width: none;
 }
 
-@media (max-width: 991.98px) {
+@media (min-width: 1600px) {
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 6px;
+  }
+}
+
+@media (max-width: 1200px) {
   .items-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 991.98px) {
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 4px;
   }
 }
 
 @media (max-width: 575.98px) {
   .items-grid {
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 4px;
   }
 }
 
 .item-card {
   border: 2px solid #e0e0e0;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 6px;
+  padding: 6px;
   cursor: pointer;
   transition: all 0.25s ease;
   background: #fff;
@@ -1933,27 +2042,27 @@ export default {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 @media (max-width: 575.98px) {
   .item-card {
-    padding: 10px;
+    padding: 6px;
   }
 
   .item-details h5 {
-    font-size: 0.9rem;
+    font-size: 0.65rem;
   }
 
   .item-price {
-    font-size: 1rem;
+    font-size: 0.85rem;
   }
 }
 
 .item-card:hover {
   border-color: #28a745;
   box-shadow: 0 10px 24px rgba(40, 167, 69, 0.15);
-  transform: translateY(-3px);
+  transform: translateY(3px);
 }
 
 .category-card {
@@ -1995,63 +2104,73 @@ export default {
 
 .item-image {
   text-align: center;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
   color: #007bff;
+}
+
+.item-image svg {
+  width: 26px;
+  height: 26px;
 }
 
 .item-details {
   width: 100%;
-  margin-top: 5px;
+  margin-top: 1px;
 }
 
 .item-details h5 {
-  /* margin: 0 0 8px 0; */
-  font-size: 0.85rem;
+  font-size: 0.68rem;
   font-weight: 500;
   color: #2c3e50;
-  line-height: 1.1;
-  min-height: 2.6em;
+  line-height: 1.2;
+  min-height: 2em;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .item-code {
-  font-size: 0.8rem;
+  font-size: 0.62rem;
   color: #6c757d;
-  margin: 0 0 10px 0;
+  margin: 1px 0 3px 0;
   font-weight: 500;
 }
 
 .item-price {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: bold;
   color: #28a745;
   margin: 0px;
 }
 
 .items-section.compact-mode .item-card {
-  padding: 8px;
-  border-radius: 10px;
+  padding: 5px;
+  border-radius: 5px;
 }
 
 .items-section.compact-mode .item-image {
-  margin-bottom: 4px;
+  margin-bottom: 1px;
+}
+
+.items-section.compact-mode .item-image svg {
+  width: 24px;
+  height: 24px;
 }
 
 .items-section.compact-mode .item-details h5 {
-  font-size: 0.78rem;
-  -webkit-line-clamp: 3;
+  font-size: 0.65rem;
+  -webkit-line-clamp: 2;
+  min-height: 1.8em;
 }
 
 .items-section.compact-mode .item-code {
-  font-size: 0.72rem;
-  margin-bottom: 6px;
+  font-size: 0.6rem;
+  margin-bottom: 3px;
 }
 
 .items-section.compact-mode .item-price {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
 }
 
 .item-vat {
@@ -2061,9 +2180,35 @@ export default {
 }
 
 .item-stock {
-  font-size: 0.85rem;
-  color: #666;
-  margin: 5px 0 0 0;
+  font-size: 0.7rem;
+  margin: 3px 0 0 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.stock-ok {
+  color: #155724;
+  background: #d4edda;
+}
+
+.stock-low {
+  color: #856404;
+  background: #fff3cd;
+}
+
+.stock-out {
+  color: #721c24;
+  background: #f8d7da;
+}
+
+.stock-unknown {
+  color: #6c757d;
+  background: #e9ecef;
 }
 
 .cart-section {
@@ -2076,9 +2221,11 @@ export default {
   border: none;
   border-radius: 0;
   box-shadow: none;
-  padding: 10px;
+  padding: 6px !important;
   min-width: 0;
+  max-width: 100%;
   box-sizing: border-box;
+  margin-right: 0;
 }
 
 @media (max-width: 767.98px) {
@@ -2092,53 +2239,28 @@ export default {
   }
 }
 
-.cart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e0e0e0;
-  flex-shrink: 0;
-}
-
-.cart-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cart-count-badge {
-  font-weight: 600;
-  background: #f4f4ff;
-  color: #7367f0;
-  border-radius: 999px;
-  padding: 3px 10px;
-}
-
-.cart-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2c3e50;
-  margin: 0;
-}
 
 .cart-items {
   flex: 1;
+  min-height: 0;
+  /* Allow shrinking but maintain usability */
   overflow-y: auto;
   overflow-x: hidden;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   position: relative;
-  padding-bottom: 15px;
+  padding-bottom: 8px;
   min-width: 0;
   box-sizing: border-box;
   /* Hide scrollbar but keep touch scrolling */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 .cart-items::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
 
 .cart-items::before {
@@ -2171,33 +2293,36 @@ export default {
 .cart-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  margin-bottom: 10px;
+  gap: 3px;
+  padding: 8px;
+  margin-bottom: 4px;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: all 0.2s ease;
   background: #f8f9fa;
   box-sizing: border-box;
 }
 
 .cart-item.highlighted {
-  background: #f0f4ff;
-  border-color: #7367f0;
+  background: #e8f5e9;
+  border-color: #28a745;
   border-width: 2px;
-  box-shadow: 0 4px 12px rgba(115, 103, 240, 0.2);
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .cart-item-header {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   align-items: flex-start;
+  margin-bottom: 0;
 }
 
 .cart-item-title h6 {
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.3;
+  font-size: 0.9rem;
 }
 
 .cart-item-total {
@@ -2212,42 +2337,59 @@ export default {
 }
 
 .cart-item-breakdown {
-  display: grid;
-  grid-template-columns: 1fr 0.6fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
-  font-size: 0.7rem;
-  color: #6c757d;
+  padding: 6px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  margin: 2px 0;
+  font-size: 0.75rem;
 }
 
-.cart-item-breakdown .chip {
-  display: inline-flex;
+.breakdown-row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  border-radius: 999px;
-  padding: 2px 6px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.breakdown-label {
+  color: #6c757d;
+  font-weight: 500;
+  min-width: 70px;
+}
+
+.breakdown-value {
   font-weight: 600;
-  white-space: nowrap;
-  line-height: 1.1;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #e9ecef;
+  color: #495057;
 }
 
-.chip--ht {
-  background: #f4f7ff;
-  color: #5d60a6;
+.breakdown-value.primary {
+  background: #d4edda;
+  color: #155724;
 }
 
-.chip--vat {
-  background: #fff6e7;
-  color: #a15c00;
+.breakdown-value.secondary {
+  background: #fff3cd;
+  color: #856404;
 }
 
-.chip--ttc {
-  background: #e9fbf2;
-  color: #17804e;
-}
-
-.chip--discount {
+.breakdown-value.discount {
   background: #fff3e0;
+  color: #e65100;
+}
+
+.breakdown-row.discount-row {
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.breakdown-icon {
   color: #e65100;
 }
 
@@ -2255,8 +2397,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: nowrap;
+  margin-top: 0;
 }
 
 .action-buttons {
@@ -2296,13 +2439,42 @@ export default {
 .cart-item-controls .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex: 1;
 }
 
 .qty-btn {
-  min-width: 28px;
-  padding: 2px 6px;
+  min-width: 36px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   line-height: 1;
+  font-size: 1.1rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  touch-action: manipulation;
+  transition: all 0.2s ease;
+}
+
+.qty-btn:hover {
+  transform: scale(1.1);
+}
+
+.qty-btn:active {
+  transform: scale(0.95);
+}
+
+.quantity {
+  min-width: 40px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 4px 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
 }
 
 .remove-btn {
@@ -2333,8 +2505,9 @@ export default {
   }
 
   .cart-item-breakdown {
-    grid-template-columns: 1fr 0.65fr 1fr;
-    font-size: 0.68rem;
+    font-size: 0.7rem;
+    padding: 6px;
+    gap: 4px;
   }
 }
 
@@ -2345,23 +2518,52 @@ export default {
 }
 
 .cart-summary {
-  border-top: 2px solid #e0e0e0;
-  padding-top: 15px;
-  margin-bottom: 15px;
+  border-top: 3px solid #e0e0e0;
+  padding-top: 10px;
+  /* margin-top: 10px; */
+  margin-bottom: 10px;
   flex-shrink: 0;
+}
+
+.cart-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cart-summary-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.cart-clear-btn {
+  padding: 2px 8px;
+  font-size: 0.75rem;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  padding: 1px 0;
+}
+
+.summary-row.discount-row {
+  color: #dc3545;
 }
 
 .summary-row.total {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: bold;
-  border-top: 1px solid #e0e0e0;
-  padding-top: 10px;
+  border-top: 2px solid #e0e0e0;
+  padding-top: 6px;
+  margin-top: 4px;
+  margin-bottom: 0;
 }
 
 @media (max-width: 575.98px) {
@@ -2446,35 +2648,218 @@ export default {
 }
 
 .virtual-keyboard {
-  background: #f3f5f7;
-  border-radius: 12px;
-  padding: 12px;
-  margin-top: 12px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin-bottom: 10px;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
 }
 
-.keyboard-row {
+.keyboard-header {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.keyboard-row:last-child {
-  margin-bottom: 0;
+.keyboard-header strong {
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.keyboard-close-btn {
+  padding: 4px 8px;
+}
+
+.keyboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
 }
 
 .keyboard-key {
-  min-width: 48px;
+  min-height: 50px;
+  height: 50px;
+  font-size: 1.3rem;
   font-weight: 600;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.keyboard-key:active {
-  transform: translateY(1px);
+.keyboard-key:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #7367f0;
+  transform: scale(0.98);
+}
+
+.keyboard-key:active:not(:disabled) {
+  transform: scale(0.95);
+  background: #e0e0e0;
+}
+
+.keyboard-key:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.key-decimal {
+  font-size: 1.2rem;
+}
+
+.key-backspace {
+  background: #ffc107;
+  color: #000;
+  font-weight: bold;
+}
+
+.key-backspace:hover:not(:disabled) {
+  background: #ffb300;
+}
+
+.keyboard-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.keyboard-action-btn {
+  flex: 1;
+  min-height: 45px;
+  font-weight: 600;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  user-select: none;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.keyboard-action-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #7367f0;
+  transform: scale(0.98);
+}
+
+.keyboard-action-btn:active:not(:disabled) {
+  transform: scale(0.95);
+  background: #e0e0e0;
+}
+
+.keyboard-action-enter {
+  background: #28a745;
+  color: #fff;
+  border-color: #28a745;
+}
+
+.keyboard-action-enter:hover:not(:disabled) {
+  background: #218838;
+  border-color: #218838;
+}
+
+.keyboard-toggle {
+  flex-shrink: 0;
+  /* margin-bottom: 10px; */
+}
+
+.keyboard-toggle-btn {
+  height: 40px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #6c757d;
+  backdrop-filter: blur(4px);
+}
+
+.keyboard-toggle-btn:hover:not(.keyboard-active) {
+  background-color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #5a6268;
+}
+
+.keyboard-toggle-btn.keyboard-active {
+  background-color: rgba(233, 236, 239, 0.8);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #495057;
+  backdrop-filter: blur(4px);
+}
+
+.keyboard-toggle-btn.keyboard-active:hover {
+  background-color: rgba(222, 226, 230, 0.9);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #343a40;
+}
+
+/* Responsive: On smaller screens, reduce keyboard size or adjust layout */
+@media (max-width: 768px) {
+  .cart-section {
+    /* When keyboard is shown, ensure cart items still have minimum space */
+    min-height: 0;
+  }
+
+  .cart-items {
+    /* Minimum height to ensure some items are visible even when keyboard is shown */
+    min-height: 150px;
+  }
+
+  .virtual-keyboard {
+    /* Smaller keyboard on mobile */
+    padding: 8px 10px;
+  }
+
+  .keyboard-grid {
+    gap: 6px;
+  }
+
+  .keyboard-key {
+    min-height: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
+
+  .keyboard-action-btn {
+    min-height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .cart-item-breakdown {
+    font-size: 0.7rem;
+    padding: 6px;
+  }
+
+  .breakdown-label {
+    min-width: 60px;
+    font-size: 0.7rem;
+  }
+
+  .breakdown-value {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
 }
 </style>
 

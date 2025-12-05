@@ -131,6 +131,7 @@ export default {
               { action: 'read', subject: 'admin-item-subfamilies' },
               { action: 'read', subject: 'admin-customers' },
               { action: 'read', subject: 'admin-locations' },
+              { action: 'read', subject: 'admin-payment-methods' },
               { action: 'read', subject: 'admin-general-setup' },
               { action: 'read', subject: 'admin-returns' },
               { action: 'read', subject: 'admin-erp-jobs' },
@@ -138,7 +139,8 @@ export default {
               { action: 'write', subject: 'admin-users' },
               { action: 'delete', subject: 'admin-users' },
               { action: 'write', subject: 'admin-customers' },
-              { action: 'delete', subject: 'admin-customers' }
+              { action: 'delete', subject: 'admin-customers' },
+              { action: 'write', subject: 'admin-payment-methods' }
             )
             // ADMIN uses admin-sessions route, not responsible-sessions
             // This prevents duplicate menu items

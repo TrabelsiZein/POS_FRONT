@@ -28,25 +28,51 @@
     </b-card>
 
     <!-- Ticket Details -->
-    <b-card v-if="ticketData" class="mb-4">
-      <h5 class="mb-3">Ticket Details</h5>
+    <b-card v-if="ticketData" class="mb-4 ticket-details-card">
+      <div class="d-flex align-items-center mb-3">
+        <feather-icon icon="FileTextIcon" size="20" class="mr-2 text-primary" />
+        <h5 class="mb-0">Ticket Details</h5>
+      </div>
       <b-row>
         <b-col cols="12" md="6">
           <div class="detail-item">
-            <strong>Ticket Number:</strong> {{ ticketData.ticket.salesNumber }}
+            <strong class="detail-label">Ticket Number:</strong>
+            <span class="detail-value">{{ ticketData.ticket.salesNumber }}</span>
           </div>
           <div class="detail-item">
-            <strong>Date:</strong> {{ formatDate(ticketData.ticket.salesDate) }}
+            <strong class="detail-label">Date:</strong>
+            <span class="detail-value">{{ formatDate(ticketData.ticket.salesDate) }}</span>
           </div>
           <div class="detail-item" v-if="ticketData.ticket.customer">
-            <strong>Customer:</strong> {{ ticketData.ticket.customer.name }}
+            <strong class="detail-label">Customer:</strong>
+            <span class="detail-value">{{ ticketData.ticket.customer.name }}</span>
+            <small class="text-muted ml-2">({{ ticketData.ticket.customer.customerCode }})</small>
+          </div>
+          <div class="detail-item" v-if="ticketData.ticket.createdByUser">
+            <strong class="detail-label">Cashier:</strong>
+            <span class="detail-value">{{ ticketData.ticket.createdByUser.fullName || ticketData.ticket.createdByUser.username }}</span>
           </div>
         </b-col>
         <b-col cols="12" md="6">
-          <div class="detail-item">
-            <strong>Total Amount:</strong> ${{ formatPrice(ticketData.ticket.totalAmount) }}
+          <div class="ticket-summary">
+            <div class="summary-item" v-if="ticketData.ticket.subtotal">
+              <span class="summary-label">Subtotal:</span>
+              <span class="summary-value">{{ formatPrice(ticketData.ticket.subtotal) }} TND</span>
+            </div>
+            <div class="summary-item" v-if="ticketData.ticket.taxAmount">
+              <span class="summary-label">Tax (VAT):</span>
+              <span class="summary-value">{{ formatPrice(ticketData.ticket.taxAmount) }} TND</span>
+            </div>
+            <div class="summary-item" v-if="ticketData.ticket.discountAmount">
+              <span class="summary-label">Discount:</span>
+              <span class="summary-value text-danger">-{{ formatPrice(ticketData.ticket.discountAmount) }} TND</span>
+            </div>
+            <div class="summary-item total-amount">
+              <span class="summary-label"><strong>Total Amount (TTC):</strong></span>
+              <span class="summary-value"><strong>{{ formatPrice(ticketData.ticket.totalAmount) }} TND</strong></span>
+            </div>
           </div>
-          <div class="detail-item" v-if="!ticketData.canReturn">
+          <div class="detail-item mt-2" v-if="!ticketData.canReturn">
             <b-badge variant="danger">This ticket is too old to be returned</b-badge>
           </div>
         </b-col>
@@ -54,9 +80,12 @@
     </b-card>
 
     <!-- Return Items Selection -->
-    <b-card v-if="ticketData && ticketData.canReturn" class="mb-4">
-      <h5 class="mb-3">Select Items to Return</h5>
-      <b-table :items="ticketData.salesLines" :fields="lineFields" striped hover responsive>
+    <b-card v-if="ticketData && ticketData.canReturn" class="mb-4 return-items-card">
+      <div class="d-flex align-items-center mb-3">
+        <feather-icon icon="PackageIcon" size="20" class="mr-2 text-primary" />
+        <h5 class="mb-0">Select Items to Return</h5>
+      </div>
+      <b-table :items="ticketData.salesLines" :fields="lineFields" striped hover responsive class="return-items-table">
         <template #cell(item)="row">
           <div>
             <strong>{{ row.item.item.name }}</strong>
@@ -64,30 +93,43 @@
           </div>
         </template>
         <template #cell(originalQty)="row">
-          {{ row.item.quantity }}
+          <span class="badge badge-secondary">{{ row.item.quantity }}</span>
         </template>
         <template #cell(remainingQty)="row">
           <span class="font-weight-bold" :class="getRemainingQtyClass(row.item)">
             {{ row.item.remainingQuantity !== undefined ? row.item.remainingQuantity : row.item.quantity }}
           </span>
           <div v-if="row.item.returnedQuantity > 0" class="small text-muted">
-            ({{ row.item.returnedQuantity }} returned)
+            ({{ row.item.returnedQuantity }} already returned)
           </div>
         </template>
         <template #cell(unitPrice)="row">
-          ${{ formatPrice(row.item.unitPrice) }}
+          <div>
+            <strong>{{ formatPrice(row.item.unitPriceIncludingVat || row.item.unitPrice) }} TND</strong>
+            <div class="small text-muted" v-if="row.item.vatPercent">
+              <span class="text-info">VAT: {{ row.item.vatPercent }}%</span>
+            </div>
+            <div class="small text-muted" v-if="row.item.unitPriceIncludingVat && row.item.unitPrice">
+              <span class="text-muted">HT: {{ formatPrice(row.item.unitPrice) }} TND</span>
+            </div>
+          </div>
         </template>
         <template #cell(returnQty)="row">
           <b-form-input v-model.number="row.item.returnQuantity" type="number" :min="0" :max="row.item.remainingQuantity || row.item.quantity"
             @input="onReturnQuantityChange(row.item)" @blur="onReturnQuantityBlur(row.item)"
             @keyup.enter="onReturnQuantityBlur(row.item)" :disabled="loading" style="width: 100px;"
-            :state="getReturnQtyState(row.item)" />
+            :state="getReturnQtyState(row.item)" class="return-qty-input" />
           <b-form-invalid-feedback v-if="row.item.returnQuantity > (row.item.remainingQuantity || row.item.quantity)" :state="false">
             Cannot exceed {{ row.item.remainingQuantity !== undefined ? row.item.remainingQuantity : row.item.quantity }}
           </b-form-invalid-feedback>
         </template>
         <template #cell(returnAmount)="row">
-          <strong>${{ formatPrice(getReturnAmount(row.item)) }}</strong>
+          <div>
+            <strong class="text-success">{{ formatPrice(getReturnAmount(row.item)) }} TND</strong>
+            <div class="small text-muted" v-if="row.item.vatAmount && row.item.returnQuantity > 0">
+              <span class="text-info">VAT: {{ formatPrice((row.item.vatAmount / row.item.quantity) * row.item.returnQuantity) }} TND</span>
+            </div>
+          </div>
         </template>
       </b-table>
     </b-card>
@@ -104,13 +146,26 @@
     </b-card>
 
     <!-- Return Summary -->
-    <b-card v-if="ticketData && ticketData.canReturn && hasReturnItems" class="mb-4">
-      <h5 class="mb-3">Return Summary</h5>
+    <b-card v-if="ticketData && ticketData.canReturn && hasReturnItems" class="mb-4 return-summary-card">
+      <div class="d-flex align-items-center mb-3">
+        <feather-icon icon="CalculatorIcon" size="20" class="mr-2 text-primary" />
+        <h5 class="mb-0">Return Summary</h5>
+      </div>
       <b-row>
         <b-col cols="12" md="6" offset-md="6">
-          <div class="summary-row">
-            <span>Total Return Amount:</span>
-            <span class="font-weight-bold">${{ formatPrice(totalReturnAmount) }}</span>
+          <div class="return-summary">
+            <div class="summary-row">
+              <span class="summary-label">Subtotal (HT):</span>
+              <span class="summary-value">{{ formatPrice(totalReturnAmountHT) }} TND</span>
+            </div>
+            <div class="summary-row" v-if="totalReturnVAT > 0">
+              <span class="summary-label">Tax (VAT):</span>
+              <span class="summary-value text-info">{{ formatPrice(totalReturnVAT) }} TND</span>
+            </div>
+            <div class="summary-row total-return">
+              <span class="summary-label"><strong>Total Return Amount (TTC):</strong></span>
+              <span class="summary-value"><strong class="text-success">{{ formatPrice(totalReturnAmount) }} TND</strong></span>
+            </div>
           </div>
         </b-col>
       </b-row>
@@ -142,11 +197,11 @@ export default {
       loading: false,
       lineFields: [
         { key: 'item', label: 'Item' },
-        { key: 'originalQty', label: 'Purchased Qty' },
-        { key: 'remainingQty', label: 'Remaining Qty' },
-        { key: 'unitPrice', label: 'Unit Price' },
-        { key: 'returnQty', label: 'Return Qty' },
-        { key: 'returnAmount', label: 'Return Amount' }
+        { key: 'originalQty', label: 'Purchased Qty', thClass: 'text-center', tdClass: 'text-center' },
+        { key: 'remainingQty', label: 'Remaining Qty', thClass: 'text-center', tdClass: 'text-center' },
+        { key: 'unitPrice', label: 'Unit Price (TTC)', thClass: 'text-right', tdClass: 'text-right' },
+        { key: 'returnQty', label: 'Return Qty', thClass: 'text-center', tdClass: 'text-center' },
+        { key: 'returnAmount', label: 'Return Amount (TTC)', thClass: 'text-right', tdClass: 'text-right' }
       ]
     }
   },
@@ -175,16 +230,39 @@ export default {
       if (!this.ticketData || !this.ticketData.salesLines) return 0
       return this.ticketData.salesLines.reduce((total, line) => {
         let returnQty = parseFloat(line.returnQuantity) || 0
-        // Cap at purchased quantity for calculation
-        if (returnQty > line.quantity) {
-          returnQty = line.quantity
+        // Cap at remaining quantity for calculation
+        const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
+        if (returnQty > maxReturnable) {
+          returnQty = maxReturnable
         }
         if (returnQty < 0) {
           returnQty = 0
         }
         returnQty = Math.round(returnQty)
-        return total + (returnQty * line.unitPrice)
+        // Use TTC amount (lineTotalIncludingVat / quantity * returnQty)
+        const unitPriceTTC = line.unitPriceIncludingVat || line.unitPrice
+        return total + (returnQty * unitPriceTTC)
       }, 0)
+    },
+    totalReturnAmountHT() {
+      if (!this.ticketData || !this.ticketData.salesLines) return 0
+      return this.ticketData.salesLines.reduce((total, line) => {
+        let returnQty = parseFloat(line.returnQuantity) || 0
+        const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
+        if (returnQty > maxReturnable) {
+          returnQty = maxReturnable
+        }
+        if (returnQty < 0) {
+          returnQty = 0
+        }
+        returnQty = Math.round(returnQty)
+        // Calculate HT: (lineTotal / quantity) * returnQty
+        const unitPriceHT = line.unitPrice || 0
+        return total + (returnQty * unitPriceHT)
+      }, 0)
+    },
+    totalReturnVAT() {
+      return this.totalReturnAmount - this.totalReturnAmountHT
     },
     canProcessReturn() {
       if (!this.hasReturnItems) return false
@@ -351,7 +429,9 @@ export default {
         returnQty = 0
       }
       returnQty = Math.round(returnQty)
-      return returnQty * line.unitPrice
+      // Use TTC amount (unitPriceIncludingVat)
+      const unitPriceTTC = line.unitPriceIncludingVat || line.unitPrice
+      return returnQty * unitPriceTTC
     },
     getRemainingQtyClass(line) {
       const remaining = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
@@ -464,7 +544,7 @@ export default {
               props: {
                 title: 'Return Voucher Created',
                 icon: 'FileTextIcon',
-                text: `Voucher Number: ${response.data.returnVoucher.voucherNumber}, Amount: $${this.formatPrice(response.data.returnVoucher.voucherAmount)}`,
+                text: `Voucher Number: ${response.data.returnVoucher.voucherNumber}, Amount: ${this.formatPrice(response.data.returnVoucher.voucherAmount)} TND`,
                 variant: 'info'
               }
             })
@@ -723,7 +803,62 @@ export default {
 }
 
 .detail-item {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+}
+
+.detail-label {
+  min-width: 120px;
+  color: #6c757d;
+}
+
+.detail-value {
+  color: #212529;
+  font-weight: 500;
+}
+
+.ticket-summary {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #dee2e6;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-item.total-amount {
+  border-top: 2px solid #28a745;
+  border-bottom: 2px solid #28a745;
+  margin-top: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.summary-label {
+  color: #6c757d;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: #212529;
+}
+
+.return-summary {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #dee2e6;
 }
 
 .summary-row {
@@ -733,11 +868,26 @@ export default {
   border-bottom: 1px solid #e0e0e0;
 }
 
-.summary-row.total {
+.summary-row.total-return {
   border-top: 2px solid #28a745;
   border-bottom: 2px solid #28a745;
   margin-top: 10px;
   padding-top: 10px;
+  padding-bottom: 10px;
   font-size: 1.1rem;
+}
+
+.ticket-details-card,
+.return-items-card,
+.return-summary-card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.return-items-table {
+  font-size: 0.95rem;
+}
+
+.return-qty-input {
+  text-align: center;
 }
 </style>
