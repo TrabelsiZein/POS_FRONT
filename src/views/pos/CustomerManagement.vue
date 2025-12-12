@@ -12,7 +12,11 @@
           <feather-icon icon="ArrowLeftIcon" size="16" class="mr-1" />
           Back
         </b-button>
-        <b-button variant="primary" @click="openAddCustomerModal">
+        <b-button variant="outline-primary" @click="loadCustomers" class="mr-2">
+          <feather-icon icon="RefreshCwIcon" size="16" />
+          Refresh
+        </b-button>
+        <b-button variant="primary" @click="openAddCustomerModal" disabled>
           <feather-icon icon="PlusIcon" size="16" />
           Add Customer
         </b-button>
@@ -47,6 +51,17 @@
                   v-model="statusFilter"
                   :options="statusFilterOptions"
                 />
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" md="6">
+              <b-form-group label="Filter by Default" label-for="default-filter" class="mb-md-0">
+                <b-form-checkbox
+                  id="default-filter"
+                  v-model="showDefaultOnly"
+                  class="mt-2"
+                >
+                  Show Default Only
+                </b-form-checkbox>
               </b-form-group>
             </b-col>
           </b-row>
@@ -92,6 +107,12 @@
           </b-badge>
         </template>
 
+        <template #cell(isDefault)="row">
+          <b-badge :variant="row.item.isDefault ? 'success' : 'secondary'">
+            {{ row.item.isDefault ? 'Default' : 'No' }}
+          </b-badge>
+        </template>
+
         <template #cell(customerCode)="row">
           <strong>{{ row.item.customerCode }}</strong>
         </template>
@@ -121,19 +142,17 @@
         </template>
  
         <template #cell(actions)="row">
-          <b-button-group size="sm">
-            <b-button variant="outline-primary" @click="editCustomer(row.item)">
-              <feather-icon icon="EditIcon" size="14" />
-            </b-button>
+          <div class="d-flex justify-content-end">
             <b-button 
-              variant="outline-danger" 
-              @click="confirmDeleteCustomer(row.item)"
-              :disabled="isPosUser || isPassengerCustomer(row.item)"
-              v-if="!isPosUser"
+              variant="outline-primary" 
+              size="sm" 
+              @click="setAsDefaultCustomer(row.item)"
+              :disabled="row.item.isDefault"
             >
-              <feather-icon icon="TrashIcon" size="14" />
+              <feather-icon icon="StarIcon" size="14" />
+              Set as Default
             </b-button>
-          </b-button-group>
+          </div>
         </template>
       </b-table>
 
@@ -359,6 +378,7 @@ export default {
         { value: 'active', text: 'Active Only' },
         { value: 'inactive', text: 'Inactive Only' }
       ],
+      showDefaultOnly: false,
       currentPage: 1,
       perPage: 10,
       perPageOptions: [
@@ -391,7 +411,8 @@ export default {
         { key: 'contact', label: 'Contact' },
         { key: 'address', label: 'Address' },
         { key: 'active', label: 'Status', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, class: 'text-right' }
+        { key: 'isDefault', label: 'Default', sortable: true },
+        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' }
       ]
     }
   },
@@ -401,30 +422,37 @@ export default {
       return userData && userData.role === 'POS_USER'
     },
     filteredCustomers() {
+      let filtered = this.customers
+
+      // Filter by status
+      if (this.statusFilter === 'active') {
+        filtered = filtered.filter(customer => customer.active === true)
+      } else if (this.statusFilter === 'inactive') {
+        filtered = filtered.filter(customer => customer.active === false)
+      }
+
+      // Filter by default status
+      if (this.showDefaultOnly) {
+        filtered = filtered.filter(customer => customer.isDefault === true)
+      }
+
+      // Filter by search term
       const term = this.searchTerm.trim().toLowerCase()
+      if (term) {
+        filtered = filtered.filter(customer => {
+          return [
+            customer.customerCode,
+            customer.name,
+            customer.email,
+            customer.phone,
+            customer.city,
+            customer.country,
+            customer.taxId
+          ].some(field => field && field.toString().toLowerCase().includes(term))
+        })
+      }
 
-      return this.customers.filter(customer => {
-        if (this.statusFilter === 'active' && customer.active === false) {
-          return false
-        }
-        if (this.statusFilter === 'inactive' && customer.active !== false) {
-          return false
-        }
-
-        if (!term) {
-          return true
-        }
-
-        return [
-          customer.customerCode,
-          customer.name,
-          customer.email,
-          customer.phone,
-          customer.city,
-          customer.country,
-          customer.taxId
-        ].some(field => field && field.toString().toLowerCase().includes(term))
-      })
+      return filtered
     },
     totalRows() {
       return this.filteredCustomers.length
@@ -454,6 +482,9 @@ export default {
       this.currentPage = 1
     },
     statusFilter() {
+      this.currentPage = 1
+    },
+    showDefaultOnly() {
       this.currentPage = 1
     },
     perPage() {
@@ -718,6 +749,60 @@ export default {
     formatPrice(price) {
       if (!price && price !== 0) return '0.00'
       return parseFloat(price).toFixed(2)
+    },
+    async setAsDefaultCustomer(customer) {
+      try {
+        const { value: confirmed } = await this.$swal({
+          title: 'Set as Default Customer?',
+          text: `Are you sure you want to set "${customer.name}" (${customer.customerCode}) as the default customer?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, set as default',
+          cancelButtonText: 'Cancel',
+          customClass: {
+            confirmButton: 'btn btn-primary',
+            cancelButton: 'btn btn-outline-secondary ml-1',
+          },
+          buttonsStyling: false,
+        })
+
+        if (!confirmed) {
+          return
+        }
+
+        this.loading = true
+        const response = await this.$http.put(`/customer/${customer.id}/set-default`, {})
+
+        if (response.status === 200) {
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: 'Success',
+              icon: 'CheckCircleIcon',
+              text: 'Default customer updated successfully',
+              variant: 'success'
+            }
+          })
+          await this.loadCustomers()
+        }
+      } catch (error) {
+        console.error('Error setting default customer:', error)
+        let errorMessage = 'Failed to set default customer'
+        if (error.response && error.response.data) {
+          errorMessage = error.response.data || errorMessage
+        }
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'XIcon',
+            text: errorMessage,
+            variant: 'danger'
+          }
+        })
+      } finally {
+        this.loading = false
+      }
     }
   }
 }

@@ -37,7 +37,7 @@
     <b-card>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="mb-0">Families</h4>
-        <b-button variant="primary" size="sm" @click="openFamilyModal()">
+        <b-button variant="primary" size="sm" @click="openFamilyModal()" :disabled="actionsDisabled">
           <feather-icon icon="PlusIcon" size="14" class="mr-1" />
           Add Family
         </b-button>
@@ -80,13 +80,20 @@
 
         <template #cell(actions)="row">
           <div class="text-right">
-            <b-button size="sm" variant="outline-primary" class="mr-1" @click="openFamilyModal(row.item)">
+            <b-button
+              size="sm"
+              variant="outline-primary"
+              class="mr-1"
+              @click="openFamilyModal(row.item)"
+              :disabled="actionsDisabled"
+            >
               <feather-icon icon="Edit2Icon" size="14" />
             </b-button>
             <b-button
               size="sm"
               variant="outline-danger"
               @click="confirmDeleteFamily(row.item)"
+              :disabled="actionsDisabled"
             >
               <feather-icon icon="Trash2Icon" size="14" />
             </b-button>
@@ -206,6 +213,7 @@ export default {
     return {
       families: [],
       loading: false,
+      actionsDisabled: true,
       searchTerm: '',
       currentPage: 1,
       perPage: 10,

@@ -26,10 +26,25 @@
             </b-input-group>
           </b-form-group>
         </b-col>
-        <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
-          <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'location' : 'locations' }}
-          </small>
+        <b-col cols="12" md="6">
+          <b-row>
+            <b-col cols="12" md="6">
+              <b-form-group label="Filter by Default" label-for="default-filter" class="mb-md-0">
+                <b-form-checkbox
+                  id="default-filter"
+                  v-model="showDefaultOnly"
+                  class="mt-2"
+                >
+                  Show Default Only
+                </b-form-checkbox>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
+              <small class="text-muted">
+                Showing {{ totalRows }} {{ totalRows === 1 ? 'location' : 'locations' }}
+              </small>
+            </b-col>
+          </b-row>
         </b-col>
       </b-row>
     </b-card>
@@ -97,9 +112,18 @@
           </b-badge>
         </template>
 
-        <template #cell(notes)="row">
-          <span class="small" v-if="row.item.notes">{{ row.item.notes }}</span>
-          <span class="text-muted small" v-else>-</span>
+        <template #cell(actions)="row">
+          <div class="text-right">
+            <b-button 
+              variant="outline-primary" 
+              size="sm" 
+              @click="setAsDefaultLocation(row.item)"
+              :disabled="row.item.isDefault"
+            >
+              <feather-icon icon="StarIcon" size="14" />
+              Set as Default
+            </b-button>
+          </div>
         </template>
       </b-table>
 
@@ -148,6 +172,7 @@ export default {
       locations: [],
       loading: false,
       searchTerm: '',
+      showDefaultOnly: false,
       currentPage: 1,
       perPage: 10,
       perPageOptions: [
@@ -162,27 +187,35 @@ export default {
         { key: 'address', label: 'Address', sortable: false },
         { key: 'contact', label: 'Contact', sortable: false },
         { key: 'isDefault', label: 'Default', sortable: true },
-        { key: 'notes', label: 'Notes', sortable: false }
+        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' }
       ]
     }
   },
   computed: {
     filteredLocations() {
-      if (!this.searchTerm) {
-        return this.locations
+      let filtered = this.locations
+
+      // Filter by default status
+      if (this.showDefaultOnly) {
+        filtered = filtered.filter(location => location.isDefault === true)
       }
 
-      const term = this.searchTerm.toLowerCase()
-      return this.locations.filter(location => {
-        return (
-          (location.locationCode && location.locationCode.toLowerCase().includes(term)) ||
-          (location.name && location.name.toLowerCase().includes(term)) ||
-          (location.city && location.city.toLowerCase().includes(term)) ||
-          (location.country && location.country.toLowerCase().includes(term)) ||
-          (location.phone && location.phone.toLowerCase().includes(term)) ||
-          (location.email && location.email.toLowerCase().includes(term))
-        )
-      })
+      // Filter by search term
+      if (this.searchTerm) {
+        const term = this.searchTerm.toLowerCase()
+        filtered = filtered.filter(location => {
+          return (
+            (location.locationCode && location.locationCode.toLowerCase().includes(term)) ||
+            (location.name && location.name.toLowerCase().includes(term)) ||
+            (location.city && location.city.toLowerCase().includes(term)) ||
+            (location.country && location.country.toLowerCase().includes(term)) ||
+            (location.phone && location.phone.toLowerCase().includes(term)) ||
+            (location.email && location.email.toLowerCase().includes(term))
+          )
+        })
+      }
+
+      return filtered
     },
     totalRows() {
       return this.filteredLocations.length
@@ -200,6 +233,9 @@ export default {
   },
   watch: {
     searchTerm() {
+      this.currentPage = 1
+    },
+    showDefaultOnly() {
       this.currentPage = 1
     },
     perPage() {
@@ -241,6 +277,60 @@ export default {
     },
     formatCityState(location) {
       return [location.city, location.state, location.postalCode].filter(Boolean).join(', ')
+    },
+    async setAsDefaultLocation(location) {
+      try {
+        const { value: confirmed } = await this.$swal({
+          title: 'Set as Default Location?',
+          text: `Are you sure you want to set "${location.name}" (${location.locationCode}) as the default location?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, set as default',
+          cancelButtonText: 'Cancel',
+          customClass: {
+            confirmButton: 'btn btn-primary',
+            cancelButton: 'btn btn-outline-secondary ml-1',
+          },
+          buttonsStyling: false,
+        })
+
+        if (!confirmed) {
+          return
+        }
+
+        this.loading = true
+        const response = await this.$http.put(`/location/${location.id}/set-default`, {})
+
+        if (response.status === 200) {
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: 'Success',
+              icon: 'CheckCircleIcon',
+              text: 'Default location updated successfully',
+              variant: 'success'
+            }
+          })
+          await this.loadLocations()
+        }
+      } catch (error) {
+        console.error('Error setting default location:', error)
+        let errorMessage = 'Failed to set default location'
+        if (error.response && error.response.data) {
+          errorMessage = error.response.data || errorMessage
+        }
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'XIcon',
+            text: errorMessage,
+            variant: 'danger'
+          }
+        })
+      } finally {
+        this.loading = false
+      }
     }
   }
 }

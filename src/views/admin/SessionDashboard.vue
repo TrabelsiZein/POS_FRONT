@@ -55,7 +55,7 @@
             </div>
             <div class="stat-item">
               <div class="stat-label">Total Sales</div>
-              <div class="stat-value text-primary">${{ formatPrice(session.totalSalesAmount || 0) }}</div>
+              <div class="stat-value text-primary">TND {{ formatPrice(session.totalSalesAmount || 0) }}</div>
             </div>
             <div class="stat-item" v-if="session.returnsCount > 0">
               <div class="stat-label">Returns</div>
@@ -71,35 +71,35 @@
             </div>
             <div class="returns-row">
               <span class="returns-label">Total Returns:</span>
-              <span class="returns-value text-danger">${{ formatPrice(session.totalReturnsAmount || 0) }}</span>
+              <span class="returns-value text-danger">TND {{ formatPrice(session.totalReturnsAmount || 0) }}</span>
             </div>
             <div class="returns-row" v-if="session.simpleReturnsAmount > 0">
               <span class="returns-label">Simple Returns (Cash):</span>
-              <span class="returns-value text-danger">${{ formatPrice(session.simpleReturnsAmount || 0) }}</span>
+              <span class="returns-value text-danger">TND {{ formatPrice(session.simpleReturnsAmount || 0) }}</span>
             </div>
             <div class="returns-row" v-if="session.voucherReturnsAmount > 0">
               <span class="returns-label">Voucher Returns:</span>
-              <span class="returns-value text-info">${{ formatPrice(session.voucherReturnsAmount || 0) }}</span>
+              <span class="returns-value text-info">TND {{ formatPrice(session.voucherReturnsAmount || 0) }}</span>
             </div>
           </div>
 
           <div class="cash-summary">
             <div class="cash-row">
               <span class="cash-label">Real Cash:</span>
-              <span class="cash-value">${{ formatPrice(session.realCash || 0) }}</span>
+              <span class="cash-value">TND {{ formatPrice(session.realCash || 0) }}</span>
             </div>
             <div class="cash-row" v-if="session.posUserClosureCash">
               <span class="cash-label">POS Closure:</span>
-              <span class="cash-value">${{ formatPrice(session.posUserClosureCash) }}</span>
+              <span class="cash-value">TND {{ formatPrice(session.posUserClosureCash) }}</span>
             </div>
             <div class="cash-row" v-if="session.responsibleClosureCash">
               <span class="cash-label">Resp Closure:</span>
-              <span class="cash-value">${{ formatPrice(session.responsibleClosureCash) }}</span>
+              <span class="cash-value">TND {{ formatPrice(session.responsibleClosureCash) }}</span>
             </div>
             <div class="cash-row" v-if="session.cashDifference !== null && session.cashDifference !== undefined">
               <span class="cash-label">Difference:</span>
               <span class="cash-value" :class="getDifferenceClass(session.cashDifference)">
-                ${{ formatPrice(session.cashDifference) }}
+                TND {{ formatPrice(session.cashDifference) }}
               </span>
             </div>
           </div>
@@ -136,100 +136,238 @@
       @hide="resetDetailsForm"
     >
       <div v-if="sessionDetails" class="session-details">
-        <!-- Session Info -->
+        <!-- Card 1: Session Info -->
         <b-card class="mb-3">
-          <h5>Session Information</h5>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">
+              <feather-icon icon="ClockIcon" size="20" class="mr-2" />
+              {{ sessionDetails.session.sessionNumber }}
+            </h4>
+            <b-badge :variant="getStatusBadgeVariant(sessionDetails.session.status)" style="font-size: 0.9rem; padding: 6px 12px;">
+              {{ sessionDetails.session.status }}
+            </b-badge>
+          </div>
+          
           <b-row>
             <b-col cols="12" md="6">
-              <p><strong>Session Number:</strong> {{ sessionDetails.session.sessionNumber }}</p>
-              <p><strong>Cashier:</strong> {{ sessionDetails.session.cashierName }}</p>
-              <p><strong>Opened At:</strong> {{ formatDateTime(sessionDetails.session.openedAt) }}</p>
-              <p><strong>Closed At:</strong> {{ formatDateTime(sessionDetails.session.closedAt) || '-' }}</p>
+              <div class="info-section">
+                <div class="info-item mb-2">
+                  <feather-icon icon="UserIcon" size="16" class="mr-2 text-muted" />
+                  <strong>Cashier:</strong> {{ sessionDetails.session.cashierName }}
+                </div>
+                <div class="info-item mb-2">
+                  <feather-icon icon="CalendarIcon" size="16" class="mr-2 text-muted" />
+                  <strong>Opened:</strong> {{ formatDateTime(sessionDetails.session.openedAt) }}
+                </div>
+                <div class="info-item mb-2" v-if="sessionDetails.session.closedAt">
+                  <feather-icon icon="CalendarIcon" size="16" class="mr-2 text-muted" />
+                  <strong>Closed:</strong> {{ formatDateTime(sessionDetails.session.closedAt) }}
+                </div>
+              </div>
             </b-col>
             <b-col cols="12" md="6">
-              <p><strong>Status:</strong> 
-                <b-badge :variant="getStatusBadgeVariant(sessionDetails.session.status)">
-                  {{ sessionDetails.session.status }}
-                </b-badge>
-              </p>
-              <p><strong>Opening Cash:</strong> ${{ formatPrice(sessionDetails.session.openingCash) }}</p>
-              <p><strong>Real Cash:</strong> ${{ formatPrice(sessionDetails.session.realCash) }}</p>
-              <p><strong>POS User Closure Cash:</strong> ${{ formatPrice(sessionDetails.session.posUserClosureCash) }}</p>
-              <p v-if="sessionDetails.session.responsibleClosureCash">
-                <strong>Responsible Closure Cash:</strong> ${{ formatPrice(sessionDetails.session.responsibleClosureCash) }}
-              </p>
-              <p><strong>Sales Count:</strong> {{ sessionDetails.salesCount }}</p>
-              <p><strong>Total Sales:</strong> ${{ formatPrice(sessionDetails.totalSalesAmount) }}</p>
-              <p v-if="sessionDetails.returnsCount > 0">
-                <strong>Returns Count:</strong> {{ sessionDetails.returnsCount }}
-              </p>
-              <p v-if="sessionDetails.totalReturnsAmount > 0">
-                <strong>Total Returns:</strong> <span class="text-danger">${{ formatPrice(sessionDetails.totalReturnsAmount) }}</span>
-              </p>
-              <p v-if="sessionDetails.simpleReturnsAmount > 0">
-                <strong>Simple Returns (Cash Refunds):</strong> <span class="text-danger">${{ formatPrice(sessionDetails.simpleReturnsAmount) }}</span>
-              </p>
-              <p v-if="sessionDetails.voucherReturnsAmount > 0">
-                <strong>Voucher Returns:</strong> <span class="text-info">${{ formatPrice(sessionDetails.voucherReturnsAmount) }}</span>
-              </p>
+              <div class="info-section">
+                <div class="info-item mb-2">
+                  <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
+                  <strong>Opening Cash:</strong> <span class="text-primary">TND {{ formatPrice(sessionDetails.session.openingCash) }}</span>
+                </div>
+                <div class="info-item mb-2">
+                  <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
+                  <strong>Real Cash:</strong> <span class="text-success">TND {{ formatPrice(sessionDetails.session.realCash) }}</span>
+                </div>
+                <div class="info-item mb-2" v-if="sessionDetails.session.posUserClosureCash">
+                  <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
+                  <strong>POS Closure:</strong> <span class="text-info">TND {{ formatPrice(sessionDetails.session.posUserClosureCash) }}</span>
+                </div>
+                <div class="info-item mb-2" v-if="sessionDetails.session.responsibleClosureCash">
+                  <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
+                  <strong>Resp Closure:</strong> <span class="text-warning">TND {{ formatPrice(sessionDetails.session.responsibleClosureCash) }}</span>
+                </div>
+              </div>
             </b-col>
           </b-row>
         </b-card>
 
-        <!-- Cash Count Lines (POS User) -->
+        <!-- Card 2: Sales & Returns Summary -->
+        <b-card class="mb-3">
+          <h5 class="mb-3">
+            <feather-icon icon="ShoppingCartIcon" size="18" class="mr-2" />
+            Sales & Returns Summary
+          </h5>
+          <b-row>
+            <b-col cols="12" md="6">
+              <div class="stat-box">
+                <div class="stat-label">Sales Count</div>
+                <div class="stat-value text-primary">{{ sessionDetails.salesCount || 0 }}</div>
+              </div>
+            </b-col>
+            <b-col cols="12" md="6">
+              <div class="stat-box">
+                <div class="stat-label">Total Sales</div>
+                <div class="stat-value text-primary" style="font-size: 1.3rem;">TND {{ formatPrice(sessionDetails.totalSalesAmount) }}</div>
+              </div>
+            </b-col>
+          </b-row>
+          <b-row v-if="sessionDetails.returnsCount > 0" class="mt-3">
+            <b-col cols="12" md="6">
+              <div class="stat-box mb-2">
+                <div class="stat-label">Returns Count</div>
+                <div class="stat-value text-danger">{{ sessionDetails.returnsCount }}</div>
+              </div>
+            </b-col>
+            <b-col cols="12" md="6">
+              <div class="stat-box mb-2">
+                <div class="stat-label">Total Returns</div>
+                <div class="stat-value text-danger">TND {{ formatPrice(sessionDetails.totalReturnsAmount) }}</div>
+              </div>
+            </b-col>
+            <b-col cols="12" md="6" v-if="sessionDetails.simpleReturnsAmount > 0">
+              <div class="stat-box mb-2">
+                <div class="stat-label small">Simple Returns (Cash)</div>
+                <div class="stat-value text-danger small">TND {{ formatPrice(sessionDetails.simpleReturnsAmount) }}</div>
+              </div>
+            </b-col>
+            <b-col cols="12" md="6" v-if="sessionDetails.voucherReturnsAmount > 0">
+              <div class="stat-box">
+                <div class="stat-label small">Voucher Returns</div>
+                <div class="stat-value text-info small">TND {{ formatPrice(sessionDetails.voucherReturnsAmount) }}</div>
+              </div>
+            </b-col>
+          </b-row>
+        </b-card>
+
+        <!-- Card 3: Cash Count - POS User -->
         <b-card class="mb-3" v-if="posUserCashCounts.length > 0">
-          <h5>Cash Count - POS User</h5>
+          <h5 class="mb-3">
+            <feather-icon icon="UserIcon" size="18" class="mr-2" />
+            Cash Count - POS User
+          </h5>
           <b-table
             :items="posUserCashCounts"
             :fields="cashCountFields"
             small
             striped
+            bordered
+            responsive
+            class="mb-0"
           >
             <template #cell(paymentMethod)="row">
               {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
             </template>
             <template #cell(lineTotal)="row">
-              ${{ formatPrice(row.item.lineTotal) }}
+              <strong>TND {{ formatPrice(row.item.lineTotal) }}</strong>
             </template>
             <template #cell(counterType)="row">
               <b-badge variant="info">{{ row.item.counterType }}</b-badge>
             </template>
           </b-table>
-          <div class="mt-2">
-            <strong>Total: ${{ formatPrice(posUserCashCountsTotal) }}</strong>
+          <div class="mt-3">
+            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+              <strong>Total Counted:</strong>
+              <strong style="font-size: 1.2rem;">TND {{ formatPrice(posUserCashCountsTotal) }}</strong>
+            </div>
           </div>
         </b-card>
 
-        <!-- Cash Count Lines (Responsible) -->
-        <b-card class="mb-3" v-if="responsibleCashCounts.length > 0">
-          <h5>Cash Count - Responsible</h5>
-          <b-table
-            :items="responsibleCashCounts"
-            :fields="cashCountFields"
-            small
-            striped
-          >
-            <template #cell(paymentMethod)="row">
-              {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
-            </template>
-            <template #cell(lineTotal)="row">
-              ${{ formatPrice(row.item.lineTotal) }}
-            </template>
-            <template #cell(counterType)="row">
-              <b-badge variant="warning">{{ row.item.counterType }}</b-badge>
-            </template>
-          </b-table>
-          <div class="mt-2">
-            <strong>Total: ${{ formatPrice(responsibleCashCountsTotal) }}</strong>
-          </div>
-        </b-card>
+        <!-- Card 4: Verify Session (with Add Responsible Cash Count as first part) -->
+        <b-card v-if="sessionDetails.session.status === 'CLOSED' && !sessionDetails.session.responsibleClosureCash" class="mb-3">
+          <h5 class="mb-3">
+            <feather-icon icon="CheckCircleIcon" size="18" class="mr-2" />
+            Verify Session
+          </h5>
+          
+          <!-- Add Responsible Cash Count (first part) -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">Add Responsible Cash Count</h6>
+              <b-button variant="primary" size="sm" @click="addResponsibleCashCountLine">
+                <feather-icon icon="PlusIcon" size="14" class="mr-50" />
+                Add Line
+              </b-button>
+            </div>
 
-        <!-- Verification Section (for CLOSED sessions) -->
-        <b-card v-if="sessionDetails.session.status === 'CLOSED' && !sessionDetails.session.responsibleClosureCash">
-          <h5>Verify Session</h5>
+            <div class="cash-count-table-container">
+              <b-table
+                v-if="responsibleCashCountForm.length > 0"
+                :items="responsibleCashCountForm"
+                :fields="cashCountFieldsForm"
+                small
+                striped
+                bordered
+                responsive
+                class="mb-0"
+              >
+                <template #cell(denominationValue)="row">
+                  <b-input-group prepend="TND" size="sm">
+                    <b-form-input
+                      v-model.number="row.item.denominationValue"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      size="sm"
+                      placeholder="0.00"
+                    />
+                  </b-input-group>
+                </template>
+                <template #cell(quantity)="row">
+                  <b-form-input
+                    v-model.number="row.item.quantity"
+                    type="number"
+                    min="1"
+                    size="sm"
+                    placeholder="0"
+                  />
+                </template>
+                <template #cell(paymentMethod)="row">
+                  <b-form-select
+                    v-model="row.item.paymentMethodId"
+                    :options="paymentMethodOptionsWithCash"
+                    value-field="id"
+                    text-field="name"
+                    size="sm"
+                  />
+                </template>
+                <template #cell(referenceNumber)="row">
+                  <b-form-input
+                    v-model="row.item.referenceNumber"
+                    placeholder="Check #, Card last 4..."
+                    size="sm"
+                  />
+                </template>
+                <template #cell(lineTotal)="row">
+                  <strong>TND {{ formatPrice((row.item.denominationValue || 0) * (row.item.quantity || 0)) }}</strong>
+                </template>
+                <template #cell(actions)="row">
+                  <b-button
+                    variant="link"
+                    size="sm"
+                    @click="removeResponsibleCashCountLine(row.index)"
+                    class="text-danger p-0"
+                    v-b-tooltip.hover
+                    title="Remove line"
+                  >
+                    <feather-icon icon="XIcon" size="16" />
+                  </b-button>
+                </template>
+              </b-table>
+              <div v-else class="text-center text-muted py-4">
+                <feather-icon icon="FileTextIcon" size="48" class="mb-2 text-muted" />
+                <p class="mb-0">No cash count lines added yet</p>
+              </div>
+            </div>
+
+            <div v-if="responsibleCashCountForm.length > 0" class="mt-3">
+              <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                <strong>Total:</strong>
+                <strong style="font-size: 1.2rem;">TND {{ formatPrice(calculatedResponsibleTotal) }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Verification Form (second part) -->
           <b-form>
             <b-form-group label="Responsible Closure Cash" label-for="responsible-closure-cash">
-              <b-input-group prepend="$">
+              <b-input-group prepend="TND">
                 <b-form-input
                   id="responsible-closure-cash"
                   v-model.number="verificationForm.responsibleClosureCash"
@@ -249,89 +387,28 @@
               />
             </b-form-group>
           </b-form>
-          <template #footer>
-            <b-button variant="success" @click="verifySession" :disabled="!canVerify">
-              Verify Session
-            </b-button>
-          </template>
-        </b-card>
-
-        <!-- Add Responsible Cash Count (if session is CLOSED and not yet verified) -->
-        <b-card v-if="sessionDetails.session.status === 'CLOSED' && !sessionDetails.session.responsibleClosureCash" class="mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Add Responsible Cash Count</h5>
-            <b-button variant="primary" size="sm" @click="addResponsibleCashCountLine">
-              <feather-icon icon="PlusIcon" size="14" />
-              Add Line
-            </b-button>
-          </div>
-
-          <b-table
-            v-if="responsibleCashCountForm.length > 0"
-            :items="responsibleCashCountForm"
-            :fields="cashCountFieldsForm"
-            small
-            striped
-          >
-            <template #cell(denominationValue)="row">
-              <b-input-group prepend="$" size="sm">
-                <b-form-input
-                  v-model.number="row.item.denominationValue"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  size="sm"
-                />
-              </b-input-group>
-            </template>
-            <template #cell(quantity)="row">
-              <b-form-input
-                v-model.number="row.item.quantity"
-                type="number"
-                min="1"
-                size="sm"
-              />
-            </template>
-            <template #cell(paymentMethod)="row">
-              <b-form-select
-                v-model="row.item.paymentMethodId"
-                :options="paymentMethodOptions"
-                value-field="id"
-                text-field="name"
-                size="sm"
-              >
-                <template #first>
-                  <b-form-select-option :value="null">Cash</b-form-select-option>
-                </template>
-              </b-form-select>
-            </template>
-            <template #cell(referenceNumber)="row">
-              <b-form-input
-                v-model="row.item.referenceNumber"
-                placeholder="Check #, Card last 4..."
-                size="sm"
-              />
-            </template>
-            <template #cell(lineTotal)="row">
-              <strong>${{ formatPrice((row.item.denominationValue || 0) * (row.item.quantity || 0)) }}</strong>
-            </template>
-            <template #cell(actions)="row">
-              <b-button
-                variant="link"
-                size="sm"
-                @click="removeResponsibleCashCountLine(row.index)"
-                class="text-danger p-0"
-              >
-                <feather-icon icon="XIcon" size="16" />
-              </b-button>
-            </template>
-          </b-table>
-
-          <div v-if="responsibleCashCountForm.length > 0" class="mt-3">
-            <strong>Total: ${{ formatPrice(calculatedResponsibleTotal) }}</strong>
-          </div>
         </b-card>
       </div>
+      
+      <template #modal-footer>
+        <div class="d-flex justify-content-between w-100">
+          <div></div>
+          <div>
+            <b-button variant="secondary" @click="showDetailsModal = false" class="mr-2">
+              Close
+            </b-button>
+            <b-button 
+              v-if="sessionDetails && sessionDetails.session.status === 'CLOSED' && !sessionDetails.session.responsibleClosureCash"
+              variant="success" 
+              @click="verifySession" 
+              :disabled="!canVerify"
+            >
+              <feather-icon icon="CheckIcon" size="16" class="mr-50" />
+              Verify Session
+            </b-button>
+          </div>
+        </div>
+      </template>
     </b-modal>
   </div>
 </template>
@@ -395,6 +472,11 @@ export default {
     },
     paymentMethodOptions() {
       return this.paymentMethods.filter(pm => pm.active !== false)
+    },
+    paymentMethodOptionsWithCash() {
+      // Add Cash as first option (null value), then all active payment methods
+      const cashOption = { id: null, name: 'Cash' }
+      return [cashOption, ...this.paymentMethodOptions]
     },
     calculatedResponsibleTotal() {
       return this.responsibleCashCountForm.reduce((total, line) => {
@@ -784,6 +866,88 @@ export default {
     flex-direction: column;
     gap: 15px;
   }
+}
+
+/* Session Details Modal Styles */
+.session-details .info-section {
+  padding: 10px 0;
+}
+
+.session-details .info-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.session-details .info-item:last-child {
+  border-bottom: none;
+}
+
+.stat-box {
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+  margin-bottom: 10px;
+}
+
+.stat-box .stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.stat-box .stat-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.stat-box .stat-label.small {
+  font-size: 0.75rem;
+}
+
+.stat-box .stat-value.small {
+  font-size: 1rem;
+}
+
+.cash-count-table-container {
+  max-height: 450px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #fff;
+}
+
+.cash-count-table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cash-count-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.cash-count-table-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.cash-count-table-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Modal background styling */
+::v-deep .modal-body {
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.session-details {
+  background-color: transparent;
 }
 </style>
 

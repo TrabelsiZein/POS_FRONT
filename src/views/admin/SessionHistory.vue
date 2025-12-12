@@ -9,88 +9,101 @@
     </div>
 
     <!-- Filters and Search -->
-    <b-card class="mb-4">
-      <b-row>
-        <b-col cols="12" md="4">
-          <b-form-group label="Search" label-for="search-input">
-            <b-input-group>
-              <b-form-input
-                id="search-input"
-                v-model="filters.search"
-                placeholder="Search by session number, cashier..."
-                @input="onFilterChange"
-              />
-              <b-input-group-append>
-                <b-button variant="outline-secondary" @click="clearSearch">
-                  <feather-icon icon="XIcon" size="16" />
-                </b-button>
-              </b-input-group-append>
-            </b-input-group>
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="3">
-          <b-form-group label="Date From" label-for="date-from">
-            <b-form-input
-              id="date-from"
-              v-model="filters.dateFrom"
-              type="date"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="3">
-          <b-form-group label="Date To" label-for="date-to">
-            <b-form-input
-              id="date-to"
-              v-model="filters.dateTo"
-              type="date"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Status" label-for="status-filter">
-            <b-form-select
-              id="status-filter"
-              v-model="filters.status"
-              :options="statusOptions"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col cols="12" class="text-right">
-          <b-button variant="secondary" @click="resetFilters" size="sm">
-            Reset Filters
-          </b-button>
-        </b-col>
-      </b-row>
+    <b-card class="mb-2">
+      <div @click="toggleFilters" role="button" tabindex="0" @keyup.enter="toggleFilters">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
+            <h6 class="mb-0 text-primary font-weight-bold">
+              Filters
+              <span class="text-muted font-weight-normal ml-2">(Total: {{ totalRows }} {{ totalRows === 1 ? 'session' : 'sessions' }})</span>
+            </h6>
+          </div>
+          <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
+        </div>
+      </div>
+      <b-collapse v-model="filtersExpanded" id="filters-collapse">
+        <div class="pt-2">
+          <b-row>
+            <b-col cols="12" sm="6" md="6" lg="6" class="mb-2">
+              <b-form-group label="Search" label-for="search-input" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="SearchIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="search-input" v-model="filters.search"
+                    placeholder="Search by session number, cashier..." @input="onFilterChange" />
+                  <b-input-group-append>
+                    <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
+                      <feather-icon icon="XIcon" size="14" />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Date From" label-for="date-from" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CalendarIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="date-from" v-model="filters.dateFrom" type="date" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Date To" label-for="date-to" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CalendarIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="date-to" v-model="filters.dateTo" type="date" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+          <b-row>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Status" label-for="status-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="TagIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="status-filter" v-model="filters.status" :options="statusOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Sync Status" label-for="sync-status-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CloudIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="sync-status-filter" v-model="filters.syncStatus" :options="syncStatusOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+        </div>
+      </b-collapse>
     </b-card>
 
     <!-- Sessions Table -->
     <b-card>
-      <div class="table-header mb-3">
-        <div>
-          <strong>Total: {{ filteredSessions.length }} sessions</strong>
-        </div>
-        <div class="text-muted">
-          Showing TERMINATED sessions only
-        </div>
-      </div>
-      <b-table
-        :items="filteredSessions"
-        :fields="sessionFields"
-        striped
-        hover
-        responsive
-        :busy="loading"
-        :sort-by="sortBy"
-        :sort-desc="sortDesc"
-        @row-clicked="viewSessionDetails"
-        class="cursor-pointer"
-        show-empty
-      >
+      <b-table :items="paginatedSessions" :fields="sessionFields" striped hover responsive :busy="loading" :sort-by="sortBy"
+        :sort-desc="sortDesc" @row-clicked="viewSessionDetails" class="cursor-pointer" show-empty>
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
@@ -99,11 +112,18 @@
         </template>
 
         <template #empty>
-          <div class="text-center py-5">
-            <feather-icon icon="InboxIcon" size="48" class="text-muted mb-3" />
-            <h5 class="text-muted">No Sessions Found</h5>
-            <p class="text-muted mb-0">No terminated sessions match your filters.</p>
+          <div class="text-center text-muted py-4">
+            <p>No sessions found</p>
+            <p class="small">Try adjusting your filters</p>
           </div>
+        </template>
+
+        <template #cell(sessionNumber)="row">
+          <strong class="text-primary">{{ row.item.sessionNumber }}</strong>
+        </template>
+
+        <template #cell(cashierFullName)="row">
+          {{ row.item.cashierFullName || row.item.cashierUsername }}
         </template>
 
         <template #cell(status)="row">
@@ -112,8 +132,16 @@
           </b-badge>
         </template>
 
-        <template #cell(cashierFullName)="row">
-          {{ row.item.cashierFullName || row.item.cashierUsername }}
+        <template #cell(synchronizationStatus)="row">
+          <div class="sync-status-cell">
+            <b-badge :variant="getSyncStatusVariant(row.item.synchronizationStatus)" class="sync-badge">
+              <feather-icon :icon="getSyncStatusIcon(row.item.synchronizationStatus)" size="12" class="mr-1" />
+              {{ formatSyncStatus(row.item.synchronizationStatus) }}
+            </b-badge>
+            <small v-if="row.item.erpNo" class="text-muted d-block mt-1">
+              ERP: {{ row.item.erpNo }}
+            </small>
+          </div>
         </template>
 
         <template #cell(openedAt)="row">
@@ -125,27 +153,27 @@
         </template>
 
         <template #cell(totalSalesAmount)="row">
-          ${{ formatPrice(row.item.totalSalesAmount || 0) }}
+          <strong>{{ formatPrice(row.item.totalSalesAmount || 0) }} TND</strong>
         </template>
 
         <template #cell(realCash)="row">
-          ${{ formatPrice(row.item.realCash || 0) }}
+          {{ formatPrice(row.item.realCash || 0) }} TND
         </template>
 
         <template #cell(posUserClosureCash)="row">
-          ${{ formatPrice(row.item.posUserClosureCash || 0) }}
+          {{ formatPrice(row.item.posUserClosureCash || 0) }} TND
         </template>
 
         <template #cell(responsibleClosureCash)="row">
           <span v-if="row.item.responsibleClosureCash">
-            ${{ formatPrice(row.item.responsibleClosureCash) }}
+            {{ formatPrice(row.item.responsibleClosureCash) }} TND
           </span>
           <span v-else class="text-muted">-</span>
         </template>
 
         <template #cell(cashDifference)="row">
           <span :class="getDifferenceClass(row.item.cashDifference)">
-            ${{ formatPrice(row.item.cashDifference || 0) }}
+            {{ formatPrice(row.item.cashDifference || 0) }} TND
           </span>
         </template>
 
@@ -155,6 +183,29 @@
           </b-button>
         </template>
       </b-table>
+
+      <!-- Pagination -->
+      <div class="mt-3">
+        <b-row align-v="center">
+          <b-col cols="12" md="6" class="mb-2 mb-md-0">
+            <div class="d-flex align-items-center">
+              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
+                style="width: auto;" @change="onPerPageChange" />
+            </div>
+          </b-col>
+          <b-col cols="12" md="6">
+            <div class="text-center text-md-right">
+              <small class="text-muted">
+                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} sessions
+              </small>
+            </div>
+          </b-col>
+        </b-row>
+        <div class="d-flex justify-content-center mt-2">
+          <b-pagination v-model="currentPage" :total-rows="totalRows" :per-page="perPage" align="center" />
+        </div>
+      </div>
     </b-card>
 
     <!-- Session Details Modal -->
@@ -163,34 +214,144 @@
       title="Session Details"
       size="xl"
       @hide="resetDetailsForm"
+      scrollable
     >
       <div v-if="sessionDetails" class="session-details">
         <!-- Session Info -->
         <b-card class="mb-3">
-          <h5>Session Information</h5>
+          <h5 class="mb-3">Session Information</h5>
           <b-row>
             <b-col cols="12" md="6">
-              <p><strong>Session Number:</strong> {{ sessionDetails.session.sessionNumber }}</p>
-              <p><strong>Cashier:</strong> {{ sessionDetails.session.cashierName }}</p>
-              <p><strong>Opened At:</strong> {{ formatDateTime(sessionDetails.session.openedAt) }}</p>
-              <p><strong>Closed At:</strong> {{ formatDateTime(sessionDetails.session.closedAt) || '-' }}</p>
-            </b-col>
-            <b-col cols="12" md="6">
-              <p><strong>Status:</strong> 
-                <b-badge :variant="getStatusBadgeVariant(sessionDetails.session.status)">
+              <div class="detail-item">
+                <strong>Session Number:</strong>
+                <span class="ml-2">{{ sessionDetails.session.sessionNumber }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Cashier:</strong>
+                <span class="ml-2">{{ sessionDetails.session.cashierName }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Opened At:</strong>
+                <span class="ml-2">{{ formatDateTime(sessionDetails.session.openedAt) }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Closed At:</strong>
+                <span class="ml-2">{{ formatDateTime(sessionDetails.session.closedAt) || '-' }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Status:</strong>
+                <b-badge :variant="getStatusBadgeVariant(sessionDetails.session.status)" class="ml-2">
                   {{ sessionDetails.session.status }}
                 </b-badge>
-              </p>
-              <p><strong>Opening Cash:</strong> ${{ formatPrice(sessionDetails.session.openingCash) }}</p>
-              <p><strong>Real Cash:</strong> ${{ formatPrice(sessionDetails.session.realCash) }}</p>
-              <p><strong>POS User Closure Cash:</strong> ${{ formatPrice(sessionDetails.session.posUserClosureCash) }}</p>
-              <p v-if="sessionDetails.session.responsibleClosureCash">
-                <strong>Responsible Closure Cash:</strong> ${{ formatPrice(sessionDetails.session.responsibleClosureCash) }}
-              </p>
-              <p><strong>Sales Count:</strong> {{ sessionDetails.salesCount }}</p>
-              <p><strong>Total Sales:</strong> ${{ formatPrice(sessionDetails.totalSalesAmount) }}</p>
+              </div>
+            </b-col>
+            <b-col cols="12" md="6">
+              <div class="detail-item">
+                <strong>Opening Cash:</strong>
+                <span class="ml-2">{{ formatPrice(sessionDetails.session.openingCash) }} TND</span>
+              </div>
+              <div class="detail-item">
+                <strong>Real Cash:</strong>
+                <span class="ml-2">{{ formatPrice(sessionDetails.session.realCash) }} TND</span>
+              </div>
+              <div class="detail-item">
+                <strong>POS User Closure Cash:</strong>
+                <span class="ml-2">{{ formatPrice(sessionDetails.session.posUserClosureCash) }} TND</span>
+              </div>
+              <div class="detail-item" v-if="sessionDetails.session.responsibleClosureCash">
+                <strong>Responsible Closure Cash:</strong>
+                <span class="ml-2">{{ formatPrice(sessionDetails.session.responsibleClosureCash) }} TND</span>
+              </div>
+              <div class="detail-item">
+                <strong>Sales Count:</strong>
+                <span class="ml-2">{{ sessionDetails.salesCount }}</span>
+              </div>
+              <div class="detail-item">
+                <strong>Total Sales:</strong>
+                <span class="ml-2">{{ formatPrice(sessionDetails.totalSalesAmount) }} TND</span>
+              </div>
             </b-col>
           </b-row>
+        </b-card>
+
+        <!-- Synchronization Information -->
+        <b-card class="mb-3 sync-info-card">
+          <div class="d-flex align-items-center mb-3">
+            <feather-icon icon="CloudIcon" size="20" class="mr-2 text-primary" />
+            <h5 class="mb-0">ERP Synchronization</h5>
+          </div>
+          <b-row>
+            <b-col md="6">
+              <div class="sync-detail-item">
+                <label class="sync-label">Synchronization Status</label>
+                <div class="sync-value">
+                  <b-badge :variant="getSyncStatusVariant(sessionDetails.session.synchronizationStatus)" class="sync-badge-large">
+                    <feather-icon :icon="getSyncStatusIcon(sessionDetails.session.synchronizationStatus)" size="14" class="mr-1" />
+                    {{ formatSyncStatus(sessionDetails.session.synchronizationStatus) }}
+                  </b-badge>
+                </div>
+              </div>
+            </b-col>
+            <b-col md="6">
+              <div class="sync-detail-item">
+                <label class="sync-label">ERP Document Number</label>
+                <div class="sync-value">
+                  <code v-if="sessionDetails.session.erpNo" class="erp-number">{{ sessionDetails.session.erpNo }}</code>
+                  <span v-else class="text-muted">Not synchronized</span>
+                </div>
+              </div>
+            </b-col>
+          </b-row>
+        </b-card>
+
+        <!-- Payment Headers and Lines -->
+        <b-card class="mb-3" v-if="sessionDetails.paymentHeaders && sessionDetails.paymentHeaders.length > 0">
+          <h5 class="mb-3">Payment Headers & Lines</h5>
+          <div v-for="header in sessionDetails.paymentHeaders" :key="header.id" class="payment-header-section mb-4">
+            <b-card class="bg-light">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                  <strong>Payment Class:</strong> {{ header.paymentClass }}
+                  <span class="ml-2">
+                    <b-badge :variant="getSyncStatusVariant(header.synchronizationStatus)" class="sync-badge">
+                      <feather-icon :icon="getSyncStatusIcon(header.synchronizationStatus)" size="12" class="mr-1" />
+                      {{ formatSyncStatus(header.synchronizationStatus) }}
+                    </b-badge>
+                  </span>
+                </div>
+                <div>
+                  <small class="text-muted">Post Date: {{ formatDate(header.postDate) }}</small>
+                  <span v-if="header.erpNo" class="ml-2">
+                    <small class="text-muted">ERP: <code>{{ header.erpNo }}</code></small>
+                  </span>
+                </div>
+              </div>
+              <b-table 
+                :items="getPaymentLinesForHeader(header.id)" 
+                :fields="paymentLineFields" 
+                small 
+                striped 
+                responsive
+                class="payment-lines-table"
+              >
+                <template #cell(custNo)="row">
+                  {{ row.item.custNo }}
+                </template>
+                <template #cell(amount)="row">
+                  <strong>{{ formatPrice(row.item.amount) }} TND</strong>
+                </template>
+                <template #cell(ticketNo)="row">
+                  {{ row.item.ticketNo }}
+                </template>
+                <template #cell(synched)="row">
+                  <b-badge :variant="row.item.synched ? 'success' : 'secondary'" class="sync-indicator">
+                    <feather-icon :icon="row.item.synched ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
+                    {{ row.item.synched ? 'Synced' : 'Not Synced' }}
+                  </b-badge>
+                </template>
+              </b-table>
+            </b-card>
+          </div>
         </b-card>
 
         <!-- Cash Count Lines (POS User) -->
@@ -206,14 +367,14 @@
               {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
             </template>
             <template #cell(lineTotal)="row">
-              ${{ formatPrice(row.item.lineTotal) }}
+              {{ formatPrice(row.item.lineTotal) }} TND
             </template>
             <template #cell(counterType)="row">
               <b-badge variant="info">{{ row.item.counterType }}</b-badge>
             </template>
           </b-table>
           <div class="mt-2">
-            <strong>Total: ${{ formatPrice(posUserCashCountsTotal) }}</strong>
+            <strong>Total: {{ formatPrice(posUserCashCountsTotal) }} TND</strong>
           </div>
         </b-card>
 
@@ -230,14 +391,14 @@
               {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
             </template>
             <template #cell(lineTotal)="row">
-              ${{ formatPrice(row.item.lineTotal) }}
+              {{ formatPrice(row.item.lineTotal) }} TND
             </template>
             <template #cell(counterType)="row">
               <b-badge variant="warning">{{ row.item.counterType }}</b-badge>
             </template>
           </b-table>
           <div class="mt-2">
-            <strong>Total: ${{ formatPrice(responsibleCashCountsTotal) }}</strong>
+            <strong>Total: {{ formatPrice(responsibleCashCountsTotal) }} TND</strong>
           </div>
         </b-card>
       </div>
@@ -254,25 +415,46 @@ export default {
   data() {
     return {
       sessions: [],
+      allSessions: [],
+      filteredSessions: [],
       loading: false,
       showDetailsModal: false,
       sessionDetails: null,
       sortBy: 'openedAt',
       sortDesc: true,
+      filtersExpanded: false,
+      currentPage: 1,
+      perPage: 10,
+      perPageOptions: [
+        { value: 10, text: '10' },
+        { value: 20, text: '20' },
+        { value: 50, text: '50' },
+        { value: 100, text: '100' }
+      ],
       filters: {
         search: '',
         dateFrom: '',
         dateTo: '',
-        status: 'TERMINATED'
+        status: 'TERMINATED',
+        syncStatus: 'all'
       },
       statusOptions: [
-        { value: null, text: 'All Status' },
-        { value: 'TERMINATED', text: 'Terminated' }
+        { value: 'all', text: 'All Status' },
+        { value: 'TERMINATED', text: 'Terminated' },
+        { value: 'CLOSED', text: 'Closed' },
+        { value: 'OPENED', text: 'Opened' }
+      ],
+      syncStatusOptions: [
+        { value: 'all', text: 'All' },
+        { value: 'NOT_SYNCHED', text: 'Not Synced' },
+        { value: 'PARTIALLY_SYNCHED', text: 'Partially Synced' },
+        { value: 'TOTALLY_SYNCHED', text: 'Totally Synced' }
       ],
       sessionFields: [
         { key: 'sessionNumber', label: 'Session #', sortable: true },
         { key: 'cashierFullName', label: 'Cashier', sortable: true },
         { key: 'status', label: 'Status', sortable: true },
+        { key: 'synchronizationStatus', label: 'Sync Status', sortable: true },
         { key: 'openedAt', label: 'Opened At', sortable: true },
         { key: 'closedAt', label: 'Closed At', sortable: true },
         { key: 'salesCount', label: 'Sales', sortable: true },
@@ -290,12 +472,94 @@ export default {
         { key: 'referenceNumber', label: 'Reference' },
         { key: 'lineTotal', label: 'Total' },
         { key: 'counterType', label: 'Counter' }
+      ],
+      paymentLineFields: [
+        { key: 'custNo', label: 'Customer' },
+        { key: 'amount', label: 'Amount' },
+        { key: 'ticketNo', label: 'Ticket #' },
+        { key: 'fenceNo', label: 'Fence #' },
+        { key: 'titleNumber', label: 'Title #' },
+        { key: 'synched', label: 'Synced', class: 'text-center' }
       ]
     }
   },
   computed: {
-    filteredSessions() {
-      let filtered = this.sessions.filter(session => session.status === 'TERMINATED')
+    totalRows() {
+      return this.filteredSessions.length
+    },
+    startIndex() {
+      return this.totalRows === 0 ? 0 : ((this.currentPage - 1) * this.perPage) + 1
+    },
+    endIndex() {
+      return Math.min(this.currentPage * this.perPage, this.totalRows)
+    },
+    paginatedSessions() {
+      const start = (this.currentPage - 1) * this.perPage
+      const end = start + this.perPage
+      return this.filteredSessions.slice(start, end)
+    },
+    posUserCashCounts() {
+      if (!this.sessionDetails || !this.sessionDetails.cashCountLines) return []
+      return this.sessionDetails.cashCountLines.filter(line => line.counterType === 'POS_USER')
+    },
+    responsibleCashCounts() {
+      if (!this.sessionDetails || !this.sessionDetails.cashCountLines) return []
+      return this.sessionDetails.cashCountLines.filter(line => line.counterType === 'RESPONSIBLE')
+    },
+    posUserCashCountsTotal() {
+      return this.posUserCashCounts.reduce((sum, line) => sum + (line.lineTotal || 0), 0)
+    },
+    responsibleCashCountsTotal() {
+      return this.responsibleCashCounts.reduce((sum, line) => sum + (line.lineTotal || 0), 0)
+    }
+  },
+  watch: {
+    currentPage() {
+      // Page change handled by computed property
+    },
+    perPage() {
+      if (this.currentPage > Math.ceil(this.totalRows / this.perPage)) {
+        this.currentPage = Math.max(1, Math.ceil(this.totalRows / this.perPage))
+      }
+    }
+  },
+  mounted() {
+    this.loadSessions()
+  },
+  methods: {
+    async loadSessions() {
+      this.loading = true
+      try {
+        const response = await this.$http.get('/cashier-session/dashboard')
+        this.allSessions = response.data || []
+        this.applyFilters()
+      } catch (error) {
+        console.error('Error loading sessions:', error)
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'AlertCircleIcon',
+            text: 'Failed to load sessions',
+            variant: 'danger'
+          }
+        })
+      } finally {
+        this.loading = false
+      }
+    },
+    applyFilters() {
+      let filtered = [...this.allSessions]
+
+      // Status filter
+      if (this.filters.status && this.filters.status !== 'all') {
+        filtered = filtered.filter(session => session.status === this.filters.status)
+      }
+
+      // Sync status filter
+      if (this.filters.syncStatus && this.filters.syncStatus !== 'all') {
+        filtered = filtered.filter(session => session.synchronizationStatus === this.filters.syncStatus)
+      }
 
       // Search filter
       if (this.filters.search) {
@@ -324,60 +588,34 @@ export default {
         })
       }
 
-      return filtered
-    },
-    posUserCashCounts() {
-      if (!this.sessionDetails || !this.sessionDetails.cashCountLines) return []
-      return this.sessionDetails.cashCountLines.filter(line => line.counterType === 'POS_USER')
-    },
-    responsibleCashCounts() {
-      if (!this.sessionDetails || !this.sessionDetails.cashCountLines) return []
-      return this.sessionDetails.cashCountLines.filter(line => line.counterType === 'RESPONSIBLE')
-    },
-    posUserCashCountsTotal() {
-      return this.posUserCashCounts.reduce((sum, line) => sum + (line.lineTotal || 0), 0)
-    },
-    responsibleCashCountsTotal() {
-      return this.responsibleCashCounts.reduce((sum, line) => sum + (line.lineTotal || 0), 0)
-    }
-  },
-  mounted() {
-    this.loadSessions()
-  },
-  methods: {
-    async loadSessions() {
-      this.loading = true
-      try {
-        const response = await this.$http.get('/cashier-session/dashboard')
-        this.sessions = response.data
-      } catch (error) {
-        console.error('Error loading sessions:', error)
-        this.$toast({
-          component: ToastificationContent,
-          props: {
-            title: 'Error',
-            icon: 'AlertCircleIcon',
-            text: 'Failed to load sessions',
-            variant: 'danger'
-          }
-        })
-      } finally {
-        this.loading = false
+      this.filteredSessions = filtered
+      if (this.currentPage > Math.ceil(this.filteredSessions.length / this.perPage)) {
+        this.currentPage = Math.max(1, Math.ceil(this.filteredSessions.length / this.perPage))
       }
     },
     onFilterChange() {
-      // Filtering happens in computed property, so no action needed
+      this.currentPage = 1
+      this.applyFilters()
+    },
+    toggleFilters() {
+      this.filtersExpanded = !this.filtersExpanded
     },
     clearSearch() {
       this.filters.search = ''
+      this.onFilterChange()
     },
     resetFilters() {
       this.filters = {
         search: '',
         dateFrom: '',
         dateTo: '',
-        status: 'TERMINATED'
+        status: 'TERMINATED',
+        syncStatus: 'all'
       }
+      this.onFilterChange()
+    },
+    onPerPageChange() {
+      this.currentPage = 1
     },
     async viewSessionDetails(session) {
       try {
@@ -397,6 +635,10 @@ export default {
         })
       }
     },
+    getPaymentLinesForHeader(headerId) {
+      if (!this.sessionDetails || !this.sessionDetails.paymentLines) return []
+      return this.sessionDetails.paymentLines.filter(line => line.paymentHeader && line.paymentHeader.id === headerId)
+    },
     resetDetailsForm() {
       this.sessionDetails = null
     },
@@ -407,6 +649,43 @@ export default {
     formatDateTime(dateString) {
       if (!dateString) return null
       return moment(dateString).format('YYYY-MM-DD HH:mm:ss')
+    },
+    formatDate(dateString) {
+      if (!dateString) return null
+      return moment(dateString).format('YYYY-MM-DD')
+    },
+    formatSyncStatus(status) {
+      if (!status) return 'Not Synced'
+      return status
+        .split('_')
+        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+        .join(' ')
+    },
+    getSyncStatusVariant(status) {
+      if (!status) return 'secondary'
+      switch (status) {
+        case 'TOTALLY_SYNCHED':
+          return 'success'
+        case 'PARTIALLY_SYNCHED':
+          return 'warning'
+        case 'NOT_SYNCHED':
+          return 'secondary'
+        default:
+          return 'secondary'
+      }
+    },
+    getSyncStatusIcon(status) {
+      if (!status) return 'XIcon'
+      switch (status) {
+        case 'TOTALLY_SYNCHED':
+          return 'CheckCircleIcon'
+        case 'PARTIALLY_SYNCHED':
+          return 'AlertCircleIcon'
+        case 'NOT_SYNCHED':
+          return 'XCircleIcon'
+        default:
+          return 'XCircleIcon'
+      }
     },
     getStatusBadgeVariant(status) {
       switch (status) {
@@ -444,14 +723,71 @@ export default {
   margin: 0;
 }
 
-.table-header {
-  display: flex;
-  justify-content: space-between;
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.sync-status-cell {
+  min-width: 120px;
+}
+
+.sync-badge {
+  display: inline-flex;
   align-items: center;
 }
 
-.cursor-pointer {
-  cursor: pointer;
+.sync-badge-large {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.sync-info-card {
+  background-color: #f8f9fa;
+  border-left: 4px solid #007bff;
+}
+
+.sync-detail-item {
+  margin-bottom: 1rem;
+}
+
+.sync-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.sync-value {
+  font-size: 1rem;
+}
+
+.erp-number {
+  background-color: #e9ecef;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.detail-item {
+  margin-bottom: 0.75rem;
+}
+
+.payment-header-section {
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+}
+
+.payment-lines-table {
+  margin-top: 0.5rem;
+}
+
+.sync-indicator {
+  display: inline-flex;
+  align-items: center;
 }
 
 @media (max-width: 575.98px) {
@@ -466,4 +802,3 @@ export default {
   }
 }
 </style>
-

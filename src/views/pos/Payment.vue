@@ -475,9 +475,13 @@ export default {
 
       if (this.cart.length === 0) {
         this.$toast({
-          title: 'No Items',
-          text: 'Cart is empty. Redirecting to item selection...',
-          variant: 'warning'
+          component: ToastificationContent,
+          props: {
+            title: 'No Items',
+            icon: 'AlertCircleIcon',
+            text: 'Cart is empty. Redirecting to item selection...',
+            variant: 'warning'
+          }
         })
         setTimeout(() => {
           this.$router.push({ name: 'pos-item-selection' })
@@ -575,9 +579,13 @@ export default {
     openCustomerDialog() {
       // Placeholder for future implementation
       this.$toast({
-        title: 'Coming Soon',
-        text: 'Customer selection dialog will be implemented soon',
-        variant: 'info'
+        component: ToastificationContent,
+        props: {
+          title: 'Coming Soon',
+          icon: 'InfoIcon',
+          text: 'Customer selection dialog will be implemented soon',
+          variant: 'info'
+        }
       })
     },
     openDiscountDialog() {
@@ -999,9 +1007,13 @@ export default {
       const printWindow = window.open('', '_blank')
       if (!printWindow) {
         this.$toast({
-          title: 'Print Error',
-          text: 'Please allow popups to print receipts',
-          variant: 'warning'
+          component: ToastificationContent,
+          props: {
+            title: 'Print Error',
+            icon: 'XIcon',
+            text: 'Please allow popups to print receipts',
+            variant: 'warning'
+          }
         })
         return
       }
@@ -1219,9 +1231,13 @@ export default {
         }
 
         this.$toast({
-          title: 'Error',
-          text: errorMessage,
-          variant: 'danger'
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'XIcon',
+            text: errorMessage,
+            variant: 'danger'
+          }
         })
       } finally {
         this.loading = false

@@ -9,95 +9,117 @@
     </div>
 
     <!-- Filters and Search -->
-    <b-card class="mb-4">
-      <b-row>
-        <b-col cols="12" md="3">
-          <b-form-group label="Search" label-for="search-input">
-            <b-input-group>
-              <b-form-input
-                id="search-input"
-                v-model="filters.search"
-                placeholder="Search by return number, ticket number, voucher number..."
-                @input="onFilterChange"
-              />
-              <b-input-group-append>
-                <b-button variant="outline-secondary" @click="clearSearch">
-                  <feather-icon icon="XIcon"/>
-                </b-button>
-              </b-input-group-append>
-            </b-input-group>
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Date From" label-for="date-from">
-            <b-form-input
-              id="date-from"
-              v-model="filters.dateFrom"
-              type="date"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Date To" label-for="date-to">
-            <b-form-input
-              id="date-to"
-              v-model="filters.dateTo"
-              type="date"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="2">
-          <b-form-group label="Return Type" label-for="return-type-filter">
-            <b-form-select
-              id="return-type-filter"
-              v-model="filters.returnType"
-              :options="returnTypeOptions"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col cols="12" md="3">
-          <b-form-group label="Voucher Status" label-for="voucher-status-filter">
-            <b-form-select
-              id="voucher-status-filter"
-              v-model="filters.voucherStatus"
-              :options="voucherStatusOptions"
-              @input="onFilterChange"
-            />
-          </b-form-group>
-        </b-col>
-      </b-row>
-      <b-row>
-        <b-col cols="12" class="text-right">
-          <b-button variant="secondary" @click="resetFilters" size="sm">
-            Reset Filters
-          </b-button>
-        </b-col>
-      </b-row>
+    <b-card class="mb-2">
+      <div @click="toggleFilters" role="button" tabindex="0" @keyup.enter="toggleFilters">
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
+            <h6 class="mb-0 text-primary font-weight-bold">
+              Filters
+              <span class="text-muted font-weight-normal ml-2">(Total: {{ totalRows }} {{ totalRows === 1 ? 'return' :
+                'returns' }})</span>
+            </h6>
+          </div>
+          <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
+        </div>
+      </div>
+      <b-collapse v-model="filtersExpanded" id="filters-collapse">
+        <div class="pt-2">
+          <!-- First Row: Search and Date Filters -->
+          <b-row>
+            <b-col cols="12" sm="6" md="6" lg="6" class="mb-2">
+              <b-form-group label="Search" label-for="search-input" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="SearchIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="search-input" v-model="filters.search"
+                    placeholder="Search by return number, ticket number, voucher number..." @input="onFilterChange" />
+                  <b-input-group-append>
+                    <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
+                      <feather-icon icon="XIcon" size="14" />
+                    </b-button>
+                  </b-input-group-append>
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Date From" label-for="date-from" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CalendarIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="date-from" v-model="filters.dateFrom" type="date" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Date To" label-for="date-to" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CalendarIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-input id="date-to" v-model="filters.dateTo" type="date" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+          <!-- Second Row: Status Filters -->
+          <b-row>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Return Type" label-for="return-type-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="TagIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="return-type-filter" v-model="filters.returnType" :options="returnTypeOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Voucher Status" label-for="voucher-status-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CreditCardIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="voucher-status-filter" v-model="filters.voucherStatus"
+                    :options="voucherStatusOptions" @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
+              <b-form-group label="Sync Status" label-for="sync-status-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="CloudIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select id="sync-status-filter" v-model="filters.syncStatus" :options="syncStatusOptions"
+                    @input="onFilterChange" />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+        </div>
+      </b-collapse>
     </b-card>
 
     <!-- Returns Table -->
     <b-card>
-      <div class="table-header mb-3">
-        <div>
-          <strong>Total: {{ totalRows }} returns</strong>
-        </div>
-      </div>
-      <b-table
-        :items="returns"
-        :fields="returnFields"
-        striped
-        hover
-        responsive
-        :busy="loading"
-        :sort-by="sortBy"
-        :sort-desc="sortDesc"
-        @row-clicked="viewReturnDetails"
-        class="cursor-pointer"
-        show-empty
-      >
+      <b-table :items="returns" :fields="returnFields" striped hover responsive :busy="loading" :sort-by="sortBy"
+        :sort-desc="sortDesc" @row-clicked="viewReturnDetails" class="cursor-pointer" show-empty>
         <template #table-busy>
           <div class="text-center text-danger my-2">
             <b-spinner class="align-middle"></b-spinner>
@@ -120,15 +142,13 @@
         </template>
 
         <template #cell(returnType)="row">
-          <b-badge 
-            :variant="row.item.returnType === 'SIMPLE_RETURN' ? 'danger' : 'info'"
-          >
+          <b-badge :variant="row.item.returnType === 'SIMPLE_RETURN' ? 'danger' : 'info'">
             {{ row.item.returnType === 'SIMPLE_RETURN' ? 'Simple Return' : 'Return Voucher' }}
           </b-badge>
         </template>
 
         <template #cell(totalReturnAmount)="row">
-          <strong>${{ formatPrice(row.item.totalReturnAmount) }}</strong>
+          <strong>{{ formatPrice(row.item.totalReturnAmount) }} TND</strong>
         </template>
 
         <template #cell(originalTicket)="row">
@@ -143,12 +163,9 @@
             <div><strong>{{ row.item.returnVoucher.voucherNumber }}</strong></div>
             <div class="small text-muted">
               <span v-if="row.item.returnVoucher.status === 'PENDING'">
-                Remaining: ${{ formatPrice(getRemainingAmount(row.item.returnVoucher)) }}
+                Remaining: {{ formatPrice(getRemainingAmount(row.item.returnVoucher)) }} TND
               </span>
-              <b-badge 
-                :variant="getVoucherStatusVariant(row.item.returnVoucher.status)"
-                class="mt-1"
-              >
+              <b-badge :variant="getVoucherStatusVariant(row.item.returnVoucher.status)" class="mt-1">
                 {{ row.item.returnVoucher.status }}
               </b-badge>
             </div>
@@ -156,22 +173,28 @@
           <span v-else class="text-muted">-</span>
         </template>
 
+        <template #cell(synchronizationStatus)="row">
+          <div class="sync-status-cell">
+            <b-badge :variant="getSyncStatusVariant(row.item.synchronizationStatus)" class="sync-badge">
+              <feather-icon :icon="getSyncStatusIcon(row.item.synchronizationStatus)" size="12" class="mr-1" />
+              {{ formatSyncStatus(row.item.synchronizationStatus) }}
+            </b-badge>
+            <small v-if="row.item.erpNo" class="text-muted d-block mt-1">
+              ERP: {{ row.item.erpNo }}
+            </small>
+          </div>
+        </template>
+
       </b-table>
-      
+
       <!-- Pagination -->
       <div class="mt-3">
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
               <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
-              <b-form-select
-                id="per-page-select"
-                v-model="perPage"
-                :options="perPageOptions"
-                size="sm"
-                style="width: auto;"
-                @change="onPerPageChange"
-              />
+              <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
+                style="width: auto;" @change="onPerPageChange" />
             </div>
           </b-col>
           <b-col cols="12" md="6">
@@ -183,26 +206,15 @@
           </b-col>
         </b-row>
         <div class="d-flex justify-content-center mt-2">
-          <b-pagination
-            v-model="currentPage"
-            :total-rows="totalRows"
-            :per-page="perPage"
-            align="center"
-            @change="onPageChange"
-          />
+          <b-pagination v-model="currentPage" :total-rows="totalRows" :per-page="perPage" align="center"
+            @change="onPageChange" />
         </div>
       </div>
     </b-card>
 
     <!-- Return Details Modal -->
-    <b-modal
-      id="return-details-modal"
-      v-model="showDetailsModal"
-      title="Return Details"
-      size="lg"
-      hide-footer
-      scrollable
-    >
+    <b-modal id="return-details-modal" v-model="showDetailsModal" title="Return Details" size="xl" hide-footer
+      scrollable>
       <div v-if="selectedReturn">
         <!-- Return Header Info -->
         <b-card class="mb-3">
@@ -220,16 +232,15 @@
               <div class="detail-row">
                 <span class="detail-label">Return Type:</span>
                 <span class="detail-value">
-                  <b-badge 
-                    :variant="selectedReturn.returnType === 'SIMPLE_RETURN' ? 'danger' : 'info'"
-                  >
+                  <b-badge :variant="selectedReturn.returnType === 'SIMPLE_RETURN' ? 'danger' : 'info'">
                     {{ selectedReturn.returnType === 'SIMPLE_RETURN' ? 'Simple Return' : 'Return Voucher' }}
                   </b-badge>
                 </span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Total Amount:</span>
-                <span class="detail-value"><strong>${{ formatPrice(selectedReturn.totalReturnAmount) }}</strong></span>
+                <span class="detail-value"><strong>{{ formatPrice(selectedReturn.totalReturnAmount) }}
+                    TND</strong></span>
               </div>
             </b-col>
             <b-col cols="12" md="6">
@@ -249,6 +260,47 @@
           </b-row>
         </b-card>
 
+        <!-- Synchronization Information -->
+        <b-card class="mb-3 sync-info-card">
+          <div class="d-flex align-items-center mb-3">
+            <feather-icon icon="CloudIcon" size="20" class="mr-2 text-primary" />
+            <h5 class="mb-0">ERP Synchronization</h5>
+          </div>
+          <b-row>
+            <b-col md="6">
+              <div class="sync-detail-item">
+                <label class="sync-label">Synchronization Status</label>
+                <div class="sync-value">
+                  <b-badge :variant="getSyncStatusVariant(selectedReturn.synchronizationStatus)"
+                    class="sync-badge-large">
+                    <feather-icon :icon="getSyncStatusIcon(selectedReturn.synchronizationStatus)" size="14"
+                      class="mr-1" />
+                    {{ formatSyncStatus(selectedReturn.synchronizationStatus) }}
+                  </b-badge>
+                </div>
+              </div>
+            </b-col>
+            <b-col md="6">
+              <div class="sync-detail-item">
+                <label class="sync-label">ERP Document Number</label>
+                <div class="sync-value">
+                  <code v-if="selectedReturn.erpNo" class="erp-number">{{ selectedReturn.erpNo }}</code>
+                  <span v-else class="text-muted">Not synchronized</span>
+                </div>
+              </div>
+            </b-col>
+          </b-row>
+          <div v-if="selectedReturn.returnLines" class="mt-3">
+            <div class="sync-summary">
+              <small class="text-muted">
+                Lines synchronized:
+                <strong>{{ getSyncedLinesCount(selectedReturn.returnLines) }} / {{ selectedReturn.returnLines.length
+                  }}</strong>
+              </small>
+            </div>
+          </div>
+        </b-card>
+
         <!-- Voucher Information (if applicable) -->
         <b-card v-if="selectedReturn.returnVoucher" class="mb-3">
           <h5 class="mb-3">Voucher Information</h5>
@@ -260,16 +312,18 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">Voucher Amount:</span>
-                <span class="detail-value"><strong>${{ formatPrice(selectedReturn.returnVoucher.voucherAmount) }}</strong></span>
+                <span class="detail-value"><strong>{{ formatPrice(selectedReturn.returnVoucher.voucherAmount) }}
+                    TND</strong></span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Used Amount:</span>
-                <span class="detail-value">${{ formatPrice(selectedReturn.returnVoucher.usedAmount || 0) }}</span>
+                <span class="detail-value">{{ formatPrice(selectedReturn.returnVoucher.usedAmount || 0) }} TND</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">Remaining Amount:</span>
                 <span class="detail-value">
-                  <strong class="text-success">${{ formatPrice(getRemainingAmount(selectedReturn.returnVoucher)) }}</strong>
+                  <strong class="text-success">{{ formatPrice(getRemainingAmount(selectedReturn.returnVoucher)) }}
+                    TND</strong>
                 </span>
               </div>
             </b-col>
@@ -281,7 +335,7 @@
               <div class="detail-row">
                 <span class="detail-label">Expiry Date:</span>
                 <span class="detail-value">
-                  <span :class="{'text-danger': isVoucherExpired(selectedReturn.returnVoucher)}">
+                  <span :class="{ 'text-danger': isVoucherExpired(selectedReturn.returnVoucher) }">
                     {{ formatDate(selectedReturn.returnVoucher.expiryDate) }}
                   </span>
                 </span>
@@ -305,13 +359,7 @@
         <!-- Return Lines -->
         <b-card>
           <h5 class="mb-3">Returned Items</h5>
-          <b-table
-            :items="selectedReturn.returnLines || []"
-            :fields="returnLineFields"
-            small
-            striped
-            responsive
-          >
+          <b-table :items="selectedReturn.returnLines || []" :fields="returnLineFields" small striped responsive>
             <template #cell(item)="row">
               <div>
                 <strong>{{ row.item.item ? row.item.item.name : 'N/A' }}</strong>
@@ -326,23 +374,26 @@
             </template>
 
             <template #cell(unitPrice)="row">
-              ${{ formatPrice(row.item.unitPrice) }}
+              {{ formatPrice(row.item.unitPrice) }} TND
             </template>
 
             <template #cell(lineTotal)="row">
-              <strong>${{ formatPrice(row.item.lineTotal) }}</strong>
+              <strong>{{ formatPrice(row.item.lineTotalIncludingVat || row.item.lineTotal) }} TND</strong>
+            </template>
+
+            <template #cell(synched)="row">
+              <b-badge :variant="isSynched(row.item.synched) ? 'success' : 'secondary'" class="sync-indicator">
+                <feather-icon :icon="isSynched(row.item.synched) ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
+                {{ isSynched(row.item.synched) ? 'Synced' : 'Not Synced' }}
+              </b-badge>
             </template>
           </b-table>
         </b-card>
 
         <!-- Actions -->
         <div class="text-right mt-3">
-          <b-button 
-            v-if="selectedReturn.returnType === 'RETURN_VOUCHER' && selectedReturn.returnVoucher"
-            variant="success"
-            @click="printVoucher(selectedReturn)"
-            class="mr-2"
-          >
+          <b-button v-if="selectedReturn.returnType === 'RETURN_VOUCHER' && selectedReturn.returnVoucher"
+            variant="success" @click="printVoucher(selectedReturn)" class="mr-2">
             <feather-icon icon="PrinterIcon" size="16" class="mr-1" />
             Print Voucher
           </b-button>
@@ -367,7 +418,7 @@ export default {
     // Get today's date for default filter
     const today = new Date()
     const todayStr = today.toISOString().split('T')[0]
-    
+
     return {
       returns: [],
       loading: false,
@@ -389,21 +440,25 @@ export default {
         dateFrom: todayStr,
         dateTo: todayStr,
         returnType: null,
-        voucherStatus: null
+        voucherStatus: null,
+        syncStatus: 'all'
       },
+      filtersExpanded: false,
       returnFields: [
         { key: 'returnNumber', label: 'Return #', sortable: true },
         { key: 'returnDate', label: 'Date', sortable: true },
         { key: 'returnType', label: 'Type', sortable: true },
         { key: 'totalReturnAmount', label: 'Amount', sortable: true },
         { key: 'originalTicket', label: 'Original Ticket', sortable: false },
-        { key: 'voucherInfo', label: 'Voucher Info', sortable: false }
+        { key: 'voucherInfo', label: 'Voucher Info', sortable: false },
+        { key: 'synchronizationStatus', label: 'Sync Status', sortable: true }
       ],
       returnLineFields: [
         { key: 'item', label: 'Item' },
         { key: 'quantity', label: 'Qty' },
         { key: 'unitPrice', label: 'Unit Price' },
-        { key: 'lineTotal', label: 'Total' }
+        { key: 'lineTotal', label: 'Total TTC' },
+        { key: 'synched', label: 'Synced', class: 'text-center' }
       ],
       returnTypeOptions: [
         { value: null, text: 'All Types' },
@@ -415,6 +470,12 @@ export default {
         { value: 'PENDING', text: 'Pending' },
         { value: 'USED', text: 'Used' },
         { value: 'EXPIRED', text: 'Expired' }
+      ],
+      syncStatusOptions: [
+        { value: 'all', text: 'All' },
+        { value: 'NOT_SYNCHED', text: 'Not Synced' },
+        { value: 'PARTIALLY_SYNCHED', text: 'Partially Synced' },
+        { value: 'TOTALLY_SYNCHED', text: 'Totally Synced' }
       ]
     }
   },
@@ -435,10 +496,10 @@ export default {
       try {
         const response = await this.$http.get('/return-header')
         let allReturns = response.data || []
-        
+
         // Apply filters
         allReturns = this.applyFilters(allReturns)
-        
+
         // Sort
         allReturns.sort((a, b) => {
           const aVal = a[this.sortBy]
@@ -449,9 +510,9 @@ export default {
             return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
           }
         })
-        
+
         this.totalRows = allReturns.length
-        
+
         // Paginate
         const start = (this.currentPage - 1) * this.perPage
         const end = start + this.perPage
@@ -473,7 +534,7 @@ export default {
     },
     applyFilters(returns) {
       let filtered = returns
-      
+
       // Search filter
       if (this.filters.search) {
         const search = this.filters.search.toLowerCase()
@@ -484,7 +545,7 @@ export default {
           return returnNum.includes(search) || ticketNum.includes(search) || voucherNum.includes(search)
         })
       }
-      
+
       // Date filters
       if (this.filters.dateFrom) {
         filtered = filtered.filter(ret => {
@@ -492,26 +553,33 @@ export default {
           return retDate >= this.filters.dateFrom
         })
       }
-      
+
       if (this.filters.dateTo) {
         filtered = filtered.filter(ret => {
           const retDate = moment(ret.returnDate).format('YYYY-MM-DD')
           return retDate <= this.filters.dateTo
         })
       }
-      
+
       // Return type filter
       if (this.filters.returnType) {
         filtered = filtered.filter(ret => ret.returnType === this.filters.returnType)
       }
-      
+
       // Voucher status filter
       if (this.filters.voucherStatus) {
         filtered = filtered.filter(ret => {
           return ret.returnVoucher && ret.returnVoucher.status === this.filters.voucherStatus
         })
       }
-      
+
+      // Sync status filter
+      if (this.filters.syncStatus && this.filters.syncStatus !== 'all') {
+        filtered = filtered.filter(ret => {
+          return ret.synchronizationStatus === this.filters.syncStatus
+        })
+      }
+
       return filtered
     },
     onFilterChange() {
@@ -531,17 +599,21 @@ export default {
       this.filters.search = ''
       this.onFilterChange()
     },
+    toggleFilters() {
+      this.filtersExpanded = !this.filtersExpanded
+    },
     resetFilters() {
       // Get today's date for reset
       const today = new Date()
       const todayStr = today.toISOString().split('T')[0]
-      
+
       this.filters = {
         search: '',
         dateFrom: todayStr,
         dateTo: todayStr,
         returnType: null,
-        voucherStatus: null
+        voucherStatus: null,
+        syncStatus: 'all'
       }
       this.currentPage = 1
       this.loadReturns()
@@ -549,7 +621,14 @@ export default {
     async viewReturnDetails(returnItem) {
       try {
         const response = await this.$http.get(`/return-header/${returnItem.id}/details`)
-        this.selectedReturn = response.data.returnHeader
+
+        // Merge API response with list item data to preserve sync status and ERP number
+        this.selectedReturn = {
+          ...response.data.returnHeader,
+          // Preserve synchronization fields from list item (they might not be in details response)
+          synchronizationStatus: response.data.returnHeader.synchronizationStatus || returnItem.synchronizationStatus,
+          erpNo: response.data.returnHeader.erpNo || returnItem.erpNo
+        }
         this.selectedReturn.returnLines = response.data.returnLines
         this.showDetailsModal = true
       } catch (error) {
@@ -826,6 +905,51 @@ export default {
     formatDate(dateString) {
       if (!dateString) return ''
       return moment(dateString).format('YYYY-MM-DD HH:mm')
+    },
+    formatSyncStatus(status) {
+      if (!status) return 'Not Synced'
+      return status
+        .split('_')
+        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+        .join(' ')
+    },
+    getSyncStatusVariant(status) {
+      if (!status) return 'secondary'
+      switch (status) {
+        case 'TOTALLY_SYNCHED':
+          return 'success'
+        case 'PARTIALLY_SYNCHED':
+          return 'warning'
+        case 'NOT_SYNCHED':
+          return 'secondary'
+        default:
+          return 'secondary'
+      }
+    },
+    getSyncStatusIcon(status) {
+      if (!status) return 'XIcon'
+      switch (status) {
+        case 'TOTALLY_SYNCHED':
+          return 'CheckCircleIcon'
+        case 'PARTIALLY_SYNCHED':
+          return 'AlertCircleIcon'
+        case 'NOT_SYNCHED':
+          return 'XCircleIcon'
+        default:
+          return 'XCircleIcon'
+      }
+    },
+    getSyncedLinesCount(lines) {
+      if (!lines || !Array.isArray(lines)) return 0
+      return lines.filter(line => this.isSynched(line.synched)).length
+    },
+    isSynched(synchedValue) {
+      // Handle boolean true, string "true", or number 1
+      if (synchedValue === true || synchedValue === 'true' || synchedValue === 1) {
+        return true
+      }
+      // Handle boolean false, string "false", null, undefined, or 0
+      return false
     }
   }
 }
@@ -869,5 +993,84 @@ export default {
 .detail-value {
   text-align: right;
 }
-</style>
 
+.sync-status-cell {
+  min-width: 120px;
+}
+
+.sync-badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sync-indicator {
+  font-size: 11px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sync-info-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6;
+}
+
+.sync-detail-item {
+  margin-bottom: 15px;
+}
+
+.sync-label {
+  font-size: 12px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.sync-value {
+  font-size: 14px;
+  color: #212529;
+}
+
+.sync-badge-large {
+  font-size: 13px;
+  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.erp-number {
+  background: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  font-size: 13px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.sync-summary {
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+}
+
+@media (max-width: 575.98px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .page-header .btn {
+    width: 100%;
+  }
+
+  .sync-status-cell {
+    min-width: auto;
+  }
+}
+</style>

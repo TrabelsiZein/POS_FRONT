@@ -63,6 +63,7 @@
 
 <script>
 import useJwt from '@/auth/jwt/useJwt'
+import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 
 export default {
   name: 'OpenSession',
@@ -99,9 +100,13 @@ export default {
           this.$store.dispatch('pos/setCurrentSession', response.data)
           
           this.$toast({
-            title: 'Success',
-            text: 'Session opened successfully!',
-            variant: 'success'
+            component: ToastificationContent,
+            props: {
+              title: 'Success',
+              icon: 'CheckCircleIcon',
+              text: 'Session opened successfully!',
+              variant: 'success'
+            }
           })
 
           // Redirect to item selection
@@ -116,9 +121,13 @@ export default {
         }
 
         this.$toast({
-          title: 'Error',
-          text: errorMessage,
-          variant: 'danger'
+          component: ToastificationContent,
+          props: {
+            title: 'Error',
+            icon: 'XIcon',
+            text: errorMessage,
+            variant: 'danger'
+          }
         })
       } finally {
         this.loading = false

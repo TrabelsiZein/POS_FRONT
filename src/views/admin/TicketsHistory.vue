@@ -110,6 +110,41 @@
                 </b-input-group>
               </b-form-group>
             </b-col>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Family" label-for="family-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="LayersIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select
+                    id="family-filter"
+                    v-model="filters.familyId"
+                    :options="familyOptions"
+                    @input="onFamilyChange"
+                  />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
+            <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
+              <b-form-group label="Subfamily" label-for="subfamily-filter" class="mb-0">
+                <b-input-group>
+                  <b-input-group-prepend>
+                    <b-input-group-text class="bg-white">
+                      <feather-icon icon="GridIcon" size="16" />
+                    </b-input-group-text>
+                  </b-input-group-prepend>
+                  <b-form-select
+                    id="subfamily-filter"
+                    v-model="filters.subFamilyId"
+                    :options="subFamilyOptions"
+                    :disabled="filters.familyId === 'all'"
+                    @input="onSubFamilyChange"
+                  />
+                </b-input-group>
+              </b-form-group>
+            </b-col>
           </b-row>
         </div>
       </b-collapse>
@@ -423,6 +458,7 @@ export default {
     return {
       tickets: [],
       allTickets: [], // Store all tickets for pagination
+      filteredTickets: [],
       loading: false,
       sortBy: 'salesDate',
       sortDesc: true,
@@ -438,13 +474,17 @@ export default {
         { value: 100, text: '100' }
       ],
       paymentMethods: [],
+      families: [],
+      subFamilies: [],
       filters: {
         search: '',
         dateFrom: todayStr,
         dateTo: todayStr,
         status: 'all',
         syncStatus: 'all',
-        paymentMethodId: 'all'
+        paymentMethodId: 'all',
+        familyId: 'all',
+        subFamilyId: 'all'
       },
       statusOptions: [
         { value: 'all', text: 'All' },
@@ -487,7 +527,7 @@ export default {
   },
   computed: {
     totalRows() {
-      return this.allTickets.length
+      return this.filteredTickets.length
     },
     paymentMethodOptions() {
       return [
@@ -496,6 +536,21 @@ export default {
           value: pm.id,
           text: pm.name
         }))
+      ]
+    },
+    familyOptions() {
+      return [
+        { value: 'all', text: 'All Families' },
+        ...this.families.map(f => ({ value: f.id, text: f.name }))
+      ]
+    },
+    subFamilyOptions() {
+      const options = this.subFamilies
+        .filter(sf => this.filters.familyId === 'all' || (sf.itemFamily && sf.itemFamily.id === this.filters.familyId))
+        .map(sf => ({ value: sf.id, text: sf.name }))
+      return [
+        { value: 'all', text: this.filters.familyId === 'all' ? 'Select a family first' : 'All Subfamilies' },
+        ...options
       ]
     },
     startIndex() {
@@ -520,9 +575,27 @@ export default {
   },
   mounted() {
     this.loadPaymentMethods()
+    this.loadFamilies()
+    this.loadSubFamilies()
     this.loadTickets()
   },
   methods: {
+    async loadFamilies() {
+      try {
+        const response = await this.$http.get('/item-family')
+        this.families = Array.isArray(response.data) ? response.data : []
+      } catch (error) {
+        console.error('Error loading families:', error)
+      }
+    },
+    async loadSubFamilies() {
+      try {
+        const response = await this.$http.get('/item-sub-family')
+        this.subFamilies = Array.isArray(response.data) ? response.data : []
+      } catch (error) {
+        console.error('Error loading subfamilies:', error)
+      }
+    },
     async loadPaymentMethods() {
       try {
         const response = await this.$http.get('/payment-method')
@@ -548,6 +621,7 @@ export default {
 
         if (response.status === 200) {
           this.allTickets = response.data || []
+          this.applyLocalFilters()
           // Reset to first page on new filter
           if (this.currentPage !== 1) {
             this.currentPage = 1
@@ -573,17 +647,17 @@ export default {
     },
     updatePaginatedTickets() {
       // Ensure allTickets exists
-      if (!this.allTickets) {
-        this.allTickets = []
+      if (!this.filteredTickets) {
+        this.filteredTickets = []
       }
 
-      if (this.allTickets.length === 0) {
+      if (this.filteredTickets.length === 0) {
         this.tickets = []
         return
       }
 
       // Ensure currentPage is valid
-      const maxPage = Math.max(1, Math.ceil(this.allTickets.length / this.perPage))
+      const maxPage = Math.max(1, Math.ceil(this.filteredTickets.length / this.perPage))
       if (this.currentPage > maxPage) {
         this.currentPage = maxPage
         // Recursive call is not safe, use nextTick instead
@@ -598,7 +672,7 @@ export default {
 
       const start = (this.currentPage - 1) * this.perPage
       const end = start + this.perPage
-      this.tickets = this.allTickets.slice(start, end)
+      this.tickets = this.filteredTickets.slice(start, end)
 
       // Scroll to top of page on page change
       this.$nextTick(() => {
@@ -638,6 +712,43 @@ export default {
     },
     onFilterChange() {
       this.loadTickets()
+    },
+    onFamilyChange() {
+      // Reset subfamily when family changes
+      this.filters.subFamilyId = 'all'
+      this.applyLocalFilters()
+    },
+    onSubFamilyChange() {
+      this.applyLocalFilters()
+    },
+    applyLocalFilters() {
+      const hasFamilyFilter = this.filters.familyId !== 'all'
+      const hasSubFamilyFilter = this.filters.subFamilyId !== 'all'
+
+      if (!hasFamilyFilter && !hasSubFamilyFilter) {
+        this.filteredTickets = [...this.allTickets]
+        this.updatePaginatedTickets()
+        return
+      }
+
+      this.filteredTickets = this.allTickets.filter(ticket => {
+        const lines = Array.isArray(ticket.salesLines) ? ticket.salesLines : []
+        if (lines.length === 0) {
+          return !hasFamilyFilter && !hasSubFamilyFilter
+        }
+
+        return lines.some(line => {
+          const item = line.item || {}
+          const familyId = item.itemFamily?.id || item.itemFamilyId
+          const subFamilyId = item.itemSubFamily?.id || item.itemSubFamilyId
+          const familyMatch = !hasFamilyFilter || familyId === this.filters.familyId
+          const subFamilyMatch = !hasSubFamilyFilter || subFamilyId === this.filters.subFamilyId
+          return familyMatch && subFamilyMatch
+        })
+      })
+
+      this.currentPage = 1
+      this.updatePaginatedTickets()
     },
     clearSearch() {
       this.filters.search = ''
