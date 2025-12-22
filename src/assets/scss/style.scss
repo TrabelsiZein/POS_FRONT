@@ -4,3 +4,227 @@ NOTE:
 ------
 PLACE HERE YOUR OWN SCSS CODES AND IF NEEDED, OVERRIDE THE STYLES FROM THE OTHER STYLESHEETS.
 WE WILL RELEASE FUTURE UPDATES SO IN ORDER TO NOT OVERWRITE YOUR STYLES IT'S BETTER LIKE THIS.  */
+
+/* RTL Support for Arabic */
+body.rtl,
+html[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+
+  // POS-specific RTL adjustments
+  .pos-container {
+    .items-column {
+      order: 2;
+    }
+    .cart-section {
+      order: 1;
+    }
+  }
+
+  // Cart items
+  .cart-item {
+    .cart-item-header {
+      flex-direction: row-reverse;
+    }
+    .cart-item-controls {
+      flex-direction: row-reverse;
+    }
+  }
+
+  // Payment cards
+  .payment-card {
+    text-align: right;
+    .payment-card-header {
+      flex-direction: row-reverse;
+    }
+  }
+
+  // Summary panels
+  .summary-item {
+    flex-direction: row-reverse;
+    .summary-label {
+      margin-left: 0.5rem;
+      margin-right: 0;
+    }
+  }
+
+  // Buttons with icons
+  .btn {
+    .feather-icon {
+      margin-right: 0;
+      margin-left: 0.5rem;
+    }
+  }
+
+  // Input groups - RTL styling
+  .input-group {
+    flex-direction: row-reverse;
+    
+    // In RTL with row-reverse:
+    // - append (X button) appears visually on LEFT
+    // - input appears in MIDDLE  
+    // - prepend (search icon) appears visually on RIGHT
+    
+    // Override Bootstrap's default border removal between input group elements
+    > .input-group-prepend {
+      // Search icon: in RTL it appears on the right, but we need border-radius on the LEFT side
+      // (as shown in user's manual edit - do the opposite of what seems logical)
+      > .input-group-text {
+        border-left: 1px solid #ced4da !important;
+        border-right: 0 !important;
+        border-top: 1px solid #ced4da !important;
+        border-bottom: 1px solid #ced4da !important;
+        // User's manual edit shows: rounded on LEFT side (top-left, bottom-left)
+        border-radius: 0 !important;
+        border-top-left-radius: 0.25rem !important;
+        border-top-right-radius: 0 !important;
+        border-bottom-left-radius: 0.25rem !important;
+        border-bottom-right-radius: 0 !important;
+      }
+    }
+    
+    > .input-group-append {
+      // Clear icon (X button) on RIGHT in RTL: rounded corners on the RIGHT side (outer edge)
+      // User's manual edit shows: rounded on RIGHT side (top-right, bottom-right)
+      > .btn,
+      > .input-group-text {
+        border-right: 1px solid #ced4da !important;
+        border-left: 0 !important;
+        border-top: 1px solid #ced4da !important;
+        border-bottom: 1px solid #ced4da !important;
+        // In RTL: rounded on RIGHT side (top-right, bottom-right) - this is the outer edge
+        border-radius: 0 !important;
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0.25rem !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0.25rem !important;
+      }
+    }
+    
+    > .form-control {
+      // Input field: default has all borders
+      border-left: 1px solid #ced4da !important;
+      border-right: 1px solid #ced4da !important;
+      border-top: 1px solid #ced4da !important;
+      border-bottom: 1px solid #ced4da !important;
+      border-radius: 0 !important;
+      
+      &:focus {
+        border-left: 1px solid #80bdff !important;
+        border-right: 1px solid #80bdff !important;
+        border-top: 1px solid #80bdff !important;
+        border-bottom: 1px solid #80bdff !important;
+      }
+    }
+    
+    // When input is after prepend, remove right border (connects to prepend)
+    > .input-group-prepend + .form-control {
+      border-right: 0 !important;
+      &:focus {
+        border-right: 0 !important;
+      }
+    }
+    
+    // When input is before append, remove left border (connects to append)
+    > .form-control + .input-group-append {
+      border-left: 0 !important;
+      &:focus {
+        border-left: 0 !important;
+      }
+    }
+    
+    // When input is between prepend and append, remove both borders
+    > .input-group-prepend + .form-control + .input-group-append {
+      border-left: 0 !important;
+      border-right: 0 !important;
+      &:focus {
+        border-left: 0 !important;
+        border-right: 0 !important;
+      }
+    }
+  }
+
+  // Breadcrumbs
+  .breadcrumb-trail {
+    flex-direction: row-reverse;
+    .breadcrumb-separator {
+      transform: rotate(180deg);
+    }
+  }
+
+  // Tables
+  .table {
+    text-align: right;
+    th, td {
+      text-align: right;
+    }
+  }
+
+  // Modals
+  .modal {
+    .modal-header {
+      flex-direction: row-reverse;
+      justify-content: space-between;
+      
+      .close,
+      .modal-header-close,
+      button[aria-label="Close"],
+      button.close {
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        order: -1;
+        float: left !important;
+      }
+      
+      .modal-title {
+        margin-right: 0;
+        margin-left: auto;
+        order: 1;
+      }
+    }
+    
+    .modal-footer {
+      flex-direction: row-reverse;
+      justify-content: flex-start;
+      
+      .btn {
+        margin-left: 0.5rem;
+        margin-right: 0;
+        
+        &:first-child {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+  
+  // Bootstrap Vue modal specific
+  .modal-content {
+    .modal-header {
+      .close {
+        margin: -1rem auto -1rem -1rem !important;
+        padding: 0.2rem 0.62rem !important;
+      }
+    }
+  }
+
+  // Cards
+  .card-header {
+    flex-direction: row-reverse;
+  }
+
+  // Navigation
+  .hierarchy-controls {
+    flex-direction: row-reverse;
+  }
+
+  // Action buttons
+  .actions-grid {
+    .action-btn {
+      .feather-icon {
+        margin-right: 0;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+}

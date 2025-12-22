@@ -17,6 +17,7 @@
 
 
     <b-navbar-nav class="nav align-items-center ml-auto">
+      <locale />
       <search-bar v-if="false" />
       <b-nav-item-dropdown right toggle-class="d-flex align-items-center dropdown-user-link" class="dropdown-user">
         <template #button-content>
@@ -44,6 +45,7 @@
 <script>
 
 import DarkToggler from '@core/layouts/components/app-navbar/components/DarkToggler.vue'
+import Locale from '@core/layouts/components/app-navbar/components/Locale.vue'
 import SearchBar from './SearchBar.vue'
 import { initialAbility } from '@/libs/acl/config'
 import useJwt from '@/auth/jwt/useJwt'
@@ -53,6 +55,7 @@ export default {
   components: {
     // Navbar Components
     DarkToggler,
+    Locale,
     SearchBar
   },
   props: {

@@ -1,9 +1,5 @@
 <template>
-  <div
-    id="app"
-    class="h-100"
-    :class="[skinClasses]"
-  >
+  <div id="app" class="h-100" :class="[skinClasses]">
     <component :is="layout">
       <router-view />
     </component>
@@ -14,7 +10,7 @@
 <script>
 
 // This will be populated in `beforeCreate` hook
-import { $themeColors, $themeBreakpoints, $themeConfig } from '@themeConfig'
+import { $themeColors, $themeBreakpoints } from '@themeConfig'
 import { provideToast } from 'vue-toastification/composition'
 import { watch } from '@vue/composition-api'
 import useAppConfig from '@core/app-config/useAppConfig'
@@ -22,6 +18,7 @@ import useAppConfig from '@core/app-config/useAppConfig'
 import { useWindowSize, useCssVar } from '@vueuse/core'
 
 import store from '@/store'
+import i18n from '@/libs/i18n'
 
 const LayoutVertical = () => import('@/layouts/vertical/LayoutVertical.vue')
 const LayoutHorizontal = () => import('@/layouts/horizontal/LayoutHorizontal.vue')
@@ -64,9 +61,15 @@ export default {
       $themeBreakpoints[breakpoints[i]] = Number(useCssVar(`--breakpoint-${breakpoints[i]}`, document.documentElement).value.slice(0, -2))
     }
 
-    // Set RTL
-    const { isRTL } = $themeConfig.layout
+    // Set RTL based on i18n locale (Arabic = RTL)
+    const currentLocale = i18n.locale || 'en'
+    const isRTL = currentLocale === 'ar'
     document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr')
+    if (isRTL) {
+      document.body.classList.add('rtl')
+    } else {
+      document.body.classList.remove('rtl')
+    }
   },
   setup() {
     const { skin, skinClasses } = useAppConfig()
@@ -91,6 +94,17 @@ export default {
     const { width: windowWidth } = useWindowSize()
     watch(windowWidth, val => {
       store.commit('app/UPDATE_WINDOW_WIDTH', val)
+    })
+
+    // Watch for locale changes to update RTL
+    watch(() => i18n.locale, newLocale => {
+      const isRTL = newLocale === 'ar'
+      document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr')
+      if (isRTL) {
+        document.body.classList.add('rtl')
+      } else {
+        document.body.classList.remove('rtl')
+      }
     })
 
     return {

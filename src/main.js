@@ -6,6 +6,7 @@ import { BootstrapVue } from 'bootstrap-vue';
 import router from './router';
 import store from './store';
 import App from './App.vue';
+import i18n from './libs/i18n';
 
 // Global Components
 import './global-components';
@@ -48,6 +49,7 @@ export const eventBus = new Vue();
   new Vue({
     router,
     store,
+    i18n,
     render: h => h(App),
   }).$mount('#app');
 })();

@@ -1,22 +1,22 @@
 <template>
   <div class="item-subfamilies-page">
     <div class="page-header">
-      <h2 class="mb-0">Item Subfamilies</h2>
+      <h2 class="mb-0">{{ $t('admin.itemSubFamilies.title') }}</h2>
       <b-button variant="outline-primary" @click="refreshData" :disabled="loadingSubFamilies || loadingFamilies">
         <feather-icon icon="RefreshCwIcon" size="16" class="mr-1" />
-        Refresh
+        {{ $t('common.refresh') }}
       </b-button>
     </div>
 
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" md="6">
-          <b-form-group label="Search" label-for="subfamily-search">
+          <b-form-group :label="$t('admin.itemSubFamilies.search')" label-for="subfamily-search">
             <b-input-group>
               <b-form-input
                 id="subfamily-search"
                 v-model="searchTerm"
-                placeholder="Search by code, name, description, or family..."
+                :placeholder="$t('admin.itemSubFamilies.searchPlaceholder')"
               />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
@@ -28,7 +28,7 @@
         </b-col>
         <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
           <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'subfamily' : 'subfamilies' }}
+            {{ $t('admin.itemSubFamilies.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.itemSubFamilies.subfamily') : $t('admin.itemSubFamilies.subfamilies') }}
           </small>
         </b-col>
       </b-row>
@@ -36,15 +36,15 @@
 
     <b-card>
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0">Subfamilies</h4>
+        <h4 class="mb-0">{{ $t('admin.itemSubFamilies.subfamiliesList') }}</h4>
         <b-button variant="primary" size="sm" @click="openSubFamilyModal()" :disabled="actionsDisabled">
           <feather-icon icon="PlusIcon" size="14" class="mr-1" />
-          Add Subfamily
+          {{ $t('admin.itemSubFamilies.addSubFamily') }}
         </b-button>
       </div>
 
       <b-alert v-if="families.length === 0 && !loadingFamilies" variant="warning" show class="mb-3">
-        You must create at least one item family before adding subfamilies.
+        {{ $t('admin.itemSubFamilies.noFamiliesWarning') }}
       </b-alert>
 
       <b-table
@@ -60,14 +60,14 @@
         <template #table-busy>
           <div class="text-center text-muted my-2">
             <b-spinner class="align-middle mr-2" />
-            <strong>Loading subfamilies…</strong>
+            <strong>{{ $t('admin.itemSubFamilies.loadingText') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="GridIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No subfamilies found.</p>
+            <p class="text-muted mb-0">{{ $t('admin.itemSubFamilies.noSubFamiliesFound') }}</p>
           </div>
         </template>
 
@@ -83,7 +83,7 @@
 
         <template #cell(active)="row">
           <b-badge :variant="row.item.active !== false ? 'success' : 'secondary'">
-            {{ row.item.active !== false ? 'Active' : 'Inactive' }}
+            {{ row.item.active !== false ? $t('admin.itemSubFamilies.active') : $t('admin.itemSubFamilies.inactive') }}
           </b-badge>
         </template>
 
@@ -114,7 +114,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="subfamilies-per-page" class="mr-2 mb-0">Items per page:</label>
+              <label for="subfamilies-per-page" class="mr-2 mb-0">{{ $t('admin.itemSubFamilies.itemsPerPage') }}</label>
               <b-form-select
                 id="subfamilies-per-page"
                 v-model="perPage"
@@ -127,7 +127,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} subfamilies
+                {{ $t('admin.itemSubFamilies.showing') }} {{ startIndex }} {{ $t('admin.itemSubFamilies.to') }} {{ endIndex }} {{ $t('admin.itemSubFamilies.of') }} {{ totalRows }} {{ $t('admin.itemSubFamilies.subfamilies') }}
               </small>
             </div>
           </b-col>
@@ -146,13 +146,13 @@
     <b-modal
       id="subfamily-modal"
       v-model="showSubFamilyModal"
-      :title="editingSubFamily ? 'Edit Subfamily' : 'Add Subfamily'"
+      :title="editingSubFamily ? $t('admin.itemSubFamilies.editSubFamily') : $t('admin.itemSubFamilies.addSubFamily')"
       @ok="saveSubFamily"
       :ok-disabled="!canSaveSubFamily"
       @hidden="resetSubFamilyForm"
     >
       <b-form>
-        <b-form-group label="Family *" label-for="subfamily-family">
+        <b-form-group :label="$t('admin.itemSubFamilies.family')" label-for="subfamily-family">
           <b-form-select
             id="subfamily-family"
             v-model="subFamilyForm.itemFamilyId"
@@ -161,32 +161,32 @@
           />
         </b-form-group>
 
-        <b-form-group label="Code *" label-for="subfamily-code">
+        <b-form-group :label="$t('admin.itemSubFamilies.code')" label-for="subfamily-code">
           <b-form-input
             id="subfamily-code"
             v-model.trim="subFamilyForm.code"
-            placeholder="Unique code"
+            :placeholder="$t('admin.itemSubFamilies.codePlaceholder')"
           />
         </b-form-group>
 
-        <b-form-group label="Name *" label-for="subfamily-name">
+        <b-form-group :label="$t('admin.itemSubFamilies.name')" label-for="subfamily-name">
           <b-form-input
             id="subfamily-name"
             v-model.trim="subFamilyForm.name"
-            placeholder="Subfamily name"
+            :placeholder="$t('admin.itemSubFamilies.namePlaceholder')"
           />
         </b-form-group>
 
-        <b-form-group label="Description" label-for="subfamily-description">
+        <b-form-group :label="$t('admin.itemSubFamilies.description')" label-for="subfamily-description">
           <b-form-textarea
             id="subfamily-description"
             v-model.trim="subFamilyForm.description"
             rows="3"
-            placeholder="Optional description"
+            :placeholder="$t('admin.itemSubFamilies.descriptionPlaceholder')"
           />
         </b-form-group>
 
-        <b-form-group label="Display Order" label-for="subfamily-order">
+        <b-form-group :label="$t('admin.itemSubFamilies.modal.displayOrder')" label-for="subfamily-order">
           <b-form-input
             id="subfamily-order"
             v-model.number="subFamilyForm.displayOrder"
@@ -197,7 +197,7 @@
 
         <b-form-group>
           <b-form-checkbox v-model="subFamilyForm.active" switch>
-            Active
+            {{ $t('admin.itemSubFamilies.modal.active') }}
           </b-form-checkbox>
         </b-form-group>
       </b-form>
@@ -206,17 +206,17 @@
     <b-modal
       id="delete-subfamily-modal"
       v-model="showDeleteSubFamilyModal"
-      title="Delete Subfamily"
+      :title="$t('admin.itemSubFamilies.deleteModal.title')"
       ok-variant="danger"
-      ok-title="Delete"
+      :ok-title="$t('admin.itemSubFamilies.deleteModal.delete')"
       @ok="deleteSubFamily"
     >
       <p class="mb-0">
-        Are you sure you want to delete the subfamily
+        {{ $t('admin.itemSubFamilies.deleteModal.confirmMessage') }}
         <strong v-if="subFamilyToDelete">{{ subFamilyToDelete.name }}</strong>?
       </p>
       <p class="text-danger small mb-0">
-        This action cannot be undone.
+        {{ $t('admin.itemSubFamilies.deleteModal.cannotUndone') }}
       </p>
     </b-modal>
   </div>
@@ -242,14 +242,6 @@ export default {
         { value: 20, text: '20' },
         { value: 50, text: '50' },
         { value: 100, text: '100' },
-      ],
-      subFamilyFields: [
-        { key: 'code', label: 'Code', sortable: true },
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'itemFamily', label: 'Family', sortable: true },
-        { key: 'displayOrder', label: 'Order', sortable: true },
-        { key: 'active', label: 'Status', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' },
       ],
       showSubFamilyModal: false,
       showDeleteSubFamilyModal: false,
@@ -306,10 +298,20 @@ export default {
         .map(family => ({ value: family.id, text: family.name }))
 
       if (options.length === 0) {
-        options.push({ value: null, text: 'No families available' })
+        options.push({ value: null, text: this.$t('admin.itemSubFamilies.noFamiliesAvailable') })
       }
 
       return options
+    },
+    subFamilyFields() {
+      return [
+        { key: 'code', label: this.$t('admin.itemSubFamilies.code'), sortable: true },
+        { key: 'name', label: this.$t('admin.itemSubFamilies.name'), sortable: true },
+        { key: 'itemFamily', label: this.$t('admin.itemSubFamilies.family'), sortable: true },
+        { key: 'displayOrder', label: this.$t('admin.itemSubFamilies.order'), sortable: true },
+        { key: 'active', label: this.$t('admin.itemSubFamilies.status'), sortable: true },
+        { key: 'actions', label: this.$t('admin.itemSubFamilies.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' },
+      ]
     },
     canSaveSubFamily() {
       return (
@@ -354,7 +356,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: 'Failed to load item subfamilies.',
+              text: this.$t('admin.itemSubFamilies.messages.failedToLoadSubfamilies'),
               variant: 'danger',
             },
           })
@@ -379,7 +381,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: 'Failed to load item families.',
+              text: this.$t('admin.itemSubFamilies.messages.failedToLoadFamilies'),
               variant: 'danger',
             },
           })
@@ -396,9 +398,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'No Families',
+            title: this.$t('admin.itemSubFamilies.messages.noFamilies'),
             icon: 'AlertCircleIcon',
-            text: 'Create an item family before adding subfamilies.',
+            text: this.$t('admin.itemSubFamilies.messages.createFamilyFirst'),
             variant: 'warning',
           },
         })
@@ -463,7 +465,7 @@ export default {
           props: {
             title: 'Success',
             icon: 'CheckIcon',
-            text: `Subfamily ${this.editingSubFamily ? 'updated' : 'created'} successfully.`,
+            text: this.editingSubFamily ? this.$t('admin.itemSubFamilies.messages.subfamilyUpdated') : this.$t('admin.itemSubFamilies.messages.subfamilyCreated'),
             variant: 'success',
           },
         })
@@ -476,7 +478,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'XIcon',
-            text: error.response?.data || 'Failed to save subfamily.',
+            text: error.response?.data || this.$t('admin.itemSubFamilies.messages.failedToSave'),
             variant: 'danger',
           },
         })
@@ -496,7 +498,7 @@ export default {
             props: {
               title: 'Deleted',
               icon: 'Trash2Icon',
-              text: 'Subfamily deleted successfully.',
+              text: this.$t('admin.itemSubFamilies.messages.subfamilyDeleted'),
               variant: 'success',
             },
           })
@@ -509,7 +511,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: error.response?.data || 'Failed to delete subfamily.',
+              text: error.response?.data || this.$t('admin.itemSubFamilies.messages.failedToDelete'),
               variant: 'danger',
             },
           })

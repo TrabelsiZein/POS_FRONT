@@ -1,20 +1,20 @@
 <template>
   <div class="erp-communications-container">
     <div class="page-header">
-      <h2 class="mb-0">ERP Communications</h2>
+      <h2 class="mb-0">{{ $t('admin.erpCommunications.title') }}</h2>
       <b-button variant="outline-primary" @click="loadCommunications" :disabled="loading">
         <feather-icon icon="RefreshCwIcon" size="16" class="mr-50" />
-        Refresh
+        {{ $t('admin.erpCommunications.refresh') }}
       </b-button>
     </div>
 
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" lg="4">
-          <b-form-group label="Search" label-for="communication-search" class="mb-lg-0">
+          <b-form-group :label="$t('admin.erpCommunications.search')" label-for="communication-search" class="mb-lg-0">
             <b-input-group>
               <b-form-input id="communication-search" v-model="searchTerm"
-                placeholder="Search by URL, error message, payload..." />
+                :placeholder="$t('admin.erpCommunications.searchPlaceholder')" />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
                   <feather-icon icon="XIcon" size="14" />
@@ -24,22 +24,22 @@
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
-          <b-form-group label="Status" label-for="status-filter" class="mb-lg-0">
+          <b-form-group :label="$t('admin.erpCommunications.status')" label-for="status-filter" class="mb-lg-0">
             <b-form-select id="status-filter" v-model="statusFilter" :options="statusOptions" />
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
-          <b-form-group label="Operation" label-for="operation-filter" class="mb-lg-0">
+          <b-form-group :label="$t('admin.erpCommunications.operation')" label-for="operation-filter" class="mb-lg-0">
             <b-form-select id="operation-filter" v-model="operationFilter" :options="operationOptions" />
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
-          <b-form-group label="From" label-for="from-date" class="mb-lg-0">
+          <b-form-group :label="$t('admin.erpCommunications.from')" label-for="from-date" class="mb-lg-0">
             <b-form-input id="from-date" type="date" v-model="fromDate" />
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="2">
-          <b-form-group label="To" label-for="to-date" class="mb-0">
+          <b-form-group :label="$t('admin.erpCommunications.to')" label-for="to-date" class="mb-0">
             <b-form-input id="to-date" type="date" v-model="toDate" />
           </b-form-group>
         </b-col>
@@ -47,7 +47,7 @@
       <b-row class="mt-1">
         <b-col cols="12" class="d-flex align-items-end justify-content-lg-end">
           <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'communication' : 'communications' }}
+            {{ $t('admin.erpCommunications.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.erpCommunications.communication') : $t('admin.erpCommunications.communications') }}
           </small>
         </b-col>
       </b-row>
@@ -58,14 +58,14 @@
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle" />
-            <strong class="ml-1">Loading...</strong>
+            <strong class="ml-1">{{ $t('admin.erpCommunications.loading') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="InboxIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No communications found.</p>
+            <p class="text-muted mb-0">{{ $t('admin.erpCommunications.noCommunicationsFound') }}</p>
           </div>
         </template>
 
@@ -99,7 +99,7 @@
         <template #cell(actions)="row">
           <div class="d-flex justify-content-end">
             <b-button size="sm" variant="outline-primary" @click="openDetails(row.item)">
-              Details
+              {{ $t('admin.erpCommunications.details') }}
             </b-button>
           </div>
         </template>
@@ -109,7 +109,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="communications-per-page" class="mr-2 mb-0">Items per page:</label>
+              <label for="communications-per-page" class="mr-2 mb-0">{{ $t('admin.erpCommunications.itemsPerPage') }}</label>
               <b-form-select id="communications-per-page" v-model="perPage" :options="perPageOptions" size="sm"
                 style="width: auto;" />
             </div>
@@ -117,7 +117,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} communications
+                {{ $t('admin.erpCommunications.showing') }} {{ startIndex }} {{ $t('admin.erpJobs.to') }} {{ endIndex }} {{ $t('admin.erpCommunications.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.erpCommunications.communication') : $t('admin.erpCommunications.communications') }}
               </small>
             </div>
           </b-col>
@@ -128,19 +128,19 @@
       </div>
     </b-card>
 
-    <b-modal id="communication-details" v-model="showDetailsModal" size="xl" title="Communication Details" ok-only
-      ok-title="Close" ok-variant="primary">
+    <b-modal id="communication-details" v-model="showDetailsModal" size="xl" :title="$t('admin.erpCommunications.communicationDetails')" ok-only
+      :ok-title="$t('admin.erpJobs.close')" ok-variant="primary">
       <div v-if="selectedCommunication">
         <!-- URL Section - Full Width -->
         <b-card class="mb-3 url-card" v-if="selectedCommunication.url">
           <div class="d-flex align-items-center mb-2">
             <feather-icon icon="LinkIcon" size="18" class="mr-2 text-primary" />
-            <strong class="text-primary">Endpoint URL</strong>
+            <strong class="text-primary">{{ $t('admin.erpCommunications.endpointUrl') }}</strong>
           </div>
           <div class="url-container">
             <code class="url-text">{{ selectedCommunication.url }}</code>
             <b-button size="sm" variant="outline-primary" class="copy-btn"
-              @click="copyToClipboard(selectedCommunication.url)" v-b-tooltip.hover title="Copy URL">
+              @click="copyToClipboard(selectedCommunication.url)" v-b-tooltip.hover :title="$t('admin.erpCommunications.copyUrl')">
               <feather-icon icon="CopyIcon" size="14" />
             </b-button>
           </div>
@@ -150,16 +150,16 @@
         <b-card class="mb-3">
           <h6 class="section-title mb-3">
             <feather-icon icon="InfoIcon" size="16" class="mr-2" />
-            Operation Details
+            {{ $t('admin.erpCommunications.operationDetails') }}
           </h6>
           <b-row>
             <b-col cols="12" md="6">
               <div class="detail-item mb-3">
-                <label class="detail-label">Operation</label>
+                <label class="detail-label">{{ $t('admin.erpCommunications.operation') }}</label>
                 <div class="detail-value">{{ formatOperation(selectedCommunication.operation) }}</div>
               </div>
               <div class="detail-item mb-3">
-                <label class="detail-label">Status</label>
+                <label class="detail-label">{{ $t('admin.erpCommunications.status') }}</label>
                 <div class="detail-value">
                   <b-badge :variant="statusVariant(selectedCommunication.status)" class="status-badge">
                     {{ selectedCommunication.status }}
@@ -169,15 +169,15 @@
             </b-col>
             <b-col cols="12" md="6">
               <div class="detail-item mb-3">
-                <label class="detail-label">Started</label>
+                <label class="detail-label">{{ $t('admin.erpCommunications.started') }}</label>
                 <div class="detail-value">{{ formatDateTime(selectedCommunication.startedAt) || '—' }}</div>
               </div>
               <div class="detail-item mb-3">
-                <label class="detail-label">Completed</label>
+                <label class="detail-label">{{ $t('admin.erpCommunications.completed') }}</label>
                 <div class="detail-value">{{ formatDateTime(selectedCommunication.completedAt) || '—' }}</div>
               </div>
               <div class="detail-item mb-3">
-                <label class="detail-label">Duration</label>
+                <label class="detail-label">{{ $t('admin.erpCommunications.duration') }}</label>
                 <div class="detail-value">
                   <span v-if="selectedCommunication.durationMs != null">
                     {{ (selectedCommunication.durationMs / 1000).toFixed(2) }}s
@@ -194,7 +194,7 @@
           <div class="d-flex align-items-start">
             <feather-icon icon="AlertCircleIcon" size="20" class="mr-2 mt-1" />
             <div>
-              <strong class="d-block mb-1">Error Message</strong>
+              <strong class="d-block mb-1">{{ $t('admin.erpCommunications.errorMessage') }}</strong>
               <div>{{ selectedCommunication.errorMessage }}</div>
             </div>
           </div>
@@ -205,12 +205,12 @@
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="section-title mb-0">
               <feather-icon icon="SendIcon" size="16" class="mr-2" />
-              Request Payload
+              {{ $t('admin.erpCommunications.requestPayload') }}
             </h6>
             <b-button size="sm" variant="outline-secondary"
-              @click="copyToClipboard(selectedCommunication.requestPayload)" v-b-tooltip.hover title="Copy Request">
+              @click="copyToClipboard(selectedCommunication.requestPayload)" v-b-tooltip.hover :title="$t('admin.erpCommunications.copyRequest')">
               <feather-icon icon="CopyIcon" size="14" class="mr-1" />
-              Copy
+              {{ $t('admin.erpCommunications.copy') }}
             </b-button>
           </div>
           <pre class="payload">{{ formatJson(selectedCommunication.requestPayload) }}</pre>
@@ -221,12 +221,12 @@
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h6 class="section-title mb-0">
               <feather-icon icon="InboxIcon" size="16" class="mr-2" />
-              Response Payload
+              {{ $t('admin.erpCommunications.responsePayload') }}
             </h6>
             <b-button size="sm" variant="outline-secondary"
-              @click="copyToClipboard(selectedCommunication.responsePayload)" v-b-tooltip.hover title="Copy Response">
+              @click="copyToClipboard(selectedCommunication.responsePayload)" v-b-tooltip.hover :title="$t('admin.erpCommunications.copyResponse')">
               <feather-icon icon="CopyIcon" size="14" class="mr-1" />
-              Copy
+              {{ $t('admin.erpCommunications.copy') }}
             </b-button>
           </div>
           <pre class="payload">{{ formatJson(selectedCommunication.responsePayload) }}</pre>
@@ -260,26 +260,30 @@ export default {
         { value: 100, text: '100' },
         { value: 200, text: '200' },
       ],
-      statusOptions: [
-        { value: 'ALL', text: 'All statuses' },
-        { value: 'SUCCESS', text: 'Success' },
-        { value: 'WARNING', text: 'Warning' },
-        { value: 'ERROR', text: 'Error' },
-      ],
       showDetailsModal: false,
       selectedCommunication: null,
-      fields: [
-        { key: 'operation', label: 'Operation', sortable: true },
-        { key: 'status', label: 'Status', sortable: true },
-        { key: 'startedAt', label: 'Started', sortable: true },
-        { key: 'completedAt', label: 'Completed', sortable: true },
-        { key: 'durationMs', label: 'Duration', sortable: true },
-        { key: 'errorMessage', label: 'Error', sortable: false },
-        { key: 'actions', label: '', sortable: false, class: 'text-right' },
-      ],
     }
   },
   computed: {
+    fields() {
+      return [
+        { key: 'operation', label: this.$t('admin.erpCommunications.operation'), sortable: true },
+        { key: 'status', label: this.$t('admin.erpCommunications.status'), sortable: true },
+        { key: 'startedAt', label: this.$t('admin.erpCommunications.started'), sortable: true },
+        { key: 'completedAt', label: this.$t('admin.erpCommunications.completed'), sortable: true },
+        { key: 'durationMs', label: this.$t('admin.erpCommunications.duration'), sortable: true },
+        { key: 'errorMessage', label: this.$t('admin.erpCommunications.error'), sortable: false },
+        { key: 'actions', label: '', sortable: false, class: 'text-right' },
+      ]
+    },
+    statusOptions() {
+      return [
+        { value: 'ALL', text: this.$t('admin.erpCommunications.allStatuses') },
+        { value: 'SUCCESS', text: this.$t('admin.erpCommunications.success') },
+        { value: 'WARNING', text: this.$t('admin.erpCommunications.warning') },
+        { value: 'ERROR', text: this.$t('admin.erpCommunications.error') },
+      ]
+    },
     operationOptions() {
       const operations = new Set()
       this.communications.forEach(comm => {
@@ -289,7 +293,7 @@ export default {
       })
       const sorted = Array.from(operations).sort()
       return [
-        { value: 'ALL', text: 'All operations' },
+        { value: 'ALL', text: this.$t('admin.erpCommunications.allOperations') },
         ...sorted.map(op => ({ value: op, text: this.formatOperation(op) })),
       ]
     },
@@ -381,9 +385,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to load ERP communications',
+            text: this.$t('admin.erpCommunications.failedToLoad'),
             variant: 'danger',
           },
         })
@@ -443,9 +447,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Copied!',
+            title: this.$t('admin.erpCommunications.copied'),
             icon: 'CheckIcon',
-            text: 'Content copied to clipboard',
+            text: this.$t('admin.erpCommunications.contentCopied'),
             variant: 'success',
           },
         })
@@ -454,9 +458,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to copy to clipboard',
+            text: this.$t('admin.erpCommunications.failedToCopy'),
             variant: 'danger',
           },
         })

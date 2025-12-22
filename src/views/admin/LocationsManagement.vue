@@ -1,22 +1,22 @@
 <template>
   <div class="locations-management-container">
     <div class="page-header">
-      <h2 class="mb-0">Locations</h2>
+      <h2 class="mb-0">{{ $t('admin.locationManagement.title') }}</h2>
       <b-button variant="outline-primary" @click="loadLocations">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.locationManagement.refresh') }}
       </b-button>
     </div>
 
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" md="6">
-          <b-form-group label="Search" label-for="search-input">
+          <b-form-group :label="$t('admin.locationManagement.search')" label-for="search-input">
             <b-input-group>
               <b-form-input
                 id="search-input"
                 v-model="searchTerm"
-                placeholder="Search by code, name, city, or contact..."
+                :placeholder="$t('admin.locationManagement.searchPlaceholder')"
               />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
@@ -29,19 +29,19 @@
         <b-col cols="12" md="6">
           <b-row>
             <b-col cols="12" md="6">
-              <b-form-group label="Filter by Default" label-for="default-filter" class="mb-md-0">
+              <b-form-group :label="$t('admin.locationManagement.filterByDefault')" label-for="default-filter" class="mb-md-0">
                 <b-form-checkbox
                   id="default-filter"
                   v-model="showDefaultOnly"
                   class="mt-2"
                 >
-                  Show Default Only
+                  {{ $t('admin.locationManagement.showDefaultOnly') }}
                 </b-form-checkbox>
               </b-form-group>
             </b-col>
             <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
               <small class="text-muted">
-                Showing {{ totalRows }} {{ totalRows === 1 ? 'location' : 'locations' }}
+                {{ $t('admin.locationManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.locationManagement.location') : $t('admin.locationManagement.locations') }}
               </small>
             </b-col>
           </b-row>
@@ -62,14 +62,14 @@
         <template #table-busy>
           <div class="text-center text-danger my-2">
             <b-spinner class="align-middle" />
-            <strong> Loading...</strong>
+            <strong>{{ $t('admin.locationManagement.loading') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="MapPinIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No locations found.</p>
+            <p class="text-muted mb-0">{{ $t('admin.locationManagement.noLocationsFound') }}</p>
           </div>
         </template>
 
@@ -108,7 +108,7 @@
 
         <template #cell(isDefault)="row">
           <b-badge :variant="row.item.isDefault ? 'success' : 'secondary'">
-            {{ row.item.isDefault ? 'Default' : 'No' }}
+            {{ row.item.isDefault ? $t('admin.locationManagement.default') : $t('admin.locationManagement.no') }}
           </b-badge>
         </template>
 
@@ -121,7 +121,7 @@
               :disabled="row.item.isDefault"
             >
               <feather-icon icon="StarIcon" size="14" />
-              Set as Default
+              {{ $t('admin.locationManagement.setAsDefault') }}
             </b-button>
           </div>
         </template>
@@ -131,7 +131,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <label for="per-page-select" class="mr-2 mb-0">{{ $t('admin.locationManagement.itemsPerPage') }}</label>
               <b-form-select
                 id="per-page-select"
                 v-model="perPage"
@@ -144,7 +144,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} locations
+                {{ $t('admin.locationManagement.showing') }} {{ startIndex }} {{ $t('admin.locationManagement.to') }} {{ endIndex }} {{ $t('admin.locationManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.locationManagement.location') : $t('admin.locationManagement.locations') }}
               </small>
             </div>
           </b-col>
@@ -181,17 +181,19 @@ export default {
         { value: 50, text: '50' },
         { value: 100, text: '100' }
       ],
-      locationFields: [
-        { key: 'locationCode', label: 'Code', sortable: true },
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'address', label: 'Address', sortable: false },
-        { key: 'contact', label: 'Contact', sortable: false },
-        { key: 'isDefault', label: 'Default', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' }
-      ]
     }
   },
   computed: {
+    locationFields() {
+      return [
+        { key: 'locationCode', label: this.$t('common.code'), sortable: true },
+        { key: 'name', label: this.$t('common.name'), sortable: true },
+        { key: 'address', label: this.$t('common.address'), sortable: false },
+        { key: 'contact', label: this.$t('common.contact'), sortable: false },
+        { key: 'isDefault', label: this.$t('admin.locationManagement.default'), sortable: true },
+        { key: 'actions', label: this.$t('common.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' }
+      ]
+    },
     filteredLocations() {
       let filtered = this.locations
 
@@ -262,9 +264,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to load locations',
+            text: this.$t('admin.locationManagement.failedToLoad'),
             variant: 'danger'
           }
         })
@@ -281,12 +283,15 @@ export default {
     async setAsDefaultLocation(location) {
       try {
         const { value: confirmed } = await this.$swal({
-          title: 'Set as Default Location?',
-          text: `Are you sure you want to set "${location.name}" (${location.locationCode}) as the default location?`,
+          title: this.$t('admin.locationManagement.setAsDefaultModal.title'),
+          text: this.$t('admin.locationManagement.setAsDefaultModal.message', {
+            name: location.name,
+            code: location.locationCode
+          }),
           icon: 'question',
           showCancelButton: true,
-          confirmButtonText: 'Yes, set as default',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: this.$t('admin.locationManagement.setAsDefaultModal.confirm'),
+          cancelButtonText: this.$t('admin.locationManagement.setAsDefaultModal.cancel'),
           customClass: {
             confirmButton: 'btn btn-primary',
             cancelButton: 'btn btn-outline-secondary ml-1',
@@ -305,9 +310,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Default location updated successfully',
+              text: this.$t('admin.locationManagement.defaultLocationUpdated'),
               variant: 'success'
             }
           })
@@ -315,14 +320,14 @@ export default {
         }
       } catch (error) {
         console.error('Error setting default location:', error)
-        let errorMessage = 'Failed to set default location'
+        let errorMessage = this.$t('admin.locationManagement.failedToSetDefault')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

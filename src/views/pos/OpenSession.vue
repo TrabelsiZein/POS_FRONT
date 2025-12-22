@@ -6,12 +6,12 @@
           <b-card class="mt-5">
             <div class="text-center mb-4">
               <feather-icon icon="CreditCardIcon" size="60" class="text-primary" />
-              <h2 class="mt-3">Open Cashier Session</h2>
-              <p class="text-muted">Enter the opening cash amount to start your session</p>
+              <h2 class="mt-3">{{ $t('pos.openSession.title') }}</h2>
+              <p class="text-muted">{{ $t('pos.openSession.description') }}</p>
             </div>
 
             <b-form @submit.prevent="openSession">
-              <b-form-group label="Opening Cash Amount" label-for="opening-cash">
+              <b-form-group :label="$t('pos.openSession.openingCashAmount')" label-for="opening-cash">
                 <b-input-group prepend="$">
                   <b-form-input
                     id="opening-cash"
@@ -19,19 +19,19 @@
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="0.00"
+                    :placeholder="$t('pos.openSession.placeholder')"
                     required
                     :state="validationState"
                   />
                 </b-input-group>
                 <b-form-invalid-feedback v-if="!isValid">
-                  Please enter a valid amount (greater than 0)
+                  {{ $t('pos.openSession.invalidAmount') }}
                 </b-form-invalid-feedback>
               </b-form-group>
 
               <b-form-group>
                 <b-form-text>
-                  This amount represents the cash you start with in your drawer
+                  {{ $t('pos.openSession.helpText') }}
                 </b-form-text>
               </b-form-group>
 
@@ -41,7 +41,7 @@
                   @click="logout"
                   class="mb-2 mb-sm-0"
                 >
-                  Cancel & Logout
+                  {{ $t('pos.openSession.cancelLogout') }}
                 </b-button>
                 <b-button 
                   type="submit" 
@@ -49,8 +49,8 @@
                   size="lg"
                   :disabled="!isValid || loading"
                 >
-                  <span v-if="loading">Opening...</span>
-                  <span v-else>Open Session</span>
+                  <span v-if="loading">{{ $t('pos.openSession.opening') }}</span>
+                  <span v-else>{{ $t('pos.openSession.openSession') }}</span>
                 </b-button>
               </div>
             </b-form>
@@ -84,6 +84,15 @@ export default {
       return this.isValid
     }
   },
+  async mounted() {
+    // Check if there's already an open session for this cashier
+    await this.$store.dispatch('pos/checkSession')
+    
+    // If there's an open session, redirect to items page
+    if (this.$store.getters['pos/hasOpenSession']) {
+      this.$router.push({ name: 'pos-item-selection' })
+    }
+  },
   methods: {
     async openSession() {
       if (!this.isValid) return
@@ -102,9 +111,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Session opened successfully!',
+              text: this.$t('pos.openSession.success'),
               variant: 'success'
             }
           })
@@ -114,7 +123,7 @@ export default {
         }
       } catch (error) {
         console.error('Error opening session:', error)
-        let errorMessage = 'Failed to open session. Please try again.'
+        let errorMessage = this.$t('pos.openSession.error')
         
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
@@ -123,7 +132,7 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

@@ -2,10 +2,10 @@
   <div class="item-barcodes-container">
 
     <div class="page-header">
-      <h2 class="mb-0">Items/ Barcodes</h2>
+      <h2 class="mb-0">{{ $t('admin.itemBarcodes.title') }}</h2>
       <b-button variant="outline-primary" @click="loadData">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('common.refresh') }}
       </b-button>
     </div>
 
@@ -16,8 +16,8 @@
           <div class="d-flex align-items-center">
             <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
             <h6 class="mb-0 text-primary font-weight-bold d-flex align-items-center">
-              Filters
-              <span class="filters-count text-muted ml-1">({{ displayTotal }} items)</span>
+              {{ $t('admin.itemBarcodes.filters') }}
+              <span class="filters-count text-muted ml-1">({{ displayTotal }} {{ $t('admin.itemBarcodes.items') }})</span>
             </h6>
           </div>
           <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
@@ -27,10 +27,10 @@
         <div class="pt-2">
           <b-row>
             <b-col cols="12" lg="6">
-              <b-form-group label="Search" label-for="search-input" class="mb-lg-0">
+              <b-form-group :label="$t('admin.itemBarcodes.search')" label-for="search-input" class="mb-lg-0">
                 <b-input-group>
                   <b-form-input id="search-input" v-model="searchTerm"
-                    placeholder="Search by item code, name, or barcode..." @input="scheduleSearch" />
+                    :placeholder="$t('admin.itemBarcodes.searchPlaceholder')" @input="scheduleSearch" />
                   <b-input-group-append>
                     <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
                       <feather-icon icon="XIcon" />
@@ -40,26 +40,26 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" lg="3">
-              <b-form-group label="Family" label-for="family-filter" class="mb-lg-0">
+              <b-form-group :label="$t('admin.itemBarcodes.family')" label-for="family-filter" class="mb-lg-0">
                 <b-form-select id="family-filter" v-model="familyId" :options="familyOptions" @input="onFamilyChange" />
               </b-form-group>
             </b-col>
             <b-col cols="12" lg="3">
-              <b-form-group label="Subfamily" label-for="subfamily-filter" class="mb-lg-0">
+              <b-form-group :label="$t('admin.itemBarcodes.subfamily')" label-for="subfamily-filter" class="mb-lg-0">
                 <b-form-select id="subfamily-filter" v-model="subFamilyId" :options="subFamilyOptions"
                   :disabled="familyId === 'all'" @input="onSubFamilyChange" />
               </b-form-group>
             </b-col>
             <b-col cols="6" lg="2">
-              <b-form-group label="Price min" label-for="price-min" class="mb-lg-0">
+              <b-form-group :label="$t('admin.itemBarcodes.priceMin')" label-for="price-min" class="mb-lg-0">
                 <b-form-input id="price-min" v-model.number="priceMin" type="number" min="0" step="0.01"
-                  placeholder="Min" />
+                  :placeholder="$t('admin.itemBarcodes.min')" />
               </b-form-group>
             </b-col>
             <b-col cols="6" lg="2">
-              <b-form-group label="Price max" label-for="price-max" class="mb-lg-0">
+              <b-form-group :label="$t('admin.itemBarcodes.priceMax')" label-for="price-max" class="mb-lg-0">
                 <b-form-input id="price-max" v-model.number="priceMax" type="number" min="0" step="0.01"
-                  placeholder="Max" />
+                  :placeholder="$t('admin.itemBarcodes.max')" />
               </b-form-group>
             </b-col>
           </b-row>
@@ -67,19 +67,19 @@
             <b-col cols="12" class="d-flex align-items-end justify-content-lg-end">
               <div class="filter-chips">
                 <b-badge v-if="searchTerm" variant="light-primary" class="mr-50">
-                  Search: "{{ searchTerm }}"
+                  {{ $t('admin.itemBarcodes.searchChip') }} "{{ searchTerm }}"
                 </b-badge>
                 <b-badge v-if="familyId !== 'all'" variant="light-info" class="mr-50">
-                  Family: {{ selectedFamilyName }}
+                  {{ $t('admin.itemBarcodes.familyChip') }} {{ selectedFamilyName }}
                 </b-badge>
                 <b-badge v-if="subFamilyId !== 'all'" variant="light-warning" class="mr-50">
-                  Subfamily: {{ selectedSubFamilyName }}
+                  {{ $t('admin.itemBarcodes.subfamilyChip') }} {{ selectedSubFamilyName }}
                 </b-badge>
                 <b-badge v-if="priceMin !== null" variant="light-success" class="mr-50">
-                  Min: {{ formatPrice(priceMin) }}
+                  {{ $t('admin.itemBarcodes.minChip') }} {{ formatPrice(priceMin) }}
                 </b-badge>
                 <b-badge v-if="priceMax !== null" variant="light-success" class="mr-50">
-                  Max: {{ formatPrice(priceMax) }}
+                  {{ $t('admin.itemBarcodes.maxChip') }} {{ formatPrice(priceMax) }}
                 </b-badge>
               </div>
             </b-col>
@@ -92,7 +92,7 @@
     <b-card v-if="loading" class="text-center py-5">
       <div class="text-center my-2">
         <b-spinner class="align-middle"></b-spinner>
-        <strong class="d-block mt-2">Loading...</strong>
+        <strong class="d-block mt-2">{{ $t('admin.itemBarcodes.loadingText') }}</strong>
       </div>
     </b-card>
 
@@ -119,7 +119,7 @@
               <span class="mr-2">{{ row.item.barcodeCount }}</span>
               <b-button size="sm" variant="outline-primary" @click="row.toggleDetails">
                 <feather-icon :icon="row.detailsShowing ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="16" class="mr-50" />
-                Details
+                {{ $t('admin.itemBarcodes.details') }}
               </b-button>
             </div>
           </template>
@@ -128,19 +128,19 @@
             <b-card class="mb-2">
               <h6 class="mb-2 d-flex align-items-center">
                 <feather-icon icon="HashIcon" size="18" class="mr-1" />
-                Barcodes ({{ row.item.barcodes.length }})
+                {{ $t('admin.itemBarcodes.barcodesCount', { count: row.item.barcodes.length }) }}
               </h6>
               <b-table v-if="row.item.barcodes.length > 0" :items="row.item.barcodes" :fields="barcodeFields" small
                 responsive striped hover>
                 <template #cell(isPrimary)="barcodeRow">
-                  <b-badge v-if="barcodeRow.item.isPrimary" variant="success">Primary</b-badge>
+                  <b-badge v-if="barcodeRow.item.isPrimary" variant="success">{{ $t('admin.itemBarcodes.primary') }}</b-badge>
                   <span v-else class="text-muted">-</span>
                 </template>
                 <template #cell(description)="barcodeRow">
                   {{ barcodeRow.item.description || '-' }}
                 </template>
               </b-table>
-              <div v-else class="text-muted">No barcodes assigned for this item.</div>
+              <div v-else class="text-muted">{{ $t('admin.itemBarcodes.noBarcodesAssigned') }}</div>
             </b-card>
           </template>
         </b-table>
@@ -149,7 +149,7 @@
           <b-row align-v="center">
             <b-col cols="12" md="6" class="mb-2 mb-md-0">
               <div class="d-flex align-items-center">
-                <label for="items-per-page" class="mr-2 mb-0">Items per page:</label>
+                <label for="items-per-page" class="mr-2 mb-0">{{ $t('admin.itemBarcodes.itemsPerPage') }}</label>
                 <b-form-select id="items-per-page" v-model="perPage" :options="perPageOptions" size="sm"
                   style="width: auto;" />
               </div>
@@ -157,7 +157,7 @@
             <b-col cols="12" md="6">
               <div class="text-center text-md-right">
                 <small class="text-muted">
-                  Showing {{ startIndex }} to {{ endIndex }} of {{ totalElements }} items
+                  {{ $t('admin.itemBarcodes.showing') }} {{ startIndex }} {{ $t('admin.itemBarcodes.to') }} {{ endIndex }} {{ $t('admin.itemBarcodes.of') }} {{ totalElements }} {{ $t('admin.itemBarcodes.items') }}
                 </small>
               </div>
             </b-col>
@@ -172,8 +172,8 @@
     <!-- Empty State -->
     <b-card v-else class="text-center py-5">
       <feather-icon icon="InboxIcon" size="48" class="text-muted mb-3" />
-      <h5 class="text-muted">No Items Found</h5>
-      <p class="text-muted mb-0">No items match your search criteria.</p>
+      <h5 class="text-muted">{{ $t('admin.itemBarcodes.noItemsFound') }}</h5>
+      <p class="text-muted mb-0">{{ $t('admin.itemBarcodes.noItemsMatchCriteria') }}</p>
     </b-card>
   </div>
 </template>
@@ -204,19 +204,6 @@ export default {
         { value: 100, text: '100' },
       ],
       debounceTimer: null,
-      barcodeFields: [
-        { key: 'barcode', label: 'Barcode', sortable: true },
-        { key: 'isPrimary', label: 'Primary', sortable: true },
-        { key: 'description', label: 'Description', sortable: true }
-      ],
-      itemFields: [
-        { key: 'itemCode', label: 'Code', sortable: true },
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'familyName', label: 'Family', sortable: true },
-        { key: 'subFamilyName', label: 'Subfamily', sortable: true },
-        { key: 'unitPrice', label: 'Price', sortable: true },
-        { key: 'actions', label: 'Barcodes', sortable: false, class: 'text-right' }
-      ],
       families: [],
       subFamilies: []
     }
@@ -270,14 +257,14 @@ export default {
     },
     familyOptions() {
       return [
-        { value: 'all', text: 'All families' },
+        { value: 'all', text: this.$t('admin.itemBarcodes.allFamilies') },
         ...this.families.map(f => ({ value: f.id, text: f.name }))
       ]
     },
     subFamilyOptions() {
       const scopedSubs = this.subFamilies.filter(sf => this.familyId === 'all' || (sf.itemFamily && sf.itemFamily.id === this.familyId))
       return [
-        { value: 'all', text: this.familyId === 'all' ? 'Select a family first' : 'All subfamilies' },
+        { value: 'all', text: this.familyId === 'all' ? this.$t('admin.itemBarcodes.selectFamilyFirst') : this.$t('admin.itemBarcodes.allSubfamilies') },
         ...scopedSubs.map(sf => ({ value: sf.id, text: sf.name }))
       ]
     },
@@ -294,6 +281,23 @@ export default {
     displayTotal() {
       // backend total reflects current filter; fall back to local count if not present
       return this.totalElements ?? this.tableItems.length
+    },
+    barcodeFields() {
+      return [
+        { key: 'barcode', label: this.$t('admin.itemBarcodes.barcodes'), sortable: true },
+        { key: 'isPrimary', label: this.$t('admin.itemBarcodes.primary'), sortable: true },
+        { key: 'description', label: this.$t('admin.itemBarcodes.description'), sortable: true }
+      ]
+    },
+    itemFields() {
+      return [
+        { key: 'itemCode', label: this.$t('admin.itemBarcodes.code'), sortable: true },
+        { key: 'name', label: this.$t('admin.itemBarcodes.name'), sortable: true },
+        { key: 'familyName', label: this.$t('admin.itemBarcodes.family'), sortable: true },
+        { key: 'subFamilyName', label: this.$t('admin.itemBarcodes.subfamily'), sortable: true },
+        { key: 'unitPrice', label: this.$t('admin.itemBarcodes.price'), sortable: true },
+        { key: 'actions', label: this.$t('admin.itemBarcodes.barcodes'), sortable: false, class: 'text-right' }
+      ]
     }
   },
   watch: {
@@ -389,7 +393,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'AlertCircleIcon',
-            text: 'Failed to load items and barcodes',
+            text: this.$t('admin.itemBarcodes.errors.failedToLoad'),
             variant: 'danger'
           }
         })

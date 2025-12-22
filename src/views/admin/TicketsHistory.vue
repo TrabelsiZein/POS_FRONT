@@ -1,10 +1,10 @@
 <template>
   <div class="tickets-history-container">
     <div class="page-header">
-      <h2 class="mb-0">Tickets History</h2>
+      <h2 class="mb-0">{{ $t('admin.ticketsHistory.title') }}</h2>
       <b-button variant="outline-primary" @click="loadTickets">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.ticketsHistory.refresh') }}
       </b-button>
     </div>
 
@@ -15,8 +15,8 @@
           <div class="d-flex align-items-center">
             <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
             <h6 class="mb-0 text-primary font-weight-bold">
-              Filters
-              <span class="text-muted font-weight-normal ml-2">(Total: {{ totalRows }} {{ totalRows === 1 ? 'ticket' : 'tickets' }})</span>
+              {{ $t('admin.ticketsHistory.filters') }}
+              <span class="text-muted font-weight-normal ml-2">({{ $t('admin.ticketsHistory.total') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.ticketsHistory.ticket') : $t('admin.ticketsHistory.tickets') }})</span>
             </h6>
           </div>
           <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
@@ -27,7 +27,7 @@
           <!-- First Row: Search and Date Filters -->
           <b-row>
             <b-col cols="12" sm="6" md="6" lg="6" class="mb-2">
-              <b-form-group label="Search" label-for="search-input" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.search')" label-for="search-input" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -35,7 +35,7 @@
                     </b-input-group-text>
                   </b-input-group-prepend>
                   <b-form-input id="search-input" v-model="filters.search"
-                    placeholder="Search by ticket number, customer name..." @input="onFilterChange" />
+                    :placeholder="$t('admin.ticketsHistory.searchPlaceholder')" @input="onFilterChange" />
                   <b-input-group-append>
                     <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
                       <feather-icon icon="XIcon" size="14" />
@@ -45,7 +45,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Date From" label-for="date-from" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.dateFrom')" label-for="date-from" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -57,7 +57,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Date To" label-for="date-to" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.dateTo')" label-for="date-to" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -72,7 +72,7 @@
           <!-- Second Row: Status Filters -->
           <b-row>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Status" label-for="status-filter" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.status')" label-for="status-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -85,7 +85,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Sync Status" label-for="sync-status-filter" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.syncStatus')" label-for="sync-status-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -98,7 +98,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Payment Method" label-for="payment-method-filter" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.paymentMethod')" label-for="payment-method-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -111,7 +111,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Family" label-for="family-filter" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.family')" label-for="family-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -128,7 +128,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Subfamily" label-for="subfamily-filter" class="mb-0">
+              <b-form-group :label="$t('admin.ticketsHistory.subfamily')" label-for="subfamily-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -157,14 +157,14 @@
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
+            <strong>{{ $t('admin.ticketsHistory.loadingText') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center text-muted py-4">
-            <p>No tickets found</p>
-            <p class="small">Try adjusting your filters</p>
+            <p>{{ $t('admin.ticketsHistory.noTickets') }}</p>
+            <p class="small">{{ $t('admin.ticketsHistory.tryAdjustingFilters') }}</p>
           </div>
         </template>
 
@@ -212,7 +212,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <label for="per-page-select" class="mr-2 mb-0">{{ $t('admin.ticketsHistory.itemsPerPage') }}</label>
               <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
                 style="width: auto;" @change="onPerPageChange" />
             </div>
@@ -220,7 +220,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} tickets
+                {{ $t('admin.ticketsHistory.showing') }} {{ startIndex }} {{ $t('admin.ticketsHistory.to') }} {{ endIndex }} {{ $t('admin.ticketsHistory.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.ticketsHistory.ticket') : $t('admin.ticketsHistory.tickets') }}
               </small>
             </div>
           </b-col>
@@ -232,7 +232,7 @@
     </b-card>
 
     <!-- Ticket Details Modal -->
-    <b-modal id="ticket-details-modal" v-model="showDetailsModal" title="Ticket Details" size="xl"
+    <b-modal id="ticket-details-modal" v-model="showDetailsModal" :title="$t('admin.ticketsHistory.ticketDetails')" size="xl"
       @hide="resetDetailsModal" scrollable>
       <div v-if="selectedTicket" class="ticket-details">
         <!-- Ticket Header Info -->
@@ -240,19 +240,19 @@
           <b-row>
             <b-col md="6">
               <div class="detail-item">
-                <strong>Ticket Number:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.ticketNumber') }}</strong>
                 <span class="ml-2">{{ selectedTicket.salesNumber }}</span>
               </div>
               <div class="detail-item">
-                <strong>Date:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.date') }}</strong>
                 <span class="ml-2">{{ formatDateTime(selectedTicket.salesDate) }}</span>
               </div>
               <div class="detail-item" v-if="selectedTicket.completedDate">
-                <strong>Completed:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.completed') }}</strong>
                 <span class="ml-2">{{ formatDateTime(selectedTicket.completedDate) }}</span>
               </div>
               <div class="detail-item">
-                <strong>Status:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.status') }}</strong>
                 <b-badge :variant="getStatusVariant(selectedTicket.status)" class="ml-2">
                   {{ selectedTicket.status }}
                 </b-badge>
@@ -260,19 +260,19 @@
             </b-col>
             <b-col md="6">
               <div class="detail-item" v-if="selectedTicket.customer">
-                <strong>Customer:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.customer') }}</strong>
                 <span class="ml-2">
                   {{ selectedTicket.customer.name }}
                   <small class="text-muted">({{ selectedTicket.customer.customerCode }})</small>
                 </span>
               </div>
               <div class="detail-item" v-if="selectedTicket.createdByUser">
-                <strong>Cashier:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.cashier') }}</strong>
                 <span class="ml-2">{{ selectedTicket.createdByUser.fullName || selectedTicket.createdByUser.username
                   }}</span>
               </div>
               <div class="detail-item" v-if="selectedTicket.cashierSession">
-                <strong>Session:</strong>
+                <strong>{{ $t('admin.ticketsHistory.modal.session') }}</strong>
                 <span class="ml-2">{{ selectedTicket.cashierSession.sessionNumber }}</span>
               </div>
             </b-col>
@@ -283,12 +283,12 @@
         <b-card class="mb-3 sync-info-card">
           <div class="d-flex align-items-center mb-3">
             <feather-icon icon="CloudIcon" size="20" class="mr-2 text-primary" />
-            <h5 class="mb-0">ERP Synchronization</h5>
+            <h5 class="mb-0">{{ $t('admin.ticketsHistory.modal.erpSynchronization') }}</h5>
           </div>
           <b-row>
             <b-col md="6">
               <div class="sync-detail-item">
-                <label class="sync-label">Synchronization Status</label>
+                <label class="sync-label">{{ $t('admin.ticketsHistory.modal.synchronizationStatus') }}</label>
                 <div class="sync-value">
                   <b-badge :variant="getSyncStatusVariant(selectedTicket.synchronizationStatus)" class="sync-badge-large">
                     <feather-icon :icon="getSyncStatusIcon(selectedTicket.synchronizationStatus)" size="14" class="mr-1" />
@@ -299,10 +299,10 @@
             </b-col>
             <b-col md="6">
               <div class="sync-detail-item">
-                <label class="sync-label">ERP Document Number</label>
+                <label class="sync-label">{{ $t('admin.ticketsHistory.modal.erpDocumentNumber') }}</label>
                 <div class="sync-value">
                   <code v-if="selectedTicket.erpNo" class="erp-number">{{ selectedTicket.erpNo }}</code>
-                  <span v-else class="text-muted">Not synchronized</span>
+                  <span v-else class="text-muted">{{ $t('admin.ticketsHistory.modal.notSynchronized') }}</span>
                 </div>
               </div>
             </b-col>
@@ -310,7 +310,7 @@
           <div v-if="selectedTicket.salesLines" class="mt-3">
             <div class="sync-summary">
               <small class="text-muted">
-                Lines synchronized: 
+                {{ $t('admin.ticketsHistory.modal.linesSynchronized') }} 
                 <strong>{{ getSyncedLinesCount(selectedTicket.salesLines) }} / {{ selectedTicket.salesLines.length }}</strong>
               </small>
             </div>
@@ -319,7 +319,7 @@
 
         <!-- Sales Lines -->
         <b-card class="mb-3">
-          <h5 class="mb-3">Items</h5>
+          <h5 class="mb-3">{{ $t('admin.ticketsHistory.modal.items') }}</h5>
           <b-table :items="selectedTicket.salesLines || []" :fields="lineFields" striped small responsive class="sales-lines-table">
             <template #cell(item)="row">
               <div>
@@ -364,7 +364,7 @@
             <template #cell(synched)="row">
               <b-badge :variant="row.item.synched ? 'success' : 'secondary'" class="sync-indicator">
                 <feather-icon :icon="row.item.synched ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
-                {{ row.item.synched ? 'Synced' : 'Not Synced' }}
+                {{ row.item.synched ? $t('admin.ticketsHistory.modal.synced') : $t('admin.ticketsHistory.modal.notSynced') }}
               </b-badge>
             </template>
           </b-table>
@@ -372,7 +372,7 @@
 
         <!-- Payments -->
         <b-card class="mb-3" v-if="selectedTicket.payments && selectedTicket.payments.length > 0">
-          <h5 class="mb-3">Payments</h5>
+          <h5 class="mb-3">{{ $t('admin.ticketsHistory.modal.payments') }}</h5>
           <b-table :items="selectedTicket.payments" :fields="paymentFields" striped small responsive>
             <template #cell(paymentMethod)="row">
               {{ row.item.paymentMethod ? row.item.paymentMethod.name : '-' }}
@@ -386,7 +386,7 @@
             <template #cell(synched)="row">
               <b-badge :variant="row.item.synched ? 'success' : 'secondary'" class="sync-indicator">
                 <feather-icon :icon="row.item.synched ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
-                {{ row.item.synched ? 'Synced' : 'Not Synced' }}
+                {{ row.item.synched ? $t('admin.ticketsHistory.modal.synced') : $t('admin.ticketsHistory.modal.notSynced') }}
               </b-badge>
             </template>
           </b-table>
@@ -394,48 +394,48 @@
 
         <!-- Summary -->
         <b-card>
-          <h5 class="mb-3">Summary</h5>
+          <h5 class="mb-3">{{ $t('admin.ticketsHistory.modal.summary') }}</h5>
           <b-row>
             <b-col md="6" offset-md="6">
               <div class="summary-row">
-                <span>Subtotal:</span>
+                <span>{{ $t('admin.ticketsHistory.modal.subtotal') }}</span>
                 <span>{{ formatPrice(selectedTicket.subtotal) }} TND</span>
               </div>
               <div class="summary-row" v-if="selectedTicket.taxAmount">
-                <span>Tax:</span>
+                <span>{{ $t('admin.ticketsHistory.modal.tax') }}</span>
                 <span>{{ formatPrice(selectedTicket.taxAmount) }} TND</span>
               </div>
               <div class="summary-row" v-if="selectedTicket.discountAmount">
-                <span>Discount:</span>
+                <span>{{ $t('admin.ticketsHistory.modal.discount') }}</span>
                 <span>-{{ formatPrice(selectedTicket.discountAmount) }} TND</span>
               </div>
               <div class="summary-row total">
-                <span><strong>Total:</strong></span>
+                <span><strong>{{ $t('admin.ticketsHistory.modal.total') }}</strong></span>
                 <span><strong>{{ formatPrice(selectedTicket.totalAmount) }} TND</strong></span>
               </div>
               <div class="summary-row" v-if="selectedTicket.paidAmount">
-                <span>Paid:</span>
+                <span>{{ $t('admin.ticketsHistory.modal.paid') }}</span>
                 <span class="text-success">{{ formatPrice(selectedTicket.paidAmount) }} TND</span>
               </div>
               <div class="summary-row" v-if="selectedTicket.changeAmount">
-                <span>Change:</span>
+                <span>{{ $t('admin.ticketsHistory.modal.change') }}</span>
                 <span class="text-info">{{ formatPrice(selectedTicket.changeAmount) }} TND</span>
               </div>
             </b-col>
           </b-row>
           <div v-if="selectedTicket.notes" class="mt-3">
-            <strong>Notes:</strong>
+            <strong>{{ $t('admin.ticketsHistory.modal.notes') }}</strong>
             <p class="text-muted">{{ selectedTicket.notes }}</p>
           </div>
         </b-card>
       </div>
       <template #modal-footer>
         <b-button variant="secondary" @click="showDetailsModal = false">
-          Close
+          {{ $t('admin.ticketsHistory.modal.close') }}
         </b-button>
         <b-button variant="primary" @click="printTicket" :disabled="loading">
           <feather-icon icon="PrinterIcon" size="16" />
-          Print Duplicate
+          {{ $t('admin.ticketsHistory.modal.printDuplicate') }}
         </b-button>
       </template>
     </b-modal>
@@ -505,23 +505,6 @@ export default {
         { key: 'totalAmount', label: 'Total', sortable: true },
         { key: 'status', label: 'Status', sortable: true },
         { key: 'synchronizationStatus', label: 'Sync Status', sortable: true }
-      ],
-      lineFields: [
-        { key: 'item', label: 'Item' },
-        { key: 'quantity', label: 'Qty' },
-        { key: 'unitPrice', label: 'Unit Price HT' },
-        { key: 'discount', label: 'Discount' },
-        { key: 'vat', label: 'VAT' },
-        { key: 'unitPriceIncludingVat', label: 'Unit Price TTC' },
-        { key: 'lineTotalIncludingVat', label: 'Total TTC' },
-        { key: 'synched', label: 'Synced', class: 'text-center' }
-      ],
-      paymentFields: [
-        { key: 'paymentMethod', label: 'Payment Method' },
-        { key: 'amount', label: 'Amount' },
-        { key: 'reference', label: 'Reference' },
-        { key: 'notes', label: 'Notes' },
-        { key: 'synched', label: 'Synced', class: 'text-center' }
       ]
     }
   },
@@ -531,7 +514,7 @@ export default {
     },
     paymentMethodOptions() {
       return [
-        { value: 'all', text: 'All Payment Methods' },
+        { value: 'all', text: this.$t('admin.ticketsHistory.allPaymentMethods') },
         ...this.paymentMethods.map(pm => ({
           value: pm.id,
           text: pm.name
@@ -540,7 +523,7 @@ export default {
     },
     familyOptions() {
       return [
-        { value: 'all', text: 'All Families' },
+        { value: 'all', text: this.$t('admin.ticketsHistory.allFamilies') },
         ...this.families.map(f => ({ value: f.id, text: f.name }))
       ]
     },
@@ -549,7 +532,7 @@ export default {
         .filter(sf => this.filters.familyId === 'all' || (sf.itemFamily && sf.itemFamily.id === this.filters.familyId))
         .map(sf => ({ value: sf.id, text: sf.name }))
       return [
-        { value: 'all', text: this.filters.familyId === 'all' ? 'Select a family first' : 'All Subfamilies' },
+        { value: 'all', text: this.filters.familyId === 'all' ? this.$t('admin.ticketsHistory.selectFamilyFirst') : this.$t('admin.ticketsHistory.allSubfamilies') },
         ...options
       ]
     },
@@ -558,6 +541,27 @@ export default {
     },
     endIndex() {
       return Math.min(this.currentPage * this.perPage, this.totalRows)
+    },
+    lineFields() {
+      return [
+        { key: 'item', label: this.$t('admin.ticketsHistory.modal.item') },
+        { key: 'quantity', label: this.$t('admin.ticketsHistory.modal.quantity') },
+        { key: 'unitPrice', label: this.$t('admin.ticketsHistory.modal.unitPrice') },
+        { key: 'discount', label: this.$t('admin.ticketsHistory.modal.discount') },
+        { key: 'vat', label: this.$t('admin.ticketsHistory.modal.vat') },
+        { key: 'unitPriceIncludingVat', label: this.$t('admin.ticketsHistory.modal.unitPriceIncludingVat') },
+        { key: 'lineTotalIncludingVat', label: this.$t('admin.ticketsHistory.modal.lineTotalIncludingVat') },
+        { key: 'synched', label: this.$t('admin.ticketsHistory.modal.synced'), class: 'text-center' }
+      ]
+    },
+    paymentFields() {
+      return [
+        { key: 'paymentMethod', label: this.$t('admin.ticketsHistory.modal.paymentMethod') },
+        { key: 'amount', label: this.$t('admin.ticketsHistory.modal.amount') },
+        { key: 'reference', label: this.$t('admin.ticketsHistory.modal.reference') },
+        { key: 'notes', label: this.$t('admin.ticketsHistory.modal.notes') },
+        { key: 'synched', label: this.$t('admin.ticketsHistory.modal.synced'), class: 'text-center' }
+      ]
     }
   },
   watch: {

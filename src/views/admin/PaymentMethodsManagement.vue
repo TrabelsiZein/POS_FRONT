@@ -1,22 +1,22 @@
 <template>
   <div class="payment-methods-management-container">
     <div class="page-header">
-      <h2 class="mb-0">Payment Methods</h2>
+      <h2 class="mb-0">{{ $t('admin.paymentMethodManagement.title') }}</h2>
       <b-button variant="outline-primary" @click="loadPaymentMethods">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.paymentMethodManagement.refresh') }}
       </b-button>
     </div>
 
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" md="6">
-          <b-form-group label="Search" label-for="search-input">
+          <b-form-group :label="$t('admin.paymentMethodManagement.search')" label-for="search-input">
             <b-input-group>
               <b-form-input
                 id="search-input"
                 v-model="searchTerm"
-                placeholder="Search by code, name, type, or description..."
+                :placeholder="$t('admin.paymentMethodManagement.searchPlaceholder')"
               />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
@@ -28,7 +28,7 @@
         </b-col>
         <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
           <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'payment method' : 'payment methods' }}
+            {{ $t('admin.paymentMethodManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.paymentMethodManagement.paymentMethod') : $t('admin.paymentMethodManagement.paymentMethods') }}
           </small>
         </b-col>
       </b-row>
@@ -47,14 +47,14 @@
         <template #table-busy>
           <div class="text-center text-danger my-2">
             <b-spinner class="align-middle" />
-            <strong> Loading...</strong>
+            <strong>{{ $t('admin.paymentMethodManagement.loading') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="CreditCardIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No payment methods found.</p>
+            <p class="text-muted mb-0">{{ $t('admin.paymentMethodManagement.noPaymentMethodsFound') }}</p>
           </div>
         </template>
 
@@ -83,7 +83,7 @@
 
         <template #cell(active)="row">
           <b-badge :variant="row.item.active ? 'success' : 'secondary'">
-            {{ row.item.active ? 'Active' : 'Inactive' }}
+            {{ row.item.active ? $t('admin.paymentMethodManagement.active') : $t('admin.paymentMethodManagement.inactive') }}
           </b-badge>
         </template>
 
@@ -100,7 +100,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <label for="per-page-select" class="mr-2 mb-0">{{ $t('admin.paymentMethodManagement.itemsPerPage') }}</label>
               <b-form-select
                 id="per-page-select"
                 v-model="perPage"
@@ -113,7 +113,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} payment methods
+                {{ $t('admin.paymentMethodManagement.showing') }} {{ startIndex }} {{ $t('admin.paymentMethodManagement.to') }} {{ endIndex }} {{ $t('admin.paymentMethodManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.paymentMethodManagement.paymentMethod') : $t('admin.paymentMethodManagement.paymentMethods') }}
               </small>
             </div>
           </b-col>
@@ -129,10 +129,10 @@
       </div>
     </b-card>
 
-    <b-modal v-model="showEditModal" title="Edit Payment Method" @ok="savePaymentMethod" :ok-disabled="!canSavePaymentMethod"
+    <b-modal v-model="showEditModal" :title="$t('admin.paymentMethodManagement.editPaymentMethod')" @ok="savePaymentMethod" :ok-disabled="!canSavePaymentMethod"
       @hidden="resetEditForm">
       <div v-if="paymentMethodToEdit">
-        <b-form-group label="Code" label-for="payment-method-code">
+        <b-form-group :label="$t('admin.paymentMethodManagement.code')" label-for="payment-method-code">
           <b-form-input 
             id="payment-method-code" 
             v-model="editForm.code" 
@@ -140,7 +140,7 @@
           />
         </b-form-group>
 
-        <b-form-group label="Name" label-for="payment-method-name">
+        <b-form-group :label="$t('admin.paymentMethodManagement.name')" label-for="payment-method-name">
           <b-form-input 
             id="payment-method-name" 
             v-model="editForm.name" 
@@ -148,20 +148,20 @@
           />
         </b-form-group>
 
-        <b-form-group label="Type">
+        <b-form-group :label="$t('admin.paymentMethodManagement.type')">
           <b-form-input :value="formatPaymentMethodType(paymentMethodToEdit.type)" disabled />
         </b-form-group>
 
-        <b-form-group label="Description" label-for="payment-method-description">
+        <b-form-group :label="$t('admin.paymentMethodManagement.description')" label-for="payment-method-description">
           <b-form-textarea 
             id="payment-method-description" 
             v-model="editForm.description" 
             rows="3"
-            placeholder="Optional description"
+            :placeholder="$t('admin.paymentMethodManagement.optionalDescription')"
           />
         </b-form-group>
 
-        <b-form-group label="Display Order" label-for="payment-method-display-order">
+        <b-form-group :label="$t('admin.paymentMethodManagement.displayOrder')" label-for="payment-method-display-order">
           <b-form-input 
             id="payment-method-display-order" 
             v-model="editForm.displayOrder" 
@@ -169,7 +169,7 @@
             min="0"
             required
           />
-          <small class="text-muted">Lower numbers appear first in the payment methods list</small>
+          <small class="text-muted">{{ $t('admin.paymentMethodManagement.orderHelpText') }}</small>
         </b-form-group>
 
         <b-form-group>
@@ -178,13 +178,13 @@
             v-model="editForm.active"
             switch
           >
-            <strong>Active</strong>
-            <small class="text-muted d-block">Inactive payment methods will not appear in the POS payment selection</small>
+            <strong>{{ $t('admin.paymentMethodManagement.activeLabel') }}</strong>
+            <small class="text-muted d-block">{{ $t('admin.paymentMethodManagement.activeHelpText') }}</small>
           </b-form-checkbox>
         </b-form-group>
       </div>
       <div v-else>
-        <p class="text-muted mb-0">Select a payment method to edit.</p>
+        <p class="text-muted mb-0">{{ $t('admin.paymentMethodManagement.selectToEdit') }}</p>
       </div>
     </b-modal>
   </div>
@@ -208,15 +208,6 @@ export default {
         { value: 50, text: '50' },
         { value: 100, text: '100' }
       ],
-      paymentMethodFields: [
-        { key: 'code', label: 'Code', sortable: true },
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'type', label: 'Type', sortable: true },
-        { key: 'description', label: 'Description', sortable: false },
-        { key: 'displayOrder', label: 'Order', sortable: true },
-        { key: 'active', label: 'Status', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' }
-      ],
       showEditModal: false,
       paymentMethodToEdit: null,
       editForm: {
@@ -229,6 +220,17 @@ export default {
     }
   },
   computed: {
+    paymentMethodFields() {
+      return [
+        { key: 'code', label: this.$t('admin.paymentMethodManagement.code'), sortable: true },
+        { key: 'name', label: this.$t('admin.paymentMethodManagement.name'), sortable: true },
+        { key: 'type', label: this.$t('admin.paymentMethodManagement.type'), sortable: true },
+        { key: 'description', label: this.$t('admin.paymentMethodManagement.description'), sortable: false },
+        { key: 'displayOrder', label: this.$t('common.order'), sortable: true },
+        { key: 'active', label: this.$t('common.status'), sortable: true },
+        { key: 'actions', label: this.$t('common.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' }
+      ]
+    },
     filteredPaymentMethods() {
       let methods = this.paymentMethods
 
@@ -304,9 +306,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to load payment methods',
+            text: this.$t('admin.paymentMethodManagement.failedToLoad'),
             variant: 'danger'
           }
         })
@@ -357,9 +359,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Payment method updated successfully',
+              text: this.$t('admin.paymentMethodManagement.updatedSuccessfully'),
               variant: 'success'
             }
           })
@@ -369,14 +371,14 @@ export default {
         }
       } catch (error) {
         console.error('Error updating payment method:', error)
-        let errorMessage = 'Failed to update payment method'
+        let errorMessage = this.$t('admin.paymentMethodManagement.failedToUpdate')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

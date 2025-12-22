@@ -1,10 +1,10 @@
 <template>
   <div class="returns-management-container">
     <div class="page-header">
-      <h2 class="mb-0">Returns Management</h2>
+      <h2 class="mb-0">{{ $t('admin.returnsManagement.title') }}</h2>
       <b-button variant="outline-primary" @click="loadReturns">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.returnsManagement.refresh') }}
       </b-button>
     </div>
 
@@ -15,9 +15,9 @@
           <div class="d-flex align-items-center">
             <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
             <h6 class="mb-0 text-primary font-weight-bold">
-              Filters
-              <span class="text-muted font-weight-normal ml-2">(Total: {{ totalRows }} {{ totalRows === 1 ? 'return' :
-                'returns' }})</span>
+              {{ $t('admin.returnsManagement.filters') }}
+              <span class="text-muted font-weight-normal ml-2">({{ $t('admin.returnsManagement.total') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.returnsManagement.return') :
+                $t('admin.returnsManagement.returns') }})</span>
             </h6>
           </div>
           <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
@@ -28,7 +28,7 @@
           <!-- First Row: Search and Date Filters -->
           <b-row>
             <b-col cols="12" sm="6" md="6" lg="6" class="mb-2">
-              <b-form-group label="Search" label-for="search-input" class="mb-0">
+              <b-form-group :label="$t('admin.returnsManagement.search')" label-for="search-input" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -36,7 +36,7 @@
                     </b-input-group-text>
                   </b-input-group-prepend>
                   <b-form-input id="search-input" v-model="filters.search"
-                    placeholder="Search by return number, ticket number, voucher number..." @input="onFilterChange" />
+                    :placeholder="$t('admin.returnsManagement.searchPlaceholder')" @input="onFilterChange" />
                   <b-input-group-append>
                     <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
                       <feather-icon icon="XIcon" size="14" />
@@ -46,7 +46,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Date From" label-for="date-from" class="mb-0">
+              <b-form-group :label="$t('admin.returnsManagement.dateFrom')" label-for="date-from" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -58,7 +58,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Date To" label-for="date-to" class="mb-0">
+              <b-form-group :label="$t('admin.returnsManagement.dateTo')" label-for="date-to" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -73,7 +73,7 @@
           <!-- Second Row: Status Filters -->
           <b-row>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Return Type" label-for="return-type-filter" class="mb-0">
+              <b-form-group :label="$t('admin.returnsManagement.returnType')" label-for="return-type-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -86,7 +86,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Voucher Status" label-for="voucher-status-filter" class="mb-0">
+              <b-form-group :label="$t('admin.returnsManagement.voucherStatus')" label-for="voucher-status-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -99,7 +99,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Sync Status" label-for="sync-status-filter" class="mb-0">
+              <b-form-group :label="$t('admin.returnsManagement.syncStatus')" label-for="sync-status-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -123,13 +123,13 @@
         <template #table-busy>
           <div class="text-center text-danger my-2">
             <b-spinner class="align-middle"></b-spinner>
-            <strong> Loading...</strong>
+            <strong> {{ $t('admin.returnsManagement.loadingText') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
-            <p class="text-muted">No returns found</p>
+            <p class="text-muted">{{ $t('admin.returnsManagement.noReturns') }}</p>
           </div>
         </template>
 
@@ -143,7 +143,7 @@
 
         <template #cell(returnType)="row">
           <b-badge :variant="row.item.returnType === 'SIMPLE_RETURN' ? 'danger' : 'info'">
-            {{ row.item.returnType === 'SIMPLE_RETURN' ? 'Simple Return' : 'Return Voucher' }}
+            {{ row.item.returnType === 'SIMPLE_RETURN' ? $t('admin.returnsManagement.simpleReturn') : $t('admin.returnsManagement.returnVoucher') }}
           </b-badge>
         </template>
 
@@ -155,7 +155,7 @@
           <span v-if="row.item.originalSalesHeader">
             {{ row.item.originalSalesHeader.salesNumber }}
           </span>
-          <span v-else class="text-muted">N/A</span>
+          <span v-else class="text-muted">{{ $t('admin.returnsManagement.nA') }}</span>
         </template>
 
         <template #cell(voucherInfo)="row">
@@ -163,7 +163,7 @@
             <div><strong>{{ row.item.returnVoucher.voucherNumber }}</strong></div>
             <div class="small text-muted">
               <span v-if="row.item.returnVoucher.status === 'PENDING'">
-                Remaining: {{ formatPrice(getRemainingAmount(row.item.returnVoucher)) }} TND
+                {{ $t('admin.returnsManagement.remaining') }} {{ formatPrice(getRemainingAmount(row.item.returnVoucher)) }} TND
               </span>
               <b-badge :variant="getVoucherStatusVariant(row.item.returnVoucher.status)" class="mt-1">
                 {{ row.item.returnVoucher.status }}
@@ -192,7 +192,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <label for="per-page-select" class="mr-2 mb-0">{{ $t('admin.returnsManagement.itemsPerPage') }}</label>
               <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
                 style="width: auto;" @change="onPerPageChange" />
             </div>
@@ -200,7 +200,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} returns
+                {{ $t('admin.returnsManagement.showing') }} {{ startIndex }} {{ $t('admin.returnsManagement.to') }} {{ endIndex }} {{ $t('admin.returnsManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.returnsManagement.return') : $t('admin.returnsManagement.returns') }}
               </small>
             </div>
           </b-col>
@@ -213,39 +213,39 @@
     </b-card>
 
     <!-- Return Details Modal -->
-    <b-modal id="return-details-modal" v-model="showDetailsModal" title="Return Details" size="xl" hide-footer
+    <b-modal id="return-details-modal" v-model="showDetailsModal" :title="$t('admin.returnsManagement.modal.returnDetails')" size="xl" hide-footer
       scrollable>
       <div v-if="selectedReturn">
         <!-- Return Header Info -->
         <b-card class="mb-3">
-          <h5 class="mb-3">Return Information</h5>
+          <h5 class="mb-3">{{ $t('admin.returnsManagement.modal.returnInformation') }}</h5>
           <b-row>
             <b-col cols="12" md="6">
               <div class="detail-row">
-                <span class="detail-label">Return Number:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.returnNumber') }}</span>
                 <span class="detail-value"><strong>{{ selectedReturn.returnNumber }}</strong></span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Return Date:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.returnDate') }}</span>
                 <span class="detail-value">{{ formatDate(selectedReturn.returnDate) }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Return Type:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.returnType') }}</span>
                 <span class="detail-value">
                   <b-badge :variant="selectedReturn.returnType === 'SIMPLE_RETURN' ? 'danger' : 'info'">
-                    {{ selectedReturn.returnType === 'SIMPLE_RETURN' ? 'Simple Return' : 'Return Voucher' }}
+                    {{ selectedReturn.returnType === 'SIMPLE_RETURN' ? $t('admin.returnsManagement.simpleReturn') : $t('admin.returnsManagement.returnVoucher') }}
                   </b-badge>
                 </span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Total Amount:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.totalAmount') }}</span>
                 <span class="detail-value"><strong>{{ formatPrice(selectedReturn.totalReturnAmount) }}
                     TND</strong></span>
               </div>
             </b-col>
             <b-col cols="12" md="6">
               <div class="detail-row" v-if="selectedReturn.originalSalesHeader">
-                <span class="detail-label">Original Ticket:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.originalTicket') }}</span>
                 <span class="detail-value">
                   <strong>{{ selectedReturn.originalSalesHeader.salesNumber }}</strong>
                   <br>
@@ -253,7 +253,7 @@
                 </span>
               </div>
               <div class="detail-row" v-if="selectedReturn.notes">
-                <span class="detail-label">Notes:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.notes') }}</span>
                 <span class="detail-value">{{ selectedReturn.notes }}</span>
               </div>
             </b-col>
@@ -264,12 +264,12 @@
         <b-card class="mb-3 sync-info-card">
           <div class="d-flex align-items-center mb-3">
             <feather-icon icon="CloudIcon" size="20" class="mr-2 text-primary" />
-            <h5 class="mb-0">ERP Synchronization</h5>
+            <h5 class="mb-0">{{ $t('admin.returnsManagement.modal.erpSynchronization') }}</h5>
           </div>
           <b-row>
             <b-col md="6">
               <div class="sync-detail-item">
-                <label class="sync-label">Synchronization Status</label>
+                <label class="sync-label">{{ $t('admin.returnsManagement.modal.synchronizationStatus') }}</label>
                 <div class="sync-value">
                   <b-badge :variant="getSyncStatusVariant(selectedReturn.synchronizationStatus)"
                     class="sync-badge-large">
@@ -282,10 +282,10 @@
             </b-col>
             <b-col md="6">
               <div class="sync-detail-item">
-                <label class="sync-label">ERP Document Number</label>
+                <label class="sync-label">{{ $t('admin.returnsManagement.modal.erpDocumentNumber') }}</label>
                 <div class="sync-value">
                   <code v-if="selectedReturn.erpNo" class="erp-number">{{ selectedReturn.erpNo }}</code>
-                  <span v-else class="text-muted">Not synchronized</span>
+                  <span v-else class="text-muted">{{ $t('admin.returnsManagement.modal.notSynchronized') }}</span>
                 </div>
               </div>
             </b-col>
@@ -293,7 +293,7 @@
           <div v-if="selectedReturn.returnLines" class="mt-3">
             <div class="sync-summary">
               <small class="text-muted">
-                Lines synchronized:
+                {{ $t('admin.returnsManagement.modal.linesSynchronized') }}:
                 <strong>{{ getSyncedLinesCount(selectedReturn.returnLines) }} / {{ selectedReturn.returnLines.length
                   }}</strong>
               </small>
@@ -303,24 +303,24 @@
 
         <!-- Voucher Information (if applicable) -->
         <b-card v-if="selectedReturn.returnVoucher" class="mb-3">
-          <h5 class="mb-3">Voucher Information</h5>
+          <h5 class="mb-3">{{ $t('admin.returnsManagement.modal.voucherInformation') }}</h5>
           <b-row>
             <b-col cols="12" md="6">
               <div class="detail-row">
-                <span class="detail-label">Voucher Number:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.voucherNumber') }}</span>
                 <span class="detail-value"><strong>{{ selectedReturn.returnVoucher.voucherNumber }}</strong></span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Voucher Amount:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.voucherAmount') }}</span>
                 <span class="detail-value"><strong>{{ formatPrice(selectedReturn.returnVoucher.voucherAmount) }}
                     TND</strong></span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Used Amount:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.usedAmount') }}</span>
                 <span class="detail-value">{{ formatPrice(selectedReturn.returnVoucher.usedAmount || 0) }} TND</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Remaining Amount:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.remainingAmount') }}</span>
                 <span class="detail-value">
                   <strong class="text-success">{{ formatPrice(getRemainingAmount(selectedReturn.returnVoucher)) }}
                     TND</strong>
@@ -329,11 +329,11 @@
             </b-col>
             <b-col cols="12" md="6">
               <div class="detail-row">
-                <span class="detail-label">Issue Date:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.issueDate') }}</span>
                 <span class="detail-value">{{ formatDate(selectedReturn.returnVoucher.voucherDate) }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Expiry Date:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.expiryDate') }}</span>
                 <span class="detail-value">
                   <span :class="{ 'text-danger': isVoucherExpired(selectedReturn.returnVoucher) }">
                     {{ formatDate(selectedReturn.returnVoucher.expiryDate) }}
@@ -341,7 +341,7 @@
                 </span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Status:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.status') }}</span>
                 <span class="detail-value">
                   <b-badge :variant="getVoucherStatusVariant(selectedReturn.returnVoucher.status)">
                     {{ selectedReturn.returnVoucher.status }}
@@ -349,7 +349,7 @@
                 </span>
               </div>
               <div class="detail-row" v-if="selectedReturn.returnVoucher.customerName">
-                <span class="detail-label">Customer:</span>
+                <span class="detail-label">{{ $t('admin.returnsManagement.modal.customer') }}</span>
                 <span class="detail-value">{{ selectedReturn.returnVoucher.customerName }}</span>
               </div>
             </b-col>
@@ -358,13 +358,13 @@
 
         <!-- Return Lines -->
         <b-card>
-          <h5 class="mb-3">Returned Items</h5>
+          <h5 class="mb-3">{{ $t('admin.returnsManagement.modal.returnedItems') }}</h5>
           <b-table :items="selectedReturn.returnLines || []" :fields="returnLineFields" small striped responsive>
             <template #cell(item)="row">
               <div>
-                <strong>{{ row.item.item ? row.item.item.name : 'N/A' }}</strong>
+                <strong>{{ row.item.item ? row.item.item.name : $t('admin.returnsManagement.nA') }}</strong>
                 <div v-if="row.item.item && row.item.item.itemCode" class="small text-muted">
-                  Code: {{ row.item.item.itemCode }}
+                  {{ $t('admin.returnsManagement.code') }}: {{ row.item.item.itemCode }}
                 </div>
               </div>
             </template>
@@ -384,7 +384,7 @@
             <template #cell(synched)="row">
               <b-badge :variant="isSynched(row.item.synched) ? 'success' : 'secondary'" class="sync-indicator">
                 <feather-icon :icon="isSynched(row.item.synched) ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
-                {{ isSynched(row.item.synched) ? 'Synced' : 'Not Synced' }}
+                {{ isSynched(row.item.synched) ? $t('admin.returnsManagement.modal.synced') : $t('admin.returnsManagement.modal.notSynced') }}
               </b-badge>
             </template>
           </b-table>
@@ -395,10 +395,10 @@
           <b-button v-if="selectedReturn.returnType === 'RETURN_VOUCHER' && selectedReturn.returnVoucher"
             variant="success" @click="printVoucher(selectedReturn)" class="mr-2">
             <feather-icon icon="PrinterIcon" size="16" class="mr-1" />
-            Print Voucher
+            {{ $t('admin.returnsManagement.modal.printVoucher') }}
           </b-button>
           <b-button variant="secondary" @click="showDetailsModal = false">
-            Close
+            {{ $t('admin.returnsManagement.modal.close') }}
           </b-button>
         </div>
       </div>
@@ -452,30 +452,6 @@ export default {
         { key: 'originalTicket', label: 'Original Ticket', sortable: false },
         { key: 'voucherInfo', label: 'Voucher Info', sortable: false },
         { key: 'synchronizationStatus', label: 'Sync Status', sortable: true }
-      ],
-      returnLineFields: [
-        { key: 'item', label: 'Item' },
-        { key: 'quantity', label: 'Qty' },
-        { key: 'unitPrice', label: 'Unit Price' },
-        { key: 'lineTotal', label: 'Total TTC' },
-        { key: 'synched', label: 'Synced', class: 'text-center' }
-      ],
-      returnTypeOptions: [
-        { value: null, text: 'All Types' },
-        { value: 'SIMPLE_RETURN', text: 'Simple Return' },
-        { value: 'RETURN_VOUCHER', text: 'Return Voucher' }
-      ],
-      voucherStatusOptions: [
-        { value: null, text: 'All Statuses' },
-        { value: 'PENDING', text: 'Pending' },
-        { value: 'USED', text: 'Used' },
-        { value: 'EXPIRED', text: 'Expired' }
-      ],
-      syncStatusOptions: [
-        { value: 'all', text: 'All' },
-        { value: 'NOT_SYNCHED', text: 'Not Synced' },
-        { value: 'PARTIALLY_SYNCHED', text: 'Partially Synced' },
-        { value: 'TOTALLY_SYNCHED', text: 'Totally Synced' }
       ]
     }
   },
@@ -485,6 +461,38 @@ export default {
     },
     endIndex() {
       return Math.min(this.currentPage * this.perPage, this.totalRows)
+    },
+    returnLineFields() {
+      return [
+        { key: 'item', label: this.$t('admin.returnsManagement.modal.item') },
+        { key: 'quantity', label: this.$t('admin.returnsManagement.modal.quantity') },
+        { key: 'unitPrice', label: this.$t('admin.returnsManagement.modal.unitPrice') },
+        { key: 'lineTotal', label: this.$t('admin.returnsManagement.modal.totalTTC') },
+        { key: 'synched', label: this.$t('admin.returnsManagement.modal.synced'), class: 'text-center' }
+      ]
+    },
+    returnTypeOptions() {
+      return [
+        { value: null, text: this.$t('admin.returnsManagement.allTypes') },
+        { value: 'SIMPLE_RETURN', text: this.$t('admin.returnsManagement.simpleReturn') },
+        { value: 'RETURN_VOUCHER', text: this.$t('admin.returnsManagement.returnVoucher') }
+      ]
+    },
+    voucherStatusOptions() {
+      return [
+        { value: null, text: this.$t('admin.returnsManagement.allStatuses') },
+        { value: 'PENDING', text: this.$t('admin.returnsManagement.pending') },
+        { value: 'USED', text: this.$t('admin.returnsManagement.used') },
+        { value: 'EXPIRED', text: this.$t('admin.returnsManagement.expired') }
+      ]
+    },
+    syncStatusOptions() {
+      return [
+        { value: 'all', text: this.$t('admin.returnsManagement.all') },
+        { value: 'NOT_SYNCHED', text: this.$t('admin.returnsManagement.notSynced') },
+        { value: 'PARTIALLY_SYNCHED', text: this.$t('admin.returnsManagement.partiallySynced') },
+        { value: 'TOTALLY_SYNCHED', text: this.$t('admin.returnsManagement.totallySynced') }
+      ]
     }
   },
   mounted() {
@@ -524,7 +532,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'XIcon',
-            text: 'Failed to load returns',
+            text: this.$t('admin.returnsManagement.errors.failedToLoad'),
             variant: 'danger'
           }
         })
@@ -638,7 +646,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'XIcon',
-            text: 'Failed to load return details',
+            text: this.$t('admin.returnsManagement.errors.failedToLoadDetails'),
             variant: 'danger'
           }
         })
@@ -651,7 +659,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'XIcon',
-            text: 'No voucher found for this return',
+            text: this.$t('admin.returnsManagement.errors.noVoucherFound'),
             variant: 'warning'
           }
         })
@@ -674,7 +682,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: 'Failed to load return details for printing',
+              text: this.$t('admin.returnsManagement.errors.failedToLoadForPrinting'),
               variant: 'danger'
             }
           })
@@ -693,7 +701,7 @@ export default {
         discountAmount: 0,
         paidAmount: returnData.returnVoucher.voucherAmount,
         changeAmount: 0,
-        notes: `Return Voucher - Original Ticket: ${returnData.originalSalesHeader?.salesNumber || 'N/A'}`,
+        notes: `${this.$t('admin.returnsManagement.returnVoucher')} - ${this.$t('admin.returnsManagement.modal.originalTicket')} ${returnData.originalSalesHeader?.salesNumber || this.$t('admin.returnsManagement.nA')}`,
         createdByUser: {
           fullName: 'System',
           username: 'System'
@@ -704,7 +712,7 @@ export default {
         } : null,
         salesLines: returnLines.map(line => ({
           item: {
-            name: line.item ? line.item.name : 'Unknown Item',
+            name: line.item ? line.item.name : this.$t('admin.returnsManagement.nA'),
             itemCode: line.item ? line.item.itemCode : null
           },
           quantity: line.quantity,
@@ -777,9 +785,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Print Error',
+            title: this.$t('admin.returnsManagement.errors.printError'),
             icon: 'XIcon',
-            text: 'Please allow popups to print vouchers',
+            text: this.$t('admin.returnsManagement.errors.allowPopups'),
             variant: 'warning'
           }
         })
@@ -791,7 +799,7 @@ export default {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Return Voucher - ${returnData.returnVoucher.voucherNumber} - DUPLICATE</title>
+          <title>${this.$t('admin.returnsManagement.returnVoucher')} - ${returnData.returnVoucher.voucherNumber} - DUPLICATE</title>
           <style>
             @page {
               size: 80mm auto;
@@ -907,8 +915,13 @@ export default {
       return moment(dateString).format('YYYY-MM-DD HH:mm')
     },
     formatSyncStatus(status) {
-      if (!status) return 'Not Synced'
-      return status
+      if (!status) return this.$t('admin.returnsManagement.notSynced')
+      const statusMap = {
+        'NOT_SYNCHED': this.$t('admin.returnsManagement.notSynced'),
+        'PARTIALLY_SYNCHED': this.$t('admin.returnsManagement.partiallySynced'),
+        'TOTALLY_SYNCHED': this.$t('admin.returnsManagement.totallySynced')
+      }
+      return statusMap[status] || status
         .split('_')
         .map(word => word.charAt(0) + word.slice(1).toLowerCase())
         .join(' ')

@@ -1,10 +1,10 @@
 <template>
   <div class="session-dashboard-container">
     <div class="page-header">
-      <h2 class="mb-0">Session Dashboard</h2>
+      <h2 class="mb-0">{{ $t('admin.sessionDashboard.title') }}</h2>
       <b-button variant="outline-primary" @click="loadSessions">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.sessionDashboard.refresh') }}
       </b-button>
     </div>
 
@@ -22,7 +22,7 @@
             <strong>{{ session.sessionNumber }}</strong>
           </div>
           <b-badge :variant="getStatusBadgeVariant(session.status)" class="status-badge">
-            {{ session.status }}
+            {{ getStatusLabel(session.status) }}
           </b-badge>
         </div>
 
@@ -30,7 +30,7 @@
           <div class="session-info-row">
             <div class="info-item">
               <feather-icon icon="UserIcon" size="16" />
-              <span class="label">Cashier:</span>
+              <span class="label">{{ $t('admin.sessionDashboard.cashier') }}</span>
               <span class="value">{{ session.cashierFullName || session.cashierUsername }}</span>
             </div>
           </div>
@@ -38,27 +38,27 @@
           <div class="session-info-row">
             <div class="info-item">
               <feather-icon icon="CalendarIcon" size="16" />
-              <span class="label">Opened:</span>
+              <span class="label">{{ $t('admin.sessionDashboard.opened') }}</span>
               <span class="value">{{ formatDateTime(session.openedAt) }}</span>
             </div>
             <div class="info-item" v-if="session.closedAt">
               <feather-icon icon="CalendarIcon" size="16" />
-              <span class="label">Closed:</span>
+              <span class="label">{{ $t('admin.sessionDashboard.closed') }}</span>
               <span class="value">{{ formatDateTime(session.closedAt) }}</span>
             </div>
           </div>
 
           <div class="session-stats">
             <div class="stat-item">
-              <div class="stat-label">Sales</div>
+              <div class="stat-label">{{ $t('admin.sessionDashboard.sales') }}</div>
               <div class="stat-value">{{ session.salesCount || 0 }}</div>
             </div>
             <div class="stat-item">
-              <div class="stat-label">Total Sales</div>
+              <div class="stat-label">{{ $t('admin.sessionDashboard.totalSales') }}</div>
               <div class="stat-value text-primary">TND {{ formatPrice(session.totalSalesAmount || 0) }}</div>
             </div>
             <div class="stat-item" v-if="session.returnsCount > 0">
-              <div class="stat-label">Returns</div>
+              <div class="stat-label">{{ $t('admin.sessionDashboard.returns') }}</div>
               <div class="stat-value text-danger">{{ session.returnsCount || 0 }}</div>
             </div>
           </div>
@@ -67,37 +67,37 @@
           <div v-if="session.returnsCount > 0" class="returns-summary">
             <div class="returns-header">
               <feather-icon icon="RotateCcwIcon" size="16" class="mr-2" />
-              <strong>Returns Information</strong>
+              <strong>{{ $t('admin.sessionDashboard.returnsInformation') }}</strong>
             </div>
             <div class="returns-row">
-              <span class="returns-label">Total Returns:</span>
+              <span class="returns-label">{{ $t('admin.sessionDashboard.totalReturns') }}</span>
               <span class="returns-value text-danger">TND {{ formatPrice(session.totalReturnsAmount || 0) }}</span>
             </div>
             <div class="returns-row" v-if="session.simpleReturnsAmount > 0">
-              <span class="returns-label">Simple Returns (Cash):</span>
+              <span class="returns-label">{{ $t('admin.sessionDashboard.simpleReturnsCash') }}</span>
               <span class="returns-value text-danger">TND {{ formatPrice(session.simpleReturnsAmount || 0) }}</span>
             </div>
             <div class="returns-row" v-if="session.voucherReturnsAmount > 0">
-              <span class="returns-label">Voucher Returns:</span>
+              <span class="returns-label">{{ $t('admin.sessionDashboard.voucherReturns') }}</span>
               <span class="returns-value text-info">TND {{ formatPrice(session.voucherReturnsAmount || 0) }}</span>
             </div>
           </div>
 
           <div class="cash-summary">
             <div class="cash-row">
-              <span class="cash-label">Real Cash:</span>
+              <span class="cash-label">{{ $t('admin.sessionDashboard.realCash') }}</span>
               <span class="cash-value">TND {{ formatPrice(session.realCash || 0) }}</span>
             </div>
             <div class="cash-row" v-if="session.posUserClosureCash">
-              <span class="cash-label">POS Closure:</span>
+              <span class="cash-label">{{ $t('admin.sessionDashboard.posClosure') }}</span>
               <span class="cash-value">TND {{ formatPrice(session.posUserClosureCash) }}</span>
             </div>
             <div class="cash-row" v-if="session.responsibleClosureCash">
-              <span class="cash-label">Resp Closure:</span>
+              <span class="cash-label">{{ $t('admin.sessionDashboard.respClosure') }}</span>
               <span class="cash-value">TND {{ formatPrice(session.responsibleClosureCash) }}</span>
             </div>
             <div class="cash-row" v-if="session.cashDifference !== null && session.cashDifference !== undefined">
-              <span class="cash-label">Difference:</span>
+              <span class="cash-label">{{ $t('admin.sessionDashboard.difference') }}</span>
               <span class="cash-value" :class="getDifferenceClass(session.cashDifference)">
                 TND {{ formatPrice(session.cashDifference) }}
               </span>
@@ -107,7 +107,7 @@
 
         <div class="session-card-footer">
           <b-button variant="primary" size="sm" @click.stop="viewSessionDetails(session)">
-            View Details
+            {{ $t('admin.sessionDashboard.viewDetails') }}
           </b-button>
         </div>
       </b-card>
@@ -117,21 +117,21 @@
     <b-card v-else-if="loading" class="text-center py-5">
       <div class="text-center my-2">
         <b-spinner class="align-middle"></b-spinner>
-        <strong class="d-block mt-2">Loading...</strong>
+        <strong class="d-block mt-2">{{ $t('admin.sessionDashboard.loading') }}</strong>
       </div>
     </b-card>
 
     <!-- Empty State -->
     <b-card v-else class="text-center py-5">
       <feather-icon icon="InboxIcon" size="48" class="text-muted mb-3" />
-      <h5 class="text-muted">No Active Sessions</h5>
-      <p class="text-muted mb-0">There are no open or closed sessions at the moment.</p>
+      <h5 class="text-muted">{{ $t('admin.sessionDashboard.noSessions') }}</h5>
+      <p class="text-muted mb-0">{{ $t('admin.sessionDashboard.noSessions') }}</p>
     </b-card>
 
     <!-- Session Details Modal -->
     <b-modal
       v-model="showDetailsModal"
-      title="Session Details"
+      :title="$t('admin.sessionDashboard.sessionDetails')"
       size="xl"
       @hide="resetDetailsForm"
     >
@@ -144,7 +144,7 @@
               {{ sessionDetails.session.sessionNumber }}
             </h4>
             <b-badge :variant="getStatusBadgeVariant(sessionDetails.session.status)" style="font-size: 0.9rem; padding: 6px 12px;">
-              {{ sessionDetails.session.status }}
+              {{ getStatusLabel(sessionDetails.session.status) }}
             </b-badge>
           </div>
           
@@ -153,15 +153,15 @@
               <div class="info-section">
                 <div class="info-item mb-2">
                   <feather-icon icon="UserIcon" size="16" class="mr-2 text-muted" />
-                  <strong>Cashier:</strong> {{ sessionDetails.session.cashierName }}
+                  <strong>{{ $t('admin.sessionDashboard.modal.cashier') }}</strong> {{ sessionDetails.session.cashierName }}
                 </div>
                 <div class="info-item mb-2">
                   <feather-icon icon="CalendarIcon" size="16" class="mr-2 text-muted" />
-                  <strong>Opened:</strong> {{ formatDateTime(sessionDetails.session.openedAt) }}
+                  <strong>{{ $t('admin.sessionDashboard.modal.opened') }}</strong> {{ formatDateTime(sessionDetails.session.openedAt) }}
                 </div>
                 <div class="info-item mb-2" v-if="sessionDetails.session.closedAt">
                   <feather-icon icon="CalendarIcon" size="16" class="mr-2 text-muted" />
-                  <strong>Closed:</strong> {{ formatDateTime(sessionDetails.session.closedAt) }}
+                  <strong>{{ $t('admin.sessionDashboard.modal.closed') }}</strong> {{ formatDateTime(sessionDetails.session.closedAt) }}
                 </div>
               </div>
             </b-col>
@@ -169,19 +169,19 @@
               <div class="info-section">
                 <div class="info-item mb-2">
                   <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
-                  <strong>Opening Cash:</strong> <span class="text-primary">TND {{ formatPrice(sessionDetails.session.openingCash) }}</span>
+                  <strong>{{ $t('admin.sessionDashboard.modal.openingCash') }}</strong> <span class="text-primary">TND {{ formatPrice(sessionDetails.session.openingCash) }}</span>
                 </div>
                 <div class="info-item mb-2">
                   <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
-                  <strong>Real Cash:</strong> <span class="text-success">TND {{ formatPrice(sessionDetails.session.realCash) }}</span>
+                  <strong>{{ $t('admin.sessionDashboard.modal.realCash') }}</strong> <span class="text-success">TND {{ formatPrice(sessionDetails.session.realCash) }}</span>
                 </div>
                 <div class="info-item mb-2" v-if="sessionDetails.session.posUserClosureCash">
                   <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
-                  <strong>POS Closure:</strong> <span class="text-info">TND {{ formatPrice(sessionDetails.session.posUserClosureCash) }}</span>
+                  <strong>{{ $t('admin.sessionDashboard.modal.posClosure') }}</strong> <span class="text-info">TND {{ formatPrice(sessionDetails.session.posUserClosureCash) }}</span>
                 </div>
                 <div class="info-item mb-2" v-if="sessionDetails.session.responsibleClosureCash">
                   <feather-icon icon="DollarSignIcon" size="16" class="mr-2 text-muted" />
-                  <strong>Resp Closure:</strong> <span class="text-warning">TND {{ formatPrice(sessionDetails.session.responsibleClosureCash) }}</span>
+                  <strong>{{ $t('admin.sessionDashboard.modal.respClosure') }}</strong> <span class="text-warning">TND {{ formatPrice(sessionDetails.session.responsibleClosureCash) }}</span>
                 </div>
               </div>
             </b-col>
@@ -192,18 +192,18 @@
         <b-card class="mb-3">
           <h5 class="mb-3">
             <feather-icon icon="ShoppingCartIcon" size="18" class="mr-2" />
-            Sales & Returns Summary
+            {{ $t('admin.sessionDashboard.modal.salesReturnsSummary') }}
           </h5>
           <b-row>
             <b-col cols="12" md="6">
               <div class="stat-box">
-                <div class="stat-label">Sales Count</div>
+                <div class="stat-label">{{ $t('admin.sessionDashboard.modal.salesCount') }}</div>
                 <div class="stat-value text-primary">{{ sessionDetails.salesCount || 0 }}</div>
               </div>
             </b-col>
             <b-col cols="12" md="6">
               <div class="stat-box">
-                <div class="stat-label">Total Sales</div>
+                <div class="stat-label">{{ $t('admin.sessionDashboard.modal.totalSales') }}</div>
                 <div class="stat-value text-primary" style="font-size: 1.3rem;">TND {{ formatPrice(sessionDetails.totalSalesAmount) }}</div>
               </div>
             </b-col>
@@ -211,25 +211,25 @@
           <b-row v-if="sessionDetails.returnsCount > 0" class="mt-3">
             <b-col cols="12" md="6">
               <div class="stat-box mb-2">
-                <div class="stat-label">Returns Count</div>
+                <div class="stat-label">{{ $t('admin.sessionDashboard.modal.returnsCount') }}</div>
                 <div class="stat-value text-danger">{{ sessionDetails.returnsCount }}</div>
               </div>
             </b-col>
             <b-col cols="12" md="6">
               <div class="stat-box mb-2">
-                <div class="stat-label">Total Returns</div>
+                <div class="stat-label">{{ $t('admin.sessionDashboard.modal.totalReturns') }}</div>
                 <div class="stat-value text-danger">TND {{ formatPrice(sessionDetails.totalReturnsAmount) }}</div>
               </div>
             </b-col>
             <b-col cols="12" md="6" v-if="sessionDetails.simpleReturnsAmount > 0">
               <div class="stat-box mb-2">
-                <div class="stat-label small">Simple Returns (Cash)</div>
+                <div class="stat-label small">{{ $t('admin.sessionDashboard.modal.simpleReturnsCash') }}</div>
                 <div class="stat-value text-danger small">TND {{ formatPrice(sessionDetails.simpleReturnsAmount) }}</div>
               </div>
             </b-col>
             <b-col cols="12" md="6" v-if="sessionDetails.voucherReturnsAmount > 0">
               <div class="stat-box">
-                <div class="stat-label small">Voucher Returns</div>
+                <div class="stat-label small">{{ $t('admin.sessionDashboard.modal.voucherReturns') }}</div>
                 <div class="stat-value text-info small">TND {{ formatPrice(sessionDetails.voucherReturnsAmount) }}</div>
               </div>
             </b-col>
@@ -240,7 +240,7 @@
         <b-card class="mb-3" v-if="posUserCashCounts.length > 0">
           <h5 class="mb-3">
             <feather-icon icon="UserIcon" size="18" class="mr-2" />
-            Cash Count - POS User
+            {{ $t('admin.sessionDashboard.modal.cashCountPosUser') }}
           </h5>
           <b-table
             :items="posUserCashCounts"
@@ -252,7 +252,7 @@
             class="mb-0"
           >
             <template #cell(paymentMethod)="row">
-              {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
+              {{ row.item.paymentMethod ? row.item.paymentMethod.name : $t('common.cash') }}
             </template>
             <template #cell(lineTotal)="row">
               <strong>TND {{ formatPrice(row.item.lineTotal) }}</strong>
@@ -263,7 +263,7 @@
           </b-table>
           <div class="mt-3">
             <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
-              <strong>Total Counted:</strong>
+              <strong>{{ $t('admin.sessionDashboard.modal.totalCounted') }}</strong>
               <strong style="font-size: 1.2rem;">TND {{ formatPrice(posUserCashCountsTotal) }}</strong>
             </div>
           </div>
@@ -273,16 +273,16 @@
         <b-card v-if="sessionDetails.session.status === 'CLOSED' && !sessionDetails.session.responsibleClosureCash" class="mb-3">
           <h5 class="mb-3">
             <feather-icon icon="CheckCircleIcon" size="18" class="mr-2" />
-            Verify Session
+            {{ $t('admin.sessionDashboard.modal.verifySession') }}
           </h5>
           
           <!-- Add Responsible Cash Count (first part) -->
           <div class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h6 class="mb-0">Add Responsible Cash Count</h6>
+              <h6 class="mb-0">{{ $t('admin.sessionDashboard.modal.addResponsibleCashCount') }}</h6>
               <b-button variant="primary" size="sm" @click="addResponsibleCashCountLine">
                 <feather-icon icon="PlusIcon" size="14" class="mr-50" />
-                Add Line
+                {{ $t('admin.sessionDashboard.modal.addLine') }}
               </b-button>
             </div>
 
@@ -344,7 +344,7 @@
                     @click="removeResponsibleCashCountLine(row.index)"
                     class="text-danger p-0"
                     v-b-tooltip.hover
-                    title="Remove line"
+                    :title="$t('admin.sessionDashboard.modal.removeLine')"
                   >
                     <feather-icon icon="XIcon" size="16" />
                   </b-button>
@@ -352,13 +352,13 @@
               </b-table>
               <div v-else class="text-center text-muted py-4">
                 <feather-icon icon="FileTextIcon" size="48" class="mb-2 text-muted" />
-                <p class="mb-0">No cash count lines added yet</p>
+                <p class="mb-0">{{ $t('admin.sessionDashboard.modal.noCashCountLines') }}</p>
               </div>
             </div>
 
             <div v-if="responsibleCashCountForm.length > 0" class="mt-3">
               <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
-                <strong>Total:</strong>
+                <strong>{{ $t('admin.sessionDashboard.modal.total') }}:</strong>
                 <strong style="font-size: 1.2rem;">TND {{ formatPrice(calculatedResponsibleTotal) }}</strong>
               </div>
             </div>
@@ -366,7 +366,7 @@
 
           <!-- Verification Form (second part) -->
           <b-form>
-            <b-form-group label="Responsible Closure Cash" label-for="responsible-closure-cash">
+            <b-form-group :label="$t('admin.sessionDashboard.modal.responsibleClosureCash')" label-for="responsible-closure-cash">
               <b-input-group prepend="TND">
                 <b-form-input
                   id="responsible-closure-cash"
@@ -374,16 +374,16 @@
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Enter counted cash"
+                  :placeholder="$t('admin.sessionDashboard.modal.enterCountedCash')"
                 />
               </b-input-group>
             </b-form-group>
-            <b-form-group label="Verification Notes" label-for="verification-notes">
+            <b-form-group :label="$t('admin.sessionDashboard.modal.verificationNotes')" label-for="verification-notes">
               <b-form-textarea
                 id="verification-notes"
                 v-model="verificationForm.verificationNotes"
                 rows="3"
-                placeholder="Enter any notes about the verification..."
+                :placeholder="$t('admin.sessionDashboard.modal.verificationNotesPlaceholder')"
               />
             </b-form-group>
           </b-form>
@@ -395,7 +395,7 @@
           <div></div>
           <div>
             <b-button variant="secondary" @click="showDetailsModal = false" class="mr-2">
-              Close
+              {{ $t('admin.sessionDashboard.modal.close') }}
             </b-button>
             <b-button 
               v-if="sessionDetails && sessionDetails.session.status === 'CLOSED' && !sessionDetails.session.responsibleClosureCash"
@@ -404,7 +404,7 @@
               :disabled="!canVerify"
             >
               <feather-icon icon="CheckIcon" size="16" class="mr-50" />
-              Verify Session
+              {{ $t('admin.sessionDashboard.modal.verifySession') }}
             </b-button>
           </div>
         </div>
@@ -647,6 +647,14 @@ export default {
     formatDateTime(dateString) {
       if (!dateString) return null
       return moment(dateString).format('YYYY-MM-DD HH:mm:ss')
+    },
+    getStatusLabel(status) {
+      const statusMap = {
+        'OPENED': this.$t('admin.sessionHistory.statusValues.opened'),
+        'CLOSED': this.$t('admin.sessionHistory.statusValues.closed'),
+        'TERMINATED': this.$t('admin.sessionHistory.statusValues.terminated')
+      }
+      return statusMap[status] || status
     },
     getStatusBadgeVariant(status) {
       switch (status) {

@@ -14,7 +14,7 @@
                       <feather-icon icon="HashIcon" size="16" />
                     </span>
                   </b-input-group-prepend>
-                  <b-form-input v-model="barcodeInput" placeholder="Scan barcode (or type and press Enter)..."
+                  <b-form-input v-model="barcodeInput" :placeholder="$t('pos.itemSelection.barcodePlaceholder')"
                     @keyup.enter="handleBarcodeScan" @input="onBarcodeInput" ref="barcodeInput"
                     class="barcode-scanner-input" :disabled="barcodeScanning" autofocus
                     @focus="setActiveInput('barcode')" />
@@ -51,12 +51,12 @@
               <div class="hierarchy-group">
                 <b-button v-if="canNavigateBack" size="sm" variant="outline-secondary" @click="navigateBack">
                   <feather-icon icon="ArrowLeftIcon" size="14" class="mr-50" />
-                  Back
+                  {{ $t('pos.itemSelection.back') }}
                 </b-button>
                 <div class="breadcrumb-trail">
                   <span class="breadcrumb-chip" :class="{ active: isFamiliesView }" @click="resetToFamilies">
                     <feather-icon icon="LayersIcon" size="14" class="mr-25" />
-                    Families
+                    {{ $t('pos.itemSelection.families') }}
                   </span>
                   <template v-if="selectedFamily">
                     <span class="breadcrumb-separator">
@@ -82,7 +82,7 @@
               <b-button size="sm" :variant="compactMode ? 'outline-primary' : 'primary'" class="compact-toggle"
                 @click="toggleCompactMode">
                 <feather-icon :icon="compactMode ? 'MaximizeIcon' : 'MinimizeIcon'" size="14" class="mr-50" />
-                {{ compactMode ? 'Comfort view' : 'Compact view' }}
+                {{ compactMode ? $t('pos.itemSelection.comfortView') : $t('pos.itemSelection.compactView') }}
               </b-button>
             </div>
           </div>
@@ -91,12 +91,12 @@
             <div class="items-grid-wrapper">
               <div v-if="gridLoading" class="grid-status">
                 <b-spinner class="mb-1" />
-                <p class="mb-0">Loading {{ currentLevelLabel.toLowerCase() }}...</p>
+                <p class="mb-0">{{ $t('pos.itemSelection.loading', { level: currentLevelLabel.toLowerCase() }) }}</p>
               </div>
               <div v-else-if="filteredGridItems.length === 0" class="grid-status empty-state">
                 <feather-icon :icon="gridStatusIcon" size="48" class="text-muted mb-1" />
-                <p class="mb-0">No {{ currentLevelLabel.toLowerCase() }} found</p>
-                <small class="text-muted">Try a different selection or clear the search</small>
+                <p class="mb-0">{{ $t('pos.itemSelection.noItemsFound', { level: currentLevelLabel.toLowerCase() }) }}</p>
+                <small class="text-muted">{{ $t('pos.itemSelection.tryDifferentSelection') }}</small>
               </div>
               <div v-else class="items-grid">
                 <div v-for="entry in filteredGridItems" :key="entry.id" class="item-card"
@@ -112,7 +112,7 @@
                       <p v-if="entry.stockQuantity !== null" class="item-stock"
                         :class="getStockClass(entry.stockQuantity)">
                         <feather-icon :icon="getStockIcon(entry.stockQuantity)" size="12" class="mr-25" />
-                        Stock: {{ entry.stockQuantity }}
+                        {{ $t('pos.itemSelection.stock') }}: {{ entry.stockQuantity }}
                       </p>
                     </div>
                   </template>
@@ -134,30 +134,30 @@
             <b-button variant="primary" block class="action-btn" @click="proceedToPayment"
               :disabled="cart.length === 0">
               <feather-icon icon="CreditCardIcon" size="16" class="mr-50" />
-              Payment
+              {{ $t('pos.itemSelection.payment') }}
             </b-button>
             <b-button variant="outline-primary" block class="action-btn" @click="goToCustomerManagement">
               <feather-icon icon="UsersIcon" size="16" class="mr-50" />
-              Customers
+              {{ $t('pos.itemSelection.customers') }}
             </b-button>
             <b-button variant="outline-success" block class="action-btn" @click="goToReturn">
               <feather-icon icon="RotateCcwIcon" size="16" class="mr-50" />
-              Return Products
+              {{ $t('pos.itemSelection.returnProducts') }}
             </b-button>
             <b-button variant="outline-warning" block class="action-btn" @click="openPendingTicketsModal">
               <feather-icon icon="ClockIcon" size="16" class="mr-50" />
-              Pending Tickets
+              {{ $t('pos.itemSelection.pendingTickets') }}
               <b-badge v-if="pendingTicketsCount > 0" variant="warning" class="ml-50">
                 {{ pendingTicketsCount }}
               </b-badge>
             </b-button>
             <b-button variant="outline-secondary" block class="action-btn" disabled>
               <feather-icon icon="ListIcon" size="16" class="mr-50" />
-              Tickets List (soon)
+              {{ $t('pos.itemSelection.ticketsList') }}
             </b-button>
             <b-button variant="outline-danger" block class="action-btn" @click="showCloseSessionModal = true">
               <feather-icon icon="PowerIcon" size="16" class="mr-50" />
-              Close Session
+              {{ $t('pos.itemSelection.closeSession') }}
             </b-button>
           </div>
         </div>
@@ -168,11 +168,11 @@
         <div class="cart-items" ref="cartList" :class="{ 'cart-items--scrolled': cartScrollShadow }">
           <div v-if="cart.length === 0" class="empty-cart">
             <feather-icon icon="ShoppingBagIcon" size="36" class="mb-1 text-muted" />
-            <p class="mb-25">Cart is empty</p>
-            <small class="text-muted d-block mb-1">Scan a barcode or tap a product to add it.</small>
+            <p class="mb-25">{{ $t('pos.itemSelection.cartEmpty') }}</p>
+            <small class="text-muted d-block mb-1">{{ $t('pos.itemSelection.scanOrTap') }}</small>
             <b-button v-if="pendingTicketsCount > 0" size="sm" variant="outline-primary"
               @click="openPendingTicketsModal">
-              View Pending Tickets ({{ pendingTicketsCount }})
+              {{ $t('pos.itemSelection.viewPendingTickets', { count: pendingTicketsCount }) }}
             </b-button>
           </div>
           <div v-for="(cartItem, index) in cart" :key="index" class="cart-item"
@@ -191,14 +191,14 @@
             </div>
             <div class="cart-item-breakdown">
               <div class="breakdown-row">
-                <span class="breakdown-label">Unit Price:</span>
-                <span class="breakdown-value">{{ formatShortTun(cartItem.unitPrice) }} HT</span>
-                <span class="breakdown-value secondary">{{ formatVatPercentage(cartItem) }}% VAT</span>
-                <span class="breakdown-value primary">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} TTC</span>
+                <span class="breakdown-label">{{ $t('pos.itemSelection.unitPrice') }}</span>
+                <span class="breakdown-value">{{ formatShortTun(cartItem.unitPrice) }} {{ $t('pos.itemSelection.ht') }}</span>
+                <span class="breakdown-value secondary">{{ formatVatPercentage(cartItem) }}% {{ $t('pos.itemSelection.vat') }}</span>
+                <span class="breakdown-value primary">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} {{ $t('pos.itemSelection.ttc') }}</span>
               </div>
               <div v-if="cartItem.discountPercentage || cartItem.discountAmount" class="breakdown-row discount-row">
                 <feather-icon icon="PercentIcon" size="14" class="breakdown-icon" />
-                <span class="breakdown-label">Discount:</span>
+                <span class="breakdown-label">{{ $t('pos.itemSelection.discount') }}:</span>
                 <span class="breakdown-value discount">
                   {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' :
                     formatShortTun(cartItem.discountAmount) }}
@@ -217,7 +217,7 @@
               </div>
               <div class="action-buttons">
                 <b-button variant="outline-info" size="sm" class="discount-btn" @click="openLineDiscountModal(index)"
-                  :title="cartItem.discountPercentage || cartItem.discountAmount ? 'Edit discount' : 'Add discount'">
+                  :title="cartItem.discountPercentage || cartItem.discountAmount ? $t('pos.itemSelection.editDiscount') : $t('pos.itemSelection.addDiscount')">
                   <feather-icon icon="PercentIcon" size="14" />
                   <span v-if="cartItem.discountPercentage || cartItem.discountAmount" class="discount-badge">
                     {{ cartItem.discountPercentage ? formatDiscountPercentage(cartItem.discountPercentage) + '%' :
@@ -234,30 +234,30 @@
 
         <div class="cart-summary">
           <div class="cart-summary-header">
-            <span class="cart-summary-title">Cart {{ cartCount > 0 ? `(${cartCount})` : '' }}</span>
+            <span class="cart-summary-title">{{ $t('pos.itemSelection.cart.title') }} {{ cartCount > 0 ? `(${cartCount})` : '' }}</span>
             <b-button v-if="cart.length > 0" variant="outline-secondary" size="sm" @click="clearCart"
               class="cart-clear-btn">
-              Clear
+              {{ $t('pos.itemSelection.cart.clear') }}
             </b-button>
           </div>
           <div class="summary-row">
-            <span>Items:</span>
-            <span>{{ cart.length }} ({{ cartCount }} units)</span>
+            <span>{{ $t('pos.itemSelection.cart.items') }}</span>
+            <span>{{ cart.length }} ({{ cartCount }} {{ $t('pos.itemSelection.cart.units') }})</span>
           </div>
           <div class="summary-row">
-            <span>Subtotal:</span>
+            <span>{{ $t('pos.itemSelection.cart.subtotal') }}</span>
             <span>{{ formatTunCurrency(subtotal) }}</span>
           </div>
           <div class="summary-row">
-            <span>Tax:</span>
+            <span>{{ $t('pos.itemSelection.cart.tax') }}</span>
             <span>{{ formatTunCurrency(taxAmount) }}</span>
           </div>
           <div v-if="headerDiscountAmount > 0" class="summary-row discount-row">
-            <span>Discount:</span>
+            <span>{{ $t('pos.itemSelection.cart.discount') }}</span>
             <span class="text-danger">-{{ formatTunCurrency(headerDiscountAmount) }}</span>
           </div>
           <div class="summary-row total">
-            <span>Total:</span>
+            <span>{{ $t('pos.itemSelection.cart.total') }}</span>
             <span>{{ formatTunCurrency(totalAmount) }}</span>
           </div>
         </div>
@@ -266,14 +266,14 @@
           <b-button variant="outline-secondary" block @click="toggleKeyboard" class="keyboard-toggle-btn"
             :class="{ 'keyboard-active': showKeyboard }">
             <feather-icon :icon="showKeyboard ? 'ChevronDownIcon' : 'ChevronUpIcon'" class="mr-50" size="16" />
-            {{ showKeyboard ? 'Hide Keyboard' : 'Show Keyboard' }}
+            {{ showKeyboard ? $t('pos.itemSelection.keyboard.hide') : $t('pos.itemSelection.keyboard.show') }}
           </b-button>
         </div>
 
         <transition name="keyboard-fade">
           <div class="virtual-keyboard" v-if="showKeyboard">
             <div class="keyboard-header">
-              <strong>Numeric Keyboard</strong>
+              <strong>{{ $t('pos.itemSelection.keyboard.title') }}</strong>
               <b-button size="sm" variant="outline-secondary" @click="toggleKeyboard" class="keyboard-close-btn">
                 <feather-icon icon="XIcon" size="14" />
               </b-button>
@@ -287,16 +287,16 @@
             </div>
             <div class="keyboard-actions">
               <button class="keyboard-action-btn" @click="handleKeyboardPress('CLEAR')" type="button">
-                Clear
+                {{ $t('pos.itemSelection.keyboard.clear') }}
               </button>
               <button class="keyboard-action-btn" @click="handleKeyboardPress('BACK')" type="button">
                 <feather-icon icon="DeleteIcon" size="16" />
-                Back
+                {{ $t('pos.itemSelection.keyboard.back') }}
               </button>
               <button class="keyboard-action-btn keyboard-action-enter" @click="handleKeyboardPress('ENTER')"
                 type="button">
                 <feather-icon icon="CheckIcon" size="16" />
-                Enter
+                {{ $t('pos.itemSelection.keyboard.enter') }}
               </button>
             </div>
           </div>
@@ -305,33 +305,33 @@
     </b-row>
 
     <!-- Pending Tickets Modal -->
-    <b-modal id="pending-tickets-modal" v-model="showPendingTicketsModal" title="Pending Tickets" size="xl"
+    <b-modal id="pending-tickets-modal" v-model="showPendingTicketsModal" :title="$t('pos.itemSelection.pendingTicketsModal.title')" size="xl"
       @show="loadPendingTickets" @hide="resetPendingTickets">
       <div v-if="loadingPendingTickets" class="text-center py-4">
         <b-spinner class="align-middle"></b-spinner>
-        <p class="mt-2">Loading pending tickets...</p>
+        <p class="mt-2">{{ $t('pos.itemSelection.pendingTicketsModal.loading') }}</p>
       </div>
 
       <div v-else-if="pendingTickets.length === 0" class="text-center py-4">
         <feather-icon icon="CheckCircleIcon" size="48" class="text-success mb-3" />
-        <h5>No Pending Tickets</h5>
-        <p class="text-muted">All tickets are completed</p>
+        <h5>{{ $t('pos.itemSelection.pendingTicketsModal.noPending') }}</h5>
+        <p class="text-muted">{{ $t('pos.itemSelection.pendingTicketsModal.allCompleted') }}</p>
       </div>
 
       <div v-else class="pending-tickets-list">
         <b-card v-for="ticket in pendingTickets" :key="ticket.id" class="mb-3 ticket-card">
           <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
-              <h6 class="mb-1">Ticket: {{ ticket.salesNumber }}</h6>
+              <h6 class="mb-1">{{ $t('pos.itemSelection.pendingTicketsModal.ticket') }} {{ ticket.salesNumber }}</h6>
               <small class="text-muted">
-                Created: {{ formatDateTime(ticket.salesDate) }}
+                {{ $t('pos.itemSelection.pendingTicketsModal.created') }} {{ formatDateTime(ticket.salesDate) }}
               </small>
             </div>
-            <b-badge variant="warning">PENDING</b-badge>
+            <b-badge variant="warning">{{ $t('pos.itemSelection.pendingTicketsModal.pending') }}</b-badge>
           </div>
 
           <div class="ticket-items mb-2">
-            <h6 class="small font-weight-bold mb-1">Items:</h6>
+            <h6 class="small font-weight-bold mb-1">{{ $t('pos.itemSelection.pendingTicketsModal.items') }}</h6>
             <div v-for="(line, idx) in ticket.salesLines" :key="idx" class="ticket-item-line">
               <span>{{ line.item.name }}</span>
               <span class="float-right">
@@ -342,15 +342,15 @@
 
           <div class="ticket-summary">
             <div class="d-flex justify-content-between">
-              <span>Subtotal:</span>
+              <span>{{ $t('pos.itemSelection.pendingTicketsModal.subtotal') }}</span>
               <span>TND {{ formatPrice(ticket.subtotal) }}</span>
             </div>
             <div class="d-flex justify-content-between">
-              <span>Tax:</span>
+              <span>{{ $t('pos.itemSelection.pendingTicketsModal.tax') }}</span>
               <span>TND {{ formatPrice(ticket.taxAmount) }}</span>
             </div>
             <div class="d-flex justify-content-between font-weight-bold">
-              <span>Total:</span>
+              <span>{{ $t('pos.itemSelection.pendingTicketsModal.total') }}</span>
               <span>TND {{ formatPrice(ticket.totalAmount) }}</span>
             </div>
           </div>
@@ -358,7 +358,7 @@
           <div class="mt-3 d-flex gap-2">
             <b-button variant="primary" size="sm" class="flex-grow-1" @click="retrievePendingTicket(ticket)">
               <feather-icon icon="ArrowRightIcon" size="14" class="mr-1" />
-              Continue
+              {{ $t('pos.itemSelection.pendingTicketsModal.continue') }}
             </b-button>
             <b-button variant="danger" size="sm" @click="confirmDeletePendingTicket(ticket)">
               <feather-icon icon="TrashIcon" size="14" />
@@ -369,25 +369,25 @@
     </b-modal>
 
     <!-- Close Session Modal -->
-    <b-modal id="close-session-modal" v-model="showCloseSessionModal" title="Close Cashier Session" size="xl"
+    <b-modal id="close-session-modal" v-model="showCloseSessionModal" :title="$t('pos.itemSelection.closeSessionModal.title')" size="xl"
       @ok="closeSession" @cancel="resetCloseSessionForm" @hide="resetCloseSessionForm" @shown="onCloseSessionModalShown"
       :ok-disabled="!canCloseSession" ok-variant="danger">
       <div class="cash-count-section">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h5 class="mb-1">Payment Count Details</h5>
-            <p class="text-muted small mb-0">Count and record all payment methods for this session</p>
+            <h5 class="mb-1">{{ $t('pos.itemSelection.closeSessionModal.paymentCountDetails') }}</h5>
+            <p class="text-muted small mb-0">{{ $t('pos.itemSelection.closeSessionModal.paymentCountDescription') }}</p>
           </div>
           <b-button variant="primary" size="sm" @click="addCashCountLine" class="shadow-sm">
             <feather-icon icon="PlusIcon" size="14" class="mr-50" />
-            Add Line
+            {{ $t('pos.itemSelection.closeSessionModal.addLine') }}
           </b-button>
         </div>
 
         <!-- Payment Count Lines Table -->
         <div class="cash-count-table-container">
           <b-table v-if="closeSessionData.cashCountLines.length > 0" :items="closeSessionData.cashCountLines"
-            :fields="cashCountFields" striped bordered small responsive class="mb-0">
+            :fields="cashCountFieldsComputed" striped bordered small responsive class="mb-0">
             <template #cell(denominationValue)="row">
               <b-input-group prepend="TND" size="sm">
                 <b-form-input v-model.number="row.item.denominationValue" type="number" step="0.01" min="0"
@@ -408,7 +408,7 @@
             </template>
             <template #cell(actions)="row">
               <b-button variant="link" size="sm" @click="removeCashCountLine(row.index)" 
-                class="text-danger p-0" v-b-tooltip.hover title="Remove line">
+                class="text-danger p-0" v-b-tooltip.hover :title="$t('pos.itemSelection.closeSessionModal.removeLine')">
                 <feather-icon icon="XIcon" size="16" />
               </b-button>
             </template>
@@ -416,8 +416,8 @@
 
           <div v-else class="text-center text-muted py-5">
             <feather-icon icon="FileTextIcon" size="48" class="mb-2 text-muted" />
-            <p class="mb-1">No payment count lines added yet</p>
-            <p class="small mb-0">Click "Add Line" to start counting payments</p>
+            <p class="mb-1">{{ $t('pos.itemSelection.closeSessionModal.noLines') }}</p>
+            <p class="small mb-0">{{ $t('pos.itemSelection.closeSessionModal.noLinesDescription') }}</p>
           </div>
         </div>
 
@@ -426,7 +426,7 @@
           <b-card class="border-primary">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <strong class="text-muted d-block mb-1" style="font-size: 0.9rem;">Total Counted</strong>
+                <strong class="text-muted d-block mb-1" style="font-size: 0.9rem;">{{ $t('pos.itemSelection.closeSessionModal.totalCounted') }}</strong>
                 <strong class="text-primary" style="font-size: 1.5rem;">
                   TND {{ formatPrice(calculatedTotalCash) }}
                 </strong>
@@ -436,19 +436,19 @@
           </b-card>
         </div>
 
-        <b-form-group label="Notes (optional)" label-for="close-notes" class="mt-4">
+        <b-form-group :label="$t('pos.itemSelection.closeSessionModal.notes')" label-for="close-notes" class="mt-4">
           <b-form-textarea id="close-notes" v-model="closeSessionData.notes"
-            placeholder="Enter any notes about the payment count..." rows="3" />
+            :placeholder="$t('pos.itemSelection.closeSessionModal.notesPlaceholder')" rows="3" />
         </b-form-group>
       </div>
       <template #modal-ok>
         <feather-icon icon="PowerIcon" size="16" class="mr-50" />
-        Close Session
+        {{ $t('pos.itemSelection.closeSessionModal.close') }}
       </template>
     </b-modal>
 
     <!-- Discount Modal -->
-    <b-modal id="discount-modal" v-model="showDiscountModal" title="Apply Discount" size="md" @ok="applyLineDiscount"
+    <b-modal id="discount-modal" v-model="showDiscountModal" :title="$t('pos.itemSelection.discountModal.title')" size="md" @ok="applyLineDiscount"
       @hide="resetDiscountForm" :ok-disabled="!canApplyDiscount">
       <div v-if="discountModalItemIndex !== null">
         <div class="mb-3" v-if="getDiscountModalItem()">
@@ -457,15 +457,15 @@
         </div>
 
         <!-- Discount Type Toggle -->
-        <b-form-group label="Discount Type">
+        <b-form-group :label="$t('pos.itemSelection.discountModal.discountType')">
           <b-form-radio-group v-model="discountType" :options="[
-            { text: 'Percentage (%)', value: 'percentage' },
-            { text: 'Amount (TND)', value: 'amount' }
+            { text: $t('pos.itemSelection.discountModal.percentageLabel'), value: 'percentage' },
+            { text: $t('pos.itemSelection.discountModal.amountLabel'), value: 'amount' }
           ]" />
         </b-form-group>
 
         <!-- Discount Input -->
-        <b-form-group :label="discountType === 'percentage' ? 'Discount Percentage' : 'Discount Amount'">
+        <b-form-group :label="discountType === 'percentage' ? $t('pos.itemSelection.discountModal.discountPercentage') : $t('pos.itemSelection.discountModal.discountAmount')">
           <b-input-group>
             <b-form-input v-model.number="discountValue" type="number" step="0.01" :min="0"
               :max="discountType === 'percentage' ? 100 : getOriginalLineTotal()"
@@ -479,25 +479,25 @@
         <!-- Preview -->
         <b-alert variant="info" show class="mt-3">
           <div class="d-flex justify-content-between mb-1">
-            <span>Original Total:</span>
+            <span>{{ $t('pos.itemSelection.discountModal.originalTotal') }}</span>
             <strong>{{ formatTunCurrency(getOriginalLineTotal()) }}</strong>
           </div>
           <div class="d-flex justify-content-between mb-1">
-            <span>Discount:</span>
+            <span>{{ $t('pos.itemSelection.discountModal.discount') }}</span>
             <strong class="text-danger">-{{ formatTunCurrency(getCalculatedDiscount()) }}</strong>
           </div>
           <hr class="my-2" />
           <div class="d-flex justify-content-between">
-            <span><strong>New Line Total:</strong></span>
+            <span><strong>{{ $t('pos.itemSelection.discountModal.newLineTotal') }}</strong></span>
             <strong class="text-success">{{ formatTunCurrency(getNewLineTotal()) }}</strong>
           </div>
         </b-alert>
       </div>
       <template #modal-ok>
-        Apply Discount
+        {{ $t('pos.itemSelection.discountModal.apply') }}
       </template>
       <template #modal-cancel>
-        Cancel
+        {{ $t('pos.itemSelection.discountModal.cancel') }}
       </template>
     </b-modal>
   </div>
@@ -554,13 +554,7 @@ export default {
       cartScrollShadow: false,
       compactMode: false,
       paymentMethods: [],
-      cashCountFields: [
-        { key: 'denominationValue', label: 'Value', sortable: false, thClass: 'text-nowrap' },
-        { key: 'quantity', label: 'Quantity', sortable: false, thClass: 'text-nowrap' },
-        { key: 'paymentMethod', label: 'Payment Method', sortable: false, thClass: 'text-nowrap' },
-        { key: 'lineTotal', label: 'Line Total', sortable: false, thClass: 'text-nowrap text-right', tdClass: 'text-right' },
-        { key: 'actions', label: '', sortable: false, thClass: 'text-center', tdClass: 'text-center' }
-      ]
+      cashCountFields: []
     }
   },
   computed: {
@@ -615,21 +609,21 @@ export default {
     },
     currentLevelLabel() {
       if (this.isItemsView) {
-        return 'Products'
+        return this.$t('pos.itemSelection.levels.products')
       }
       if (this.isSubFamiliesView) {
-        return 'Sub families'
+        return this.$t('pos.itemSelection.levels.subFamilies')
       }
-      return 'Families'
+      return this.$t('pos.itemSelection.levels.families')
     },
     searchPlaceholder() {
       if (this.isItemsView) {
-        return 'Search products by name or code...'
+        return this.$t('pos.itemSelection.searchPlaceholders.products')
       }
       if (this.isSubFamiliesView) {
-        return 'Search sub families...'
+        return this.$t('pos.itemSelection.searchPlaceholders.subFamilies')
       }
-      return 'Search families...'
+      return this.$t('pos.itemSelection.searchPlaceholders.families')
     },
     gridStatusIcon() {
       if (this.isItemsView) {
@@ -723,8 +717,17 @@ export default {
     },
     paymentMethodOptionsWithCash() {
       // Add Cash as first option (null value), then all active payment methods
-      const cashOption = { id: null, name: 'Cash' }
+      const cashOption = { id: null, name: this.$t('common.cash') }
       return [cashOption, ...this.paymentMethodOptions]
+    },
+    cashCountFieldsComputed() {
+      return [
+        { key: 'denominationValue', label: this.$t('pos.itemSelection.closeSessionModal.value'), sortable: false, thClass: 'text-nowrap' },
+        { key: 'quantity', label: this.$t('pos.itemSelection.closeSessionModal.quantity'), sortable: false, thClass: 'text-nowrap' },
+        { key: 'paymentMethod', label: this.$t('pos.itemSelection.closeSessionModal.paymentMethod'), sortable: false, thClass: 'text-nowrap' },
+        { key: 'lineTotal', label: this.$t('pos.itemSelection.closeSessionModal.lineTotal'), sortable: false, thClass: 'text-nowrap text-right', tdClass: 'text-right' },
+        { key: 'actions', label: '', sortable: false, thClass: 'text-center', tdClass: 'text-center' }
+      ]
     },
     calculatedTotalCash() {
       return this.closeSessionData.cashCountLines.reduce((total, line) => {
@@ -877,9 +880,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.messages.error'),
             icon: 'XIcon',
-            text: 'Failed to load item families',
+            text: this.$t('pos.itemSelection.messages.failedToLoadFamilies'),
             variant: 'danger'
           }
         })
@@ -907,9 +910,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.messages.error'),
             icon: 'XIcon',
-            text: 'Failed to load sub families',
+            text: this.$t('pos.itemSelection.messages.failedToLoadSubFamilies'),
             variant: 'danger'
           }
         })
@@ -935,9 +938,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.messages.error'),
             icon: 'XIcon',
-            text: 'Failed to load products for this sub family',
+            text: this.$t('pos.itemSelection.messages.failedToLoadItems'),
             variant: 'danger'
           }
         })
@@ -1142,9 +1145,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Barcode Not Found',
+              title: this.$t('pos.itemSelection.messages.barcodeNotFound'),
               icon: 'AlertCircleIcon',
-              text: `No item found with barcode: ${barcode}`,
+              text: this.$t('pos.itemSelection.messages.barcodeNotFoundText', { barcode }),
               variant: 'warning'
             }
           })
@@ -1162,9 +1165,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.messages.error'),
             icon: 'XIcon',
-            text: 'Failed to scan barcode. Please try again.',
+            text: this.$t('pos.itemSelection.messages.failedToScanBarcode'),
             variant: 'danger'
           }
         })
@@ -1197,9 +1200,9 @@ export default {
         this.$toast({
           component: require('@core/components/toastification/ToastificationContent.vue').default,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.messages.error'),
             icon: 'XIcon',
-            text: 'Failed to load pending tickets',
+            text: this.$t('pos.itemSelection.messages.failedToLoadTickets'),
             variant: 'danger'
           }
         })
@@ -1239,9 +1242,9 @@ export default {
       this.$toast({
         component: ToastificationContent,
         props: {
-          title: 'Ticket Retrieved',
+          title: this.$t('pos.itemSelection.messages.ticketRetrieved'),
           icon: 'CheckCircleIcon',
-          text: `Pending ticket ${ticket.salesNumber} loaded. You can add more items or proceed to payment.`,
+          text: this.$t('pos.itemSelection.messages.ticketRetrievedText', { ticketNumber: ticket.salesNumber }),
           variant: 'success'
         }
       })
@@ -1261,14 +1264,14 @@ export default {
     confirmDeletePendingTicket(ticket) {
       this.ticketToDelete = ticket
       this.$bvModal.msgBoxConfirm(
-        `Are you sure you want to delete pending ticket "${ticket.salesNumber}"? This action cannot be undone.`,
+        this.$t('pos.itemSelection.pendingTicketsModal.deleteConfirm', { ticketNumber: ticket.salesNumber }),
         {
-          title: 'Delete Pending Ticket',
+          title: this.$t('pos.itemSelection.pendingTicketsModal.deleteTitle'),
           size: 'sm',
           buttonSize: 'sm',
           okVariant: 'danger',
-          okTitle: 'Delete',
-          cancelTitle: 'Cancel',
+          okTitle: this.$t('pos.itemSelection.pendingTicketsModal.delete'),
+          cancelTitle: this.$t('pos.itemSelection.pendingTicketsModal.cancel'),
           footerClass: 'p-2',
           hideHeaderClose: false,
           centered: true
@@ -1289,9 +1292,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Pending ticket deleted successfully',
+              text: this.$t('pos.itemSelection.messages.pendingTicketDeleted'),
               variant: 'success'
             }
           })
@@ -1307,7 +1310,7 @@ export default {
         }
       } catch (error) {
         console.error('Error deleting pending ticket:', error)
-        let errorMessage = 'Failed to delete pending ticket. Please try again.'
+        let errorMessage = this.$t('pos.itemSelection.messages.failedToDeleteTicket')
 
         if (error.response && error.response.data) {
           errorMessage = error.response.data.message || error.response.data || errorMessage
@@ -1316,7 +1319,7 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.messages.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -1363,9 +1366,9 @@ export default {
       this.$toast({
         component: ToastificationContent,
         props: {
-          title: 'Added to Cart',
+          title: this.$t('pos.itemSelection.messages.addedToCart'),
           icon: 'CheckIcon',
-          text: `${item.name} added to cart`,
+          text: this.$t('pos.itemSelection.messages.addedToCartText', { itemName: item.name }),
           variant: 'success'
         },
       }, {
@@ -1510,9 +1513,9 @@ export default {
         this.$toast({
           component: require('@core/components/toastification/ToastificationContent.vue').default,
           props: {
-            title: 'Cannot Close Session',
+            title: this.$t('pos.itemSelection.closeSessionModal.cannotClose'),
             icon: 'AlertCircleIcon',
-            text: `You have ${this.pendingTicketsCount} pending ticket(s). Please complete or cancel all pending tickets before closing the session.`,
+            text: this.$t('pos.itemSelection.closeSessionModal.pendingTicketsWarning', { count: this.pendingTicketsCount }),
             variant: 'warning'
           }
         })
@@ -1524,9 +1527,9 @@ export default {
         this.$toast({
           component: require('@core/components/toastification/ToastificationContent.vue').default,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.closeSessionModal.error'),
             icon: 'XIcon',
-            text: 'Please add cash count lines or enter actual cash amount',
+            text: this.$t('pos.itemSelection.closeSessionModal.addCashCountError'),
             variant: 'danger'
           }
         })
@@ -1555,9 +1558,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Session closed successfully!',
+              text: this.$t('pos.itemSelection.closeSessionModal.sessionClosed'),
               variant: 'success'
             }
           })
@@ -1576,14 +1579,14 @@ export default {
         }
       } catch (error) {
         console.error('Error closing session:', error)
-        let errorMessage = 'Failed to close session. Please try again.'
+        let errorMessage = this.$t('pos.itemSelection.closeSessionModal.failedToClose')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('pos.itemSelection.closeSessionModal.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

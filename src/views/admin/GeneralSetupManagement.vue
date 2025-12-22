@@ -1,20 +1,20 @@
 <template>
   <div class="general-setup-container">
     <div class="page-header">
-      <h2 class="mb-0">General Setup</h2>
+      <h2 class="mb-0">{{ $t('admin.generalSetupManagement.title') }}</h2>
       <b-button variant="outline-primary" @click="loadGeneralSetup">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.generalSetupManagement.refresh') }}
       </b-button>
     </div>
 
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" md="6">
-          <b-form-group label="Search" label-for="search-input">
+          <b-form-group :label="$t('admin.generalSetupManagement.search')" label-for="search-input">
             <b-input-group>
               <b-form-input id="search-input" v-model="searchTerm"
-                placeholder="Search by code, description, or value..." />
+                :placeholder="$t('admin.generalSetupManagement.searchPlaceholder')" />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
                   <feather-icon icon="XIcon" size="14" />
@@ -25,7 +25,7 @@
         </b-col>
         <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
           <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'setting' : 'settings' }}
+            {{ $t('admin.generalSetupManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.generalSetupManagement.setting') : $t('admin.generalSetupManagement.settings') }}
           </small>
         </b-col>
       </b-row>
@@ -36,14 +36,14 @@
         <template #table-busy>
           <div class="text-center text-danger my-2">
             <b-spinner class="align-middle" />
-            <strong> Loading...</strong>
+            <strong>{{ $t('admin.generalSetupManagement.loading') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="SettingsIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No general setup settings found.</p>
+            <p class="text-muted mb-0">{{ $t('admin.generalSetupManagement.noSettingsFound') }}</p>
           </div>
         </template>
 
@@ -62,7 +62,7 @@
 
         <template #cell(readOnly)="row">
           <b-badge :variant="row.item.readOnly ? 'info' : 'secondary'">
-            {{ row.item.readOnly ? 'Read Only' : 'Editable' }}
+            {{ row.item.readOnly ? $t('admin.generalSetupManagement.readOnly') : $t('admin.generalSetupManagement.editable') }}
           </b-badge>
         </template>
 
@@ -80,7 +80,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <label for="per-page-select" class="mr-2 mb-0">{{ $t('admin.generalSetupManagement.itemsPerPage') }}</label>
               <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
                 style="width: auto;" />
             </div>
@@ -88,7 +88,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} settings
+                {{ $t('admin.generalSetupManagement.showing') }} {{ startIndex }} {{ $t('admin.generalSetupManagement.to') }} {{ endIndex }} {{ $t('admin.generalSetupManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.generalSetupManagement.setting') : $t('admin.generalSetupManagement.settings') }}
               </small>
             </div>
           </b-col>
@@ -99,24 +99,24 @@
       </div>
     </b-card>
 
-    <b-modal v-model="showEditModal" title="Edit Setting" @ok="saveSetting" :ok-disabled="!canSaveSetting"
+    <b-modal v-model="showEditModal" :title="$t('admin.generalSetupManagement.editSetting')" @ok="saveSetting" :ok-disabled="!canSaveSetting"
       @hidden="resetEditForm">
       <div v-if="settingToEdit">
-        <b-form-group label="Code">
+        <b-form-group :label="$t('admin.generalSetupManagement.code')">
           <b-form-input :value="settingToEdit.code" disabled />
         </b-form-group>
 
-        <b-form-group label="Value" label-for="setting-value">
+        <b-form-group :label="$t('admin.generalSetupManagement.value')" label-for="setting-value">
           <b-form-input id="setting-value" v-model="editForm.valeur" required />
         </b-form-group>
 
-        <b-form-group label="Description" label-for="setting-description">
+        <b-form-group :label="$t('admin.generalSetupManagement.description')" label-for="setting-description">
           <b-form-textarea id="setting-description" v-model="editForm.description" rows="3"
-            placeholder="Optional description" disabled />
+            :placeholder="$t('admin.generalSetupManagement.optionalDescription')" disabled />
         </b-form-group>
       </div>
       <div v-else>
-        <p class="text-muted mb-0">Select a setting to edit.</p>
+        <p class="text-muted mb-0">{{ $t('admin.generalSetupManagement.selectToEdit') }}</p>
       </div>
     </b-modal>
   </div>
@@ -140,13 +140,6 @@ export default {
         { value: 50, text: '50' },
         { value: 100, text: '100' }
       ],
-      setupFields: [
-        { key: 'code', label: 'Code', sortable: true },
-        { key: 'valeur', label: 'Value', sortable: true },
-        { key: 'description', label: 'Description', sortable: false },
-        { key: 'readOnly', label: 'Read Only', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' }
-      ],
       showEditModal: false,
       settingToEdit: null,
       editForm: {
@@ -156,6 +149,15 @@ export default {
     }
   },
   computed: {
+    setupFields() {
+      return [
+        { key: 'code', label: this.$t('admin.generalSetupManagement.code'), sortable: true },
+        { key: 'valeur', label: this.$t('admin.generalSetupManagement.value'), sortable: true },
+        { key: 'description', label: this.$t('admin.generalSetupManagement.description'), sortable: false },
+        { key: 'readOnly', label: this.$t('admin.generalSetupManagement.readOnly'), sortable: true },
+        { key: 'actions', label: this.$t('common.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' }
+      ]
+    },
     filteredSettings() {
       if (!this.searchTerm) {
         return this.settings
@@ -215,9 +217,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to load general setup',
+            text: this.$t('admin.generalSetupManagement.failedToLoad'),
             variant: 'danger'
           }
         })
@@ -233,9 +235,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Read Only',
+            title: this.$t('admin.generalSetupManagement.readOnly'),
             icon: 'AlertCircleIcon',
-            text: 'This setting is read only and cannot be modified.',
+            text: this.$t('admin.generalSetupManagement.readOnlyWarning'),
             variant: 'warning'
           }
         })
@@ -267,9 +269,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Setting updated successfully',
+              text: this.$t('admin.generalSetupManagement.updatedSuccessfully'),
               variant: 'success'
             }
           })
@@ -279,14 +281,14 @@ export default {
         }
       } catch (error) {
         console.error('Error updating setting:', error)
-        let errorMessage = 'Failed to update setting'
+        let errorMessage = this.$t('admin.generalSetupManagement.failedToUpdate')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

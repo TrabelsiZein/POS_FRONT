@@ -1,22 +1,22 @@
 <template>
   <div class="item-families-page">
     <div class="page-header">
-      <h2 class="mb-0">Item Families</h2>
+      <h2 class="mb-0">{{ $t('admin.itemFamiliesManagement.title') }}</h2>
       <b-button variant="outline-primary" @click="loadFamilies" :disabled="loading">
         <feather-icon icon="RefreshCwIcon" size="16" class="mr-1" />
-        Refresh
+        {{ $t('admin.itemFamiliesManagement.refresh') }}
       </b-button>
     </div>
 
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" md="6">
-          <b-form-group label="Search" label-for="family-search">
+          <b-form-group :label="$t('admin.itemFamiliesManagement.search')" label-for="family-search">
             <b-input-group>
               <b-form-input
                 id="family-search"
                 v-model="searchTerm"
-                placeholder="Search by code, name, or description..."
+                :placeholder="$t('admin.itemFamiliesManagement.searchPlaceholder')"
               />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
@@ -28,7 +28,7 @@
         </b-col>
         <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
           <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'family' : 'families' }}
+            {{ $t('admin.itemFamiliesManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.itemFamiliesManagement.family') : $t('admin.itemFamiliesManagement.families') }}
           </small>
         </b-col>
       </b-row>
@@ -36,10 +36,10 @@
 
     <b-card>
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0">Families</h4>
+        <h4 class="mb-0">{{ $t('admin.itemFamiliesManagement.familiesList') }}</h4>
         <b-button variant="primary" size="sm" @click="openFamilyModal()" :disabled="actionsDisabled">
           <feather-icon icon="PlusIcon" size="14" class="mr-1" />
-          Add Family
+          {{ $t('admin.itemFamiliesManagement.addFamily') }}
         </b-button>
       </div>
 
@@ -56,14 +56,14 @@
         <template #table-busy>
           <div class="text-center text-muted my-2">
             <b-spinner class="align-middle mr-2" />
-            <strong>Loading families…</strong>
+            <strong>{{ $t('admin.itemFamiliesManagement.loadingText') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="LayersIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No families found.</p>
+            <p class="text-muted mb-0">{{ $t('admin.itemFamiliesManagement.noFamiliesFound') }}</p>
           </div>
         </template>
 
@@ -74,7 +74,7 @@
 
         <template #cell(active)="row">
           <b-badge :variant="row.item.active !== false ? 'success' : 'secondary'">
-            {{ row.item.active !== false ? 'Active' : 'Inactive' }}
+            {{ row.item.active !== false ? $t('admin.itemFamiliesManagement.active') : $t('admin.itemFamiliesManagement.inactive') }}
           </b-badge>
         </template>
 
@@ -105,7 +105,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="families-per-page" class="mr-2 mb-0">Items per page:</label>
+              <label for="families-per-page" class="mr-2 mb-0">{{ $t('admin.itemFamiliesManagement.itemsPerPage') }}</label>
               <b-form-select
                 id="families-per-page"
                 v-model="perPage"
@@ -118,7 +118,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} families
+                {{ $t('admin.itemFamiliesManagement.showing') }} {{ startIndex }} {{ $t('admin.itemFamiliesManagement.to') }} {{ endIndex }} {{ $t('admin.itemFamiliesManagement.of') }} {{ totalRows }} {{ $t('admin.itemFamiliesManagement.families') }}
               </small>
             </div>
           </b-col>
@@ -137,38 +137,38 @@
     <b-modal
       id="family-modal"
       v-model="showFamilyModal"
-      :title="editingFamily ? 'Edit Family' : 'Add Family'"
+      :title="editingFamily ? $t('admin.itemFamiliesManagement.modal.editFamily') : $t('admin.itemFamiliesManagement.modal.addFamily')"
       @ok="saveFamily"
       :ok-disabled="!canSaveFamily"
       @hidden="resetFamilyForm"
     >
       <b-form>
-        <b-form-group label="Code *" label-for="family-code">
+        <b-form-group :label="$t('admin.itemFamiliesManagement.modal.code')" label-for="family-code">
           <b-form-input
             id="family-code"
             v-model.trim="familyForm.code"
-            placeholder="Unique code"
+            :placeholder="$t('admin.itemFamiliesManagement.modal.codePlaceholder')"
           />
         </b-form-group>
 
-        <b-form-group label="Name *" label-for="family-name">
+        <b-form-group :label="$t('admin.itemFamiliesManagement.modal.name')" label-for="family-name">
           <b-form-input
             id="family-name"
             v-model.trim="familyForm.name"
-            placeholder="Family name"
+            :placeholder="$t('admin.itemFamiliesManagement.modal.namePlaceholder')"
           />
         </b-form-group>
 
-        <b-form-group label="Description" label-for="family-description">
+        <b-form-group :label="$t('admin.itemFamiliesManagement.modal.description')" label-for="family-description">
           <b-form-textarea
             id="family-description"
             v-model.trim="familyForm.description"
             rows="3"
-            placeholder="Optional description"
+            :placeholder="$t('admin.itemFamiliesManagement.modal.descriptionPlaceholder')"
           />
         </b-form-group>
 
-        <b-form-group label="Display Order" label-for="family-order">
+        <b-form-group :label="$t('admin.itemFamiliesManagement.modal.displayOrder')" label-for="family-order">
           <b-form-input
             id="family-order"
             v-model.number="familyForm.displayOrder"
@@ -179,7 +179,7 @@
 
         <b-form-group>
           <b-form-checkbox v-model="familyForm.active" switch>
-            Active
+            {{ $t('admin.itemFamiliesManagement.modal.active') }}
           </b-form-checkbox>
         </b-form-group>
       </b-form>
@@ -188,17 +188,17 @@
     <b-modal
       id="delete-family-modal"
       v-model="showDeleteFamilyModal"
-      title="Delete Family"
+      :title="$t('admin.itemFamiliesManagement.deleteModal.title')"
       ok-variant="danger"
-      ok-title="Delete"
+      :ok-title="$t('admin.itemFamiliesManagement.deleteModal.delete')"
       @ok="deleteFamily"
     >
       <p class="mb-0">
-        Are you sure you want to delete the family
+        {{ $t('admin.itemFamiliesManagement.deleteModal.confirmMessage') }}
         <strong v-if="familyToDelete">{{ familyToDelete.name }}</strong>?
       </p>
       <p class="text-danger small mb-0">
-        This action cannot be undone.
+        {{ $t('admin.itemFamiliesManagement.deleteModal.cannotUndone') }}
       </p>
     </b-modal>
   </div>
@@ -222,13 +222,6 @@ export default {
         { value: 20, text: '20' },
         { value: 50, text: '50' },
         { value: 100, text: '100' },
-      ],
-      familyFields: [
-        { key: 'code', label: 'Code', sortable: true },
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'displayOrder', label: 'Order', sortable: true },
-        { key: 'active', label: 'Status', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' },
       ],
       showFamilyModal: false,
       showDeleteFamilyModal: false,
@@ -274,6 +267,15 @@ export default {
     canSaveFamily() {
       return this.familyForm.code && this.familyForm.name
     },
+    familyFields() {
+      return [
+        { key: 'code', label: this.$t('admin.itemFamiliesManagement.code'), sortable: true },
+        { key: 'name', label: this.$t('admin.itemFamiliesManagement.name'), sortable: true },
+        { key: 'displayOrder', label: this.$t('admin.itemFamiliesManagement.order'), sortable: true },
+        { key: 'active', label: this.$t('admin.itemFamiliesManagement.status'), sortable: true },
+        { key: 'actions', label: this.$t('admin.itemFamiliesManagement.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' },
+      ]
+    },
   },
   watch: {
     searchTerm() {
@@ -306,7 +308,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: 'Failed to load item families.',
+              text: this.$t('admin.itemFamiliesManagement.messages.failedToLoad'),
               variant: 'danger',
             },
           })
@@ -372,7 +374,7 @@ export default {
           props: {
             title: 'Success',
             icon: 'CheckIcon',
-            text: `Family ${this.editingFamily ? 'updated' : 'created'} successfully.`,
+            text: this.editingFamily ? this.$t('admin.itemFamiliesManagement.messages.familyUpdated') : this.$t('admin.itemFamiliesManagement.messages.familyCreated'),
             variant: 'success',
           },
         })
@@ -385,7 +387,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'XIcon',
-            text: error.response?.data || 'Failed to save family.',
+            text: error.response?.data || this.$t('admin.itemFamiliesManagement.messages.failedToSave'),
             variant: 'danger',
           },
         })
@@ -401,9 +403,9 @@ export default {
             this.$toast({
               component: ToastificationContent,
               props: {
-                title: 'Cannot Delete',
+                title: this.$t('admin.itemFamiliesManagement.messages.cannotDelete'),
                 icon: 'AlertCircleIcon',
-                text: 'Delete or reassign the subfamilies before removing this family.',
+                text: this.$t('admin.itemFamiliesManagement.messages.deleteSubfamiliesFirst'),
                 variant: 'warning',
               },
             })
@@ -419,7 +421,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: 'Unable to verify subfamilies for this family.',
+              text: this.$t('admin.itemFamiliesManagement.messages.unableToVerify'),
               variant: 'danger',
             },
           })
@@ -434,7 +436,7 @@ export default {
             props: {
               title: 'Deleted',
               icon: 'Trash2Icon',
-              text: 'Family deleted successfully.',
+              text: this.$t('admin.itemFamiliesManagement.messages.familyDeleted'),
               variant: 'success',
             },
           })
@@ -447,7 +449,7 @@ export default {
             props: {
               title: 'Error',
               icon: 'XIcon',
-              text: error.response?.data || 'Failed to delete family.',
+              text: error.response?.data || this.$t('admin.itemFamiliesManagement.messages.failedToDelete'),
               variant: 'danger',
             },
           })

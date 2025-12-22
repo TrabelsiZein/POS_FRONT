@@ -5,8 +5,8 @@
       <template #overlay>
         <div class="text-center">
           <b-spinner type="grow" variant="primary" class="mb-3"></b-spinner>
-          <p class="h4">Processing Payment...</p>
-          <p>Creating ticket and printing receipt</p>
+          <p class="h4">{{ $t('pos.payment.processingPayment') }}</p>
+          <p>{{ $t('pos.payment.creatingTicket') }}</p>
         </div>
       </template>
       <div></div>
@@ -17,14 +17,14 @@
       <div class="summary-left">
         <b-button variant="outline-secondary" @click="goBack" :disabled="loading" class="back-btn">
           <feather-icon icon="ArrowLeftIcon" size="18" class="mr-50" />
-          Back
+          {{ $t('pos.payment.back') }}
         </b-button>
         <div class="summary-customer">
           <div class="customer-info-display">
             <strong v-if="selectedCustomer">{{ selectedCustomer.name }}</strong>
             <strong v-else-if="passengerCustomer">{{ passengerCustomer.name }}</strong>
             <b-badge v-if="passengerCustomer && (!selectedCustomer || selectedCustomer.customerCode === 'PASSENGER')"
-              variant="info" class="ml-2">Default</b-badge>
+              variant="info" class="ml-2">{{ $t('pos.payment.default') }}</b-badge>
             <small class="text-muted d-block" v-if="selectedCustomer">{{ selectedCustomer.customerCode }}</small>
             <small class="text-muted d-block" v-else-if="passengerCustomer">{{ passengerCustomer.customerCode }}</small>
           </div>
@@ -32,11 +32,11 @@
       </div>
       <div class="summary-totals">
         <div class="summary-item">
-          <span class="summary-label">Ticket Total:</span>
+          <span class="summary-label">{{ $t('pos.payment.ticketTotal') }}</span>
           <span class="summary-value">{{ formatTunCurrency(orderSummary.totalAmount) }}</span>
         </div>
         <div class="summary-item" v-if="headerDiscountAmount > 0">
-          <span class="summary-label">Discount:</span>
+          <span class="summary-label">{{ $t('pos.payment.discount') }}</span>
           <span class="summary-value text-danger">
             <template v-if="orderSummary && (orderSummary.discountPercent > 0 || orderSummary.discountAmount > 0)">
               <span v-if="orderSummary.discountPercent > 0">
@@ -50,15 +50,15 @@
           </span>
         </div>
         <div class="summary-item">
-          <span class="summary-label">Total After Discount:</span>
+          <span class="summary-label">{{ $t('pos.payment.totalAfterDiscount') }}</span>
           <span class="summary-value">{{ formatTunCurrency(totalAfterDiscount) }}</span>
         </div>
         <div class="summary-item">
-          <span class="summary-label">Total Paid:</span>
+          <span class="summary-label">{{ $t('pos.payment.totalPaid') }}</span>
           <span class="summary-value text-success">{{ formatTunCurrency(totalPaid) }}</span>
         </div>
         <div class="summary-item">
-          <span class="summary-label">Remaining:</span>
+          <span class="summary-label">{{ $t('pos.payment.remaining') }}</span>
           <span class="summary-value" :class="remainingBalance > 0 ? 'text-danger' : 'text-success'">
             {{ formatTunCurrency(Math.abs(remainingBalance)) }}
           </span>
@@ -71,7 +71,7 @@
       <!-- Panel 2: Payment Classes (Left) -->
       <div class="panel-payment-classes">
         <div class="payment-classes-header">
-          <h5>Payment Methods</h5>
+          <h5>{{ $t('pos.payment.paymentMethods') }}</h5>
         </div>
         <div class="payment-classes-list">
           <div v-for="method in paymentMethods" :key="method.id" class="payment-class-item"
@@ -87,19 +87,19 @@
         <!-- Panel 4: Payment Cards (Right-Top, Scrollable) -->
         <div class="panel-payment-cards">
           <div class="payment-cards-header">
-            <h5>Payment Details</h5>
+            <h5>{{ $t('pos.payment.paymentDetails') }}</h5>
           </div>
           <div class="payment-cards-container">
             <div v-if="paymentCards.length === 0" class="empty-cards">
               <feather-icon icon="CreditCardIcon" size="48" class="mb-2 text-muted" />
-              <p class="mb-0 text-muted">Select a payment method to add payment</p>
+              <p class="mb-0 text-muted">{{ $t('pos.payment.selectPaymentMethod') }}</p>
             </div>
             <div v-else class="payment-cards-list">
               <div v-for="(card, index) in paymentCards" :key="card.id || index" class="payment-card"
                 :class="{ selected: selectedCardIndex === index }" @click="selectCard(index)">
                 <div class="payment-card-header">
                   <div class="payment-card-title">
-                    <strong>{{ getPaymentMethodName(card.paymentMethodId) || 'Unknown Method' }}</strong>
+                    <strong>{{ getPaymentMethodName(card.paymentMethodId) || $t('pos.payment.unknownMethod') }}</strong>
                   </div>
                   <b-button variant="link" size="sm" @click.stop="removeCard(index)" class="card-delete-btn"
                     :disabled="loading">
@@ -108,9 +108,9 @@
                 </div>
                 <div class="payment-card-body">
                   <!-- Return Voucher Number -->
-                  <b-form-group v-if="isReturnVoucherPayment(card)" label="Voucher Number *" class="mb-2">
+                  <b-form-group v-if="isReturnVoucherPayment(card)" :label="$t('pos.payment.voucherNumber')" class="mb-2">
                     <b-input-group>
-                      <b-form-input v-model="card.voucherNumber" placeholder="Enter voucher number..."
+                      <b-form-input v-model="card.voucherNumber" :placeholder="$t('pos.payment.voucherNumberPlaceholder')"
                         @keyup.enter="validateVoucher(card)" @click.stop :disabled="loading" size="sm" />
                       <b-input-group-append>
                         <b-button variant="outline-primary" @click="validateVoucher(card)"
@@ -120,14 +120,14 @@
                       </b-input-group-append>
                     </b-input-group>
                     <small class="text-muted" v-if="card.voucherRemainingAmount !== undefined">
-                      Remaining: {{ formatTunCurrency(card.voucherRemainingAmount) }}
+                      {{ $t('pos.payment.remaining') }} {{ formatTunCurrency(card.voucherRemainingAmount) }}
                     </small>
                   </b-form-group>
 
                   <!-- Amount Input -->
-                  <b-form-group label="Amount *" class="mb-2">
+                  <b-form-group :label="$t('pos.payment.amount')" class="mb-2">
                     <b-input-group>
-                      <b-form-input v-model.number="card.amount" type="number" step="0.01" min="0.01" placeholder="0.00"
+                      <b-form-input v-model.number="card.amount" type="number" step="0.01" min="0.01" :placeholder="$t('pos.payment.amountPlaceholder')"
                         @input="updatePaymentTotal" @click.stop :disabled="isReturnVoucherPayment(card) || loading"
                         :readonly="isReturnVoucherPayment(card)" size="" :ref="`amount-input-${index}`" />
                       <b-input-group-append>
@@ -135,25 +135,25 @@
                       </b-input-group-append>
                     </b-input-group>
                     <small v-if="isReturnVoucherPayment(card)" class="text-muted">
-                      Amount is automatically set from voucher
+                      {{ $t('pos.payment.amountAutoSet') }}
                     </small>
                   </b-form-group>
 
                   <!-- Dynamic Required Fields -->
-                  <b-form-group v-if="requiresTitleNumber(card)" label="N° Titre *" class="mb-2">
-                    <b-form-input v-model="card.titleNumber" placeholder="N° du titre" @click.stop size="sm" />
+                  <b-form-group v-if="requiresTitleNumber(card)" :label="$t('pos.payment.titleNumber')" class="mb-2">
+                    <b-form-input v-model="card.titleNumber" :placeholder="$t('pos.payment.titleNumberPlaceholder')" @click.stop size="sm" />
                   </b-form-group>
 
-                  <b-form-group v-if="requiresDueDate(card)" label="Date Échéance *" class="mb-2">
+                  <b-form-group v-if="requiresDueDate(card)" :label="$t('pos.payment.dueDate')" class="mb-2">
                     <b-form-input v-model="card.dueDate" type="date" @click.stop size="sm" />
                   </b-form-group>
 
-                  <b-form-group v-if="requiresDrawerName(card)" label="Nom du tireur *" class="mb-2">
-                    <b-form-input v-model="card.drawerName" placeholder="Nom du tireur" @click.stop size="sm" />
+                  <b-form-group v-if="requiresDrawerName(card)" :label="$t('pos.payment.drawerName')" class="mb-2">
+                    <b-form-input v-model="card.drawerName" :placeholder="$t('pos.payment.drawerNamePlaceholder')" @click.stop size="sm" />
                   </b-form-group>
 
-                  <b-form-group v-if="requiresIssuingBank(card)" label="Banque émettrice *" class="mb-2">
-                    <b-form-input v-model="card.issuingBank" placeholder="Banque émettrice" @click.stop size="sm" />
+                  <b-form-group v-if="requiresIssuingBank(card)" :label="$t('pos.payment.issuingBank')" class="mb-2">
+                    <b-form-input v-model="card.issuingBank" :placeholder="$t('pos.payment.issuingBankPlaceholder')" @click.stop size="sm" />
                   </b-form-group>
                 </div>
               </div>
@@ -179,32 +179,32 @@
       <b-button variant="warning" size="lg" @click="saveAsPending" :disabled="cart.length === 0 || loading"
         class="action-btn">
         <feather-icon icon="SaveIcon" size="18" class="mr-50" />
-        <span v-if="loading">Saving...</span>
-        <span v-else>Save as Pending</span>
+        <span v-if="loading">{{ $t('pos.payment.buttons.saving') }}</span>
+        <span v-else>{{ $t('pos.payment.buttons.saveAsPending') }}</span>
       </b-button>
 
       <b-button variant="info" size="lg" @click="openDiscountDialog" :disabled="loading" class="action-btn">
         <feather-icon icon="PercentIcon" size="18" class="mr-50" />
-        Discount
+        {{ $t('pos.payment.buttons.discount') }}
       </b-button>
 
       <b-button variant="info" size="lg" @click="openCustomerDialog" :disabled="loading" class="action-btn">
         <feather-icon icon="UsersIcon" size="18" class="mr-50" />
-        Customer
+        {{ $t('pos.payment.buttons.customer') }}
       </b-button>
 
       <b-button variant="success" size="lg" @click="completePayment" :disabled="!canCompletePayment || loading"
         class="action-btn">
         <feather-icon icon="CheckCircleIcon" size="18" class="mr-50" />
-        <span v-if="loading">Processing...</span>
-        <span v-else>Complete Payment</span>
+        <span v-if="loading">{{ $t('pos.payment.buttons.processing') }}</span>
+        <span v-else>{{ $t('pos.payment.processPayment') }}</span>
       </b-button>
     </div>
 
     <!-- Discount Dialog -->
     <b-modal
       v-model="showDiscountDialog"
-      title="Apply Header Discount"
+      :title="$t('pos.payment.headerDiscount.title')"
       hide-footer
       centered
       size="md"
@@ -213,19 +213,19 @@
     >
       <div class="discount-dialog">
         <!-- Discount Type Selection -->
-        <b-form-group label="Discount Type" class="mb-3">
+        <b-form-group :label="$t('pos.payment.headerDiscount.discountType')" class="mb-3">
           <b-form-radio-group
             v-model="discountType"
             :options="[
-              { text: 'Percentage (%)', value: 'percentage' },
-              { text: 'Amount (TND)', value: 'amount' }
+              { text: $t('pos.payment.headerDiscount.percentage') + ' (%)', value: 'percentage' },
+              { text: $t('pos.payment.headerDiscount.amount') + ' (TND)', value: 'amount' }
             ]"
             class="discount-type-radio"
           ></b-form-radio-group>
         </b-form-group>
 
         <!-- Discount Value Input -->
-        <b-form-group :label="discountType === 'percentage' ? 'Discount Percentage' : 'Discount Amount'" class="mb-3">
+        <b-form-group :label="discountType === 'percentage' ? $t('pos.payment.headerDiscount.discountPercentage') : $t('pos.payment.headerDiscount.discountAmount')" class="mb-3">
           <b-input-group>
             <b-form-input
               v-model.number="discountValue"
@@ -233,7 +233,7 @@
               :step="discountType === 'percentage' ? 0.01 : 0.01"
               :min="0"
               :max="discountType === 'percentage' ? 100 : orderSummary.totalAmount"
-              :placeholder="discountType === 'percentage' ? 'Enter percentage...' : 'Enter amount...'"
+              :placeholder="discountType === 'percentage' ? $t('pos.payment.headerDiscount.placeholderPercentage') : $t('pos.payment.headerDiscount.placeholderAmount')"
               @input="updateDiscountPreview"
             />
             <b-input-group-append v-if="discountType === 'percentage'">
@@ -248,11 +248,11 @@
         <!-- Discount Preview -->
         <div v-if="discountValue" class="discount-preview mb-3 p-3" style="background: #f8f9fa; border-radius: 8px;">
           <div class="d-flex justify-content-between mb-2">
-            <span>Ticket Total:</span>
+            <span>{{ $t('pos.payment.headerDiscount.ticketTotal') }}</span>
             <strong>{{ formatTunCurrency(orderSummary.totalAmount) }}</strong>
           </div>
           <div class="d-flex justify-content-between mb-2">
-            <span>Discount:</span>
+            <span>{{ $t('pos.payment.headerDiscount.discountLabel') }}</span>
             <strong class="text-danger">
               {{ formatTunCurrency(calculatePreviewDiscount()) }}
               <span v-if="discountType === 'percentage'">({{ discountValue }}%)</span>
@@ -260,7 +260,7 @@
           </div>
           <hr />
           <div class="d-flex justify-content-between">
-            <span><strong>Total After Discount:</strong></span>
+            <span><strong>{{ $t('pos.payment.headerDiscount.totalAfterDiscountLabel') }}</strong></span>
             <strong class="text-success">{{ formatTunCurrency(calculatePreviewTotal()) }}</strong>
           </div>
         </div>
@@ -268,13 +268,13 @@
         <!-- Action Buttons -->
         <div class="d-flex justify-content-end">
           <b-button variant="secondary" @click="showDiscountDialog = false" class="mr-2">
-            Cancel
+            {{ $t('pos.payment.headerDiscount.cancel') }}
           </b-button>
           <b-button variant="danger" @click="clearHeaderDiscount" v-if="orderSummary.discountAmount > 0 || orderSummary.discountPercent > 0" class="mr-2">
-            Clear Discount
+            {{ $t('pos.payment.headerDiscount.clearDiscount') }}
           </b-button>
           <b-button variant="primary" @click="applyHeaderDiscount" :disabled="!discountValue || discountValue <= 0">
-            Apply Discount
+            {{ $t('pos.payment.headerDiscount.applyDiscount') }}
           </b-button>
         </div>
       </div>
@@ -477,9 +477,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'No Items',
+            title: this.$t('pos.payment.errors.noItems'),
             icon: 'AlertCircleIcon',
-            text: 'Cart is empty. Redirecting to item selection...',
+            text: this.$t('pos.payment.errors.cartEmpty'),
             variant: 'warning'
           }
         })
@@ -581,9 +581,9 @@ export default {
       this.$toast({
         component: ToastificationContent,
         props: {
-          title: 'Coming Soon',
+          title: this.$t('pos.payment.errors.comingSoon'),
           icon: 'InfoIcon',
-          text: 'Customer selection dialog will be implemented soon',
+          text: this.$t('pos.payment.errors.customerDialogComingSoon'),
           variant: 'info'
         }
       })
@@ -857,9 +857,9 @@ export default {
             this.$toast({
               component: ToastificationContent,
               props: {
-                title: 'Invalid Voucher',
+                title: this.$t('pos.payment.errors.invalidVoucher'),
                 icon: 'XIcon',
-                text: 'This voucher is expired or fully used',
+                text: this.$t('pos.payment.errors.voucherExpired'),
                 variant: 'danger'
               }
             })
@@ -878,16 +878,16 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Voucher Validated',
+              title: this.$t('pos.payment.success.voucherValidated'),
               icon: 'CheckCircleIcon',
-              text: `Voucher validated. Remaining amount: ${this.formatTunCurrency(voucherData.remainingAmount)}`,
+              text: this.$t('pos.payment.success.voucherValidatedText', { amount: this.formatTunCurrency(voucherData.remainingAmount) }),
               variant: 'success'
             }
           })
         }
       } catch (error) {
         console.error('Error validating voucher:', error)
-        let errorMessage = 'Failed to validate voucher. Please check the voucher number.'
+        let errorMessage = this.$t('pos.payment.errors.failedToValidateVoucher')
         if (error.response && error.response.data) {
           errorMessage = error.response.data.message || error.response.data || errorMessage
         }
@@ -895,7 +895,7 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -1009,9 +1009,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Print Error',
+            title: this.$t('pos.payment.errors.printError'),
             icon: 'XIcon',
-            text: 'Please allow popups to print receipts',
+            text: this.$t('pos.payment.errors.allowPopups'),
             variant: 'warning'
           }
         })
@@ -1208,9 +1208,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('pos.payment.success.saleCompleted'),
               icon: 'CheckCircleIcon',
-              text: `Sale ${response.data.salesNumber} completed!`,
+              text: this.$t('pos.payment.success.saleCompletedText', { number: response.data.salesNumber }),
               variant: 'success'
             }
           })
@@ -1224,7 +1224,7 @@ export default {
 
       } catch (error) {
         console.error('Error completing payment:', error)
-        let errorMessage = 'Failed to complete payment. Please try again.'
+        let errorMessage = this.$t('pos.payment.errors.failedToComplete')
 
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
@@ -1233,7 +1233,7 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -1308,9 +1308,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('pos.payment.success.pendingTicketSaved'),
               icon: 'CheckCircleIcon',
-              text: `Pending ticket ${response.data.salesNumber} saved!`,
+              text: this.$t('pos.payment.success.pendingTicketSavedText', { number: response.data.salesNumber }),
               variant: 'success'
             }
           })
@@ -1322,7 +1322,7 @@ export default {
 
       } catch (error) {
         console.error('Error saving pending sale:', error)
-        let errorMessage = 'Failed to save pending sale. Please try again.'
+        let errorMessage = this.$t('pos.payment.errors.failedToSavePending')
 
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
@@ -1331,7 +1331,7 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

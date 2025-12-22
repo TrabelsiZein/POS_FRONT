@@ -1,16 +1,16 @@
 export default [
     {
-        title: 'Session Dashboard',
+        title: 'admin.adminDashboard',
         icon: 'StarIcon',
         resource: 'admin-sessions',
     },
     {
-        title: 'ERP Jobs',
+        title: 'admin.erpJobs',
         icon: 'RefreshCwIcon',
         resource: 'admin-erp-jobs',
     },
     {
-        title: 'ERP Logs',
+        title: 'admin.erpLogs',
         icon: 'ActivityIcon',
         resource: 'admin-erp-communications',
     },

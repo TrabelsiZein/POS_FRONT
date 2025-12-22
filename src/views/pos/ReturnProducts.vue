@@ -1,25 +1,25 @@
 <template>
   <div class="return-products-container">
     <div class="page-header">
-      <h2 class="mb-0">Return Products</h2>
+      <h2 class="mb-0">{{ $t('pos.returnProducts.title') }}</h2>
       <b-button variant="outline-secondary" @click="goBack" :disabled="loading">
-        Back to POS
+        {{ $t('pos.returnProducts.backToPos') }}
       </b-button>
     </div>
 
     <!-- Ticket Search -->
     <b-card class="mb-4">
-      <h5 class="mb-3">Enter Ticket Number</h5>
+      <h5 class="mb-3">{{ $t('pos.returnProducts.enterTicketNumber') }}</h5>
       <b-row>
         <b-col cols="12" md="6">
           <b-input-group>
-            <b-form-input v-model="ticketNumber" placeholder="Enter ticket number..." @keyup.enter="loadTicket"
+            <b-form-input v-model="ticketNumber" :placeholder="$t('pos.returnProducts.ticketNumberPlaceholder')" @keyup.enter="loadTicket"
               :disabled="loading" ref="ticketInput" />
             <b-input-group-append>
               <b-button variant="primary" @click="loadTicket" :disabled="loading || !ticketNumber">
                 <b-spinner v-if="loading" small class="mr-1" />
                 <feather-icon v-else icon="SearchIcon"/>
-                Load Ticket
+                {{ $t('pos.returnProducts.loadTicket') }}
               </b-button>
             </b-input-group-append>
           </b-input-group>
@@ -31,49 +31,49 @@
     <b-card v-if="ticketData" class="mb-4 ticket-details-card">
       <div class="d-flex align-items-center mb-3">
         <feather-icon icon="FileTextIcon" size="20" class="mr-2 text-primary" />
-        <h5 class="mb-0">Ticket Details</h5>
+        <h5 class="mb-0">{{ $t('pos.returnProducts.ticketDetails') }}</h5>
       </div>
       <b-row>
         <b-col cols="12" md="6">
           <div class="detail-item">
-            <strong class="detail-label">Ticket Number:</strong>
+            <strong class="detail-label">{{ $t('pos.returnProducts.ticketNumber') }}</strong>
             <span class="detail-value">{{ ticketData.ticket.salesNumber }}</span>
           </div>
           <div class="detail-item">
-            <strong class="detail-label">Date:</strong>
+            <strong class="detail-label">{{ $t('pos.returnProducts.date') }}</strong>
             <span class="detail-value">{{ formatDate(ticketData.ticket.salesDate) }}</span>
           </div>
           <div class="detail-item" v-if="ticketData.ticket.customer">
-            <strong class="detail-label">Customer:</strong>
+            <strong class="detail-label">{{ $t('pos.returnProducts.customer') }}</strong>
             <span class="detail-value">{{ ticketData.ticket.customer.name }}</span>
             <small class="text-muted ml-2">({{ ticketData.ticket.customer.customerCode }})</small>
           </div>
           <div class="detail-item" v-if="ticketData.ticket.createdByUser">
-            <strong class="detail-label">Cashier:</strong>
+            <strong class="detail-label">{{ $t('pos.returnProducts.cashier') }}</strong>
             <span class="detail-value">{{ ticketData.ticket.createdByUser.fullName || ticketData.ticket.createdByUser.username }}</span>
           </div>
         </b-col>
         <b-col cols="12" md="6">
           <div class="ticket-summary">
             <div class="summary-item" v-if="ticketData.ticket.subtotal">
-              <span class="summary-label">Subtotal:</span>
+              <span class="summary-label">{{ $t('pos.returnProducts.subtotal') }}</span>
               <span class="summary-value">{{ formatPrice(ticketData.ticket.subtotal) }} TND</span>
             </div>
             <div class="summary-item" v-if="ticketData.ticket.taxAmount">
-              <span class="summary-label">Tax (VAT):</span>
+              <span class="summary-label">{{ $t('pos.returnProducts.taxVat') }}</span>
               <span class="summary-value">{{ formatPrice(ticketData.ticket.taxAmount) }} TND</span>
             </div>
             <div class="summary-item" v-if="ticketData.ticket.discountAmount">
-              <span class="summary-label">Discount:</span>
+              <span class="summary-label">{{ $t('pos.returnProducts.discount') }}</span>
               <span class="summary-value text-danger">-{{ formatPrice(ticketData.ticket.discountAmount) }} TND</span>
             </div>
             <div class="summary-item total-amount">
-              <span class="summary-label"><strong>Total Amount (TTC):</strong></span>
+              <span class="summary-label"><strong>{{ $t('pos.returnProducts.totalAmountTtc') }}</strong></span>
               <span class="summary-value"><strong>{{ formatPrice(ticketData.ticket.totalAmount) }} TND</strong></span>
             </div>
           </div>
           <div class="detail-item mt-2" v-if="!ticketData.canReturn">
-            <b-badge variant="danger">This ticket is too old to be returned</b-badge>
+            <b-badge variant="danger">{{ $t('pos.returnProducts.tooOld') }}</b-badge>
           </div>
         </b-col>
       </b-row>
@@ -83,7 +83,7 @@
     <b-card v-if="ticketData && ticketData.canReturn" class="mb-4 return-items-card">
       <div class="d-flex align-items-center mb-3">
         <feather-icon icon="PackageIcon" size="20" class="mr-2 text-primary" />
-        <h5 class="mb-0">Select Items to Return</h5>
+        <h5 class="mb-0">{{ $t('pos.returnProducts.selectItemsToReturn') }}</h5>
       </div>
       <b-table :items="ticketData.salesLines" :fields="lineFields" striped hover responsive class="return-items-table">
         <template #cell(item)="row">
@@ -100,17 +100,17 @@
             {{ row.item.remainingQuantity !== undefined ? row.item.remainingQuantity : row.item.quantity }}
           </span>
           <div v-if="row.item.returnedQuantity > 0" class="small text-muted">
-            ({{ row.item.returnedQuantity }} already returned)
+            {{ $t('pos.returnProducts.alreadyReturned', { quantity: row.item.returnedQuantity }) }}
           </div>
         </template>
         <template #cell(unitPrice)="row">
           <div>
             <strong>{{ formatPrice(row.item.unitPriceIncludingVat || row.item.unitPrice) }} TND</strong>
             <div class="small text-muted" v-if="row.item.vatPercent">
-              <span class="text-info">VAT: {{ row.item.vatPercent }}%</span>
+              <span class="text-info">{{ $t('pos.returnProducts.vatLabel', { percent: row.item.vatPercent }) }}</span>
             </div>
             <div class="small text-muted" v-if="row.item.unitPriceIncludingVat && row.item.unitPrice">
-              <span class="text-muted">HT: {{ formatPrice(row.item.unitPrice) }} TND</span>
+              <span class="text-muted">{{ $t('pos.returnProducts.htLabel', { amount: formatPrice(row.item.unitPrice) }) }}</span>
             </div>
           </div>
         </template>
@@ -120,14 +120,14 @@
             @keyup.enter="onReturnQuantityBlur(row.item)" :disabled="loading" style="width: 100px;"
             :state="getReturnQtyState(row.item)" class="return-qty-input" />
           <b-form-invalid-feedback v-if="row.item.returnQuantity > (row.item.remainingQuantity || row.item.quantity)" :state="false">
-            Cannot exceed {{ row.item.remainingQuantity !== undefined ? row.item.remainingQuantity : row.item.quantity }}
+            {{ $t('pos.returnProducts.cannotExceed', { max: row.item.remainingQuantity !== undefined ? row.item.remainingQuantity : row.item.quantity }) }}
           </b-form-invalid-feedback>
         </template>
         <template #cell(returnAmount)="row">
           <div>
             <strong class="text-success">{{ formatPrice(getReturnAmount(row.item)) }} TND</strong>
             <div class="small text-muted" v-if="row.item.vatAmount && row.item.returnQuantity > 0">
-              <span class="text-info">VAT: {{ formatPrice((row.item.vatAmount / row.item.quantity) * row.item.returnQuantity) }} TND</span>
+              <span class="text-info">{{ $t('pos.returnProducts.vatAmount', { amount: formatPrice((row.item.vatAmount / row.item.quantity) * row.item.returnQuantity) }) }}</span>
             </div>
           </div>
         </template>
@@ -136,12 +136,12 @@
 
     <!-- Return Type Selection -->
     <b-card v-if="ticketData && ticketData.canReturn && hasReturnItems" class="mb-4">
-      <h5 class="mb-3">Return Type</h5>
+      <h5 class="mb-3">{{ $t('pos.returnProducts.returnType') }}</h5>
       <b-form-group>
         <b-form-radio-group v-model="returnType" :options="returnTypeOptions" @change="onReturnTypeChange" />
       </b-form-group>
       <b-alert v-if="returnType === 'SIMPLE_RETURN' && !ticketData.isSimpleReturnEnabled" variant="warning" show>
-        Simple return is not enabled. Please select Return Voucher.
+        {{ $t('pos.returnProducts.simpleReturnNotEnabled') }}
       </b-alert>
     </b-card>
 
@@ -149,21 +149,21 @@
     <b-card v-if="ticketData && ticketData.canReturn && hasReturnItems" class="mb-4 return-summary-card">
       <div class="d-flex align-items-center mb-3">
         <feather-icon icon="CalculatorIcon" size="20" class="mr-2 text-primary" />
-        <h5 class="mb-0">Return Summary</h5>
+        <h5 class="mb-0">{{ $t('pos.returnProducts.returnSummary') }}</h5>
       </div>
       <b-row>
         <b-col cols="12" md="6" offset-md="6">
           <div class="return-summary">
             <div class="summary-row">
-              <span class="summary-label">Subtotal (HT):</span>
+              <span class="summary-label">{{ $t('pos.returnProducts.totalItems') }}</span>
               <span class="summary-value">{{ formatPrice(totalReturnAmountHT) }} TND</span>
             </div>
             <div class="summary-row" v-if="totalReturnVAT > 0">
-              <span class="summary-label">Tax (VAT):</span>
+              <span class="summary-label">{{ $t('pos.returnProducts.taxVat') }}</span>
               <span class="summary-value text-info">{{ formatPrice(totalReturnVAT) }} TND</span>
             </div>
             <div class="summary-row total-return">
-              <span class="summary-label"><strong>Total Return Amount (TTC):</strong></span>
+              <span class="summary-label"><strong>{{ $t('pos.returnProducts.totalAmount') }}</strong></span>
               <span class="summary-value"><strong class="text-success">{{ formatPrice(totalReturnAmount) }} TND</strong></span>
             </div>
           </div>
@@ -176,7 +176,7 @@
       <b-button variant="success" size="lg" @click="processReturn" :disabled="loading || !canProcessReturn">
         <b-spinner v-if="loading" small class="mr-2" />
         <feather-icon v-else icon="CheckCircleIcon" size="18" class="mr-2" />
-        Process Return
+        {{ $t('pos.returnProducts.processReturn') }}
       </b-button>
     </div>
   </div>
@@ -194,24 +194,26 @@ export default {
       ticketNumber: '',
       ticketData: null,
       returnType: 'RETURN_VOUCHER',
-      loading: false,
-      lineFields: [
-        { key: 'item', label: 'Item' },
-        { key: 'originalQty', label: 'Purchased Qty', thClass: 'text-center', tdClass: 'text-center' },
-        { key: 'remainingQty', label: 'Remaining Qty', thClass: 'text-center', tdClass: 'text-center' },
-        { key: 'unitPrice', label: 'Unit Price (TTC)', thClass: 'text-right', tdClass: 'text-right' },
-        { key: 'returnQty', label: 'Return Qty', thClass: 'text-center', tdClass: 'text-center' },
-        { key: 'returnAmount', label: 'Return Amount (TTC)', thClass: 'text-right', tdClass: 'text-right' }
-      ]
+      loading: false
     }
   },
   computed: {
+    lineFields() {
+      return [
+        { key: 'item', label: this.$t('pos.returnProducts.tableHeaders.item') },
+        { key: 'originalQty', label: this.$t('pos.returnProducts.tableHeaders.purchasedQty'), thClass: 'text-center', tdClass: 'text-center' },
+        { key: 'remainingQty', label: this.$t('pos.returnProducts.tableHeaders.remainingQty'), thClass: 'text-center', tdClass: 'text-center' },
+        { key: 'unitPrice', label: this.$t('pos.returnProducts.tableHeaders.unitPrice'), thClass: 'text-right', tdClass: 'text-right' },
+        { key: 'returnQty', label: this.$t('pos.returnProducts.tableHeaders.returnQty'), thClass: 'text-center', tdClass: 'text-center' },
+        { key: 'returnAmount', label: this.$t('pos.returnProducts.tableHeaders.returnAmount'), thClass: 'text-right', tdClass: 'text-right' }
+      ]
+    },
     returnTypeOptions() {
       const options = []
       if (this.ticketData && this.ticketData.isSimpleReturnEnabled) {
-        options.push({ value: 'SIMPLE_RETURN', text: 'Simple Return (Cash Refund)' })
+        options.push({ value: 'SIMPLE_RETURN', text: this.$t('pos.returnProducts.simpleReturn') })
       }
-      options.push({ value: 'RETURN_VOUCHER', text: 'Return Voucher' })
+      options.push({ value: 'RETURN_VOUCHER', text: this.$t('pos.returnProducts.returnVoucher') })
       return options
     },
     hasReturnItems() {
@@ -283,9 +285,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
-            text: 'Please enter a ticket number',
+            text: this.$t('pos.returnProducts.errors.enterTicketNumber'),
             variant: 'danger'
           }
         })
@@ -321,14 +323,14 @@ export default {
         }
       } catch (error) {
         console.error('Error loading ticket:', error)
-        let errorMessage = 'Failed to load ticket. Please check the ticket number.'
+        let errorMessage = this.$t('pos.returnProducts.errors.failedToLoadTicket')
         if (error.response && error.response.data) {
           errorMessage = error.response.data.message || error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -359,9 +361,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Validation',
+              title: this.$t('common.warning'),
               icon: 'AlertCircleIcon',
-              text: `Return quantity cannot exceed remaining quantity (${maxReturnable})`,
+              text: this.$t('pos.returnProducts.errors.returnQuantityExceededMessage', { maxReturnable }),
               variant: 'warning'
             }
           })
@@ -457,7 +459,7 @@ export default {
 
         // Validate return quantity
         if (isNaN(returnQty)) {
-          validationErrors.push(`Invalid return quantity for ${line.item.name}`)
+          validationErrors.push(this.$t('pos.returnProducts.errors.invalidReturnQuantity', { itemName: line.item.name }))
           continue
         }
 
@@ -466,7 +468,7 @@ export default {
 
         // Validate range
         if (returnQty < 0) {
-          validationErrors.push(`Return quantity for ${line.item.name} cannot be negative`)
+          validationErrors.push(this.$t('pos.returnProducts.errors.returnQuantityNegative', { itemName: line.item.name }))
           continue
         }
 
@@ -474,7 +476,7 @@ export default {
         const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
         
         if (returnQty > maxReturnable) {
-          validationErrors.push(`Return quantity for ${line.item.name} (${returnQty}) cannot exceed remaining quantity (${maxReturnable})`)
+          validationErrors.push(this.$t('pos.returnProducts.errors.returnQuantityExceeded', { itemName: line.item.name, returnQty, maxReturnable }))
           continue
         }
 
@@ -492,7 +494,7 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Validation Error',
+            title: this.$t('pos.returnProducts.errors.validationError'),
             icon: 'XIcon',
             text: validationErrors.join('. '),
             variant: 'danger'
@@ -505,9 +507,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
-            text: 'Please select at least one item to return',
+            text: this.$t('pos.returnProducts.errors.selectAtLeastOne'),
             variant: 'danger'
           }
         })
@@ -529,9 +531,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: `Return ${response.data.returnNumber} processed successfully!`,
+              text: this.$t('pos.returnProducts.success.returnProcessed', { returnNumber: response.data.returnNumber }),
               variant: 'success'
             }
           })
@@ -542,9 +544,12 @@ export default {
             this.$toast({
               component: ToastificationContent,
               props: {
-                title: 'Return Voucher Created',
+                title: this.$t('pos.returnProducts.success.voucherCreated'),
                 icon: 'FileTextIcon',
-                text: `Voucher Number: ${response.data.returnVoucher.voucherNumber}, Amount: ${this.formatPrice(response.data.returnVoucher.voucherAmount)} TND`,
+                text: this.$t('pos.returnProducts.success.voucherInfo', { 
+                  voucherNumber: response.data.returnVoucher.voucherNumber, 
+                  amount: this.formatPrice(response.data.returnVoucher.voucherAmount) 
+                }),
                 variant: 'info'
               }
             })
@@ -565,14 +570,14 @@ export default {
         }
       } catch (error) {
         console.error('Error processing return:', error)
-        let errorMessage = 'Failed to process return. Please try again.'
+        let errorMessage = this.$t('pos.returnProducts.errors.failedToProcess')
         if (error.response && error.response.data) {
           errorMessage = error.response.data.message || error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -613,7 +618,7 @@ export default {
         discountAmount: 0,
         paidAmount: returnData.returnVoucher.voucherAmount,
         changeAmount: 0,
-        notes: `Return Voucher - Original Ticket: ${returnData.originalSalesHeader?.salesNumber || 'N/A'}`,
+        notes: this.$t('pos.returnProducts.print.voucherTitle', { ticketNumber: returnData.originalSalesHeader?.salesNumber || 'N/A' }),
         createdByUser: {
           fullName: 'System',
           username: 'System'
@@ -624,7 +629,7 @@ export default {
         } : null,
         salesLines: returnLines.map(line => ({
           item: {
-            name: line.item?.name || 'Return Item',
+            name: line.item?.name || this.$t('pos.returnProducts.print.returnItem'),
             itemCode: line.item?.itemCode || 'N/A'
           },
           quantity: line.quantity || 0,
@@ -673,9 +678,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Print Error',
+            title: this.$t('pos.returnProducts.print.printError'),
             icon: 'XIcon',
-            text: 'Please allow popups to print vouchers',
+            text: this.$t('pos.returnProducts.print.allowPopups'),
             variant: 'warning'
           }
         })

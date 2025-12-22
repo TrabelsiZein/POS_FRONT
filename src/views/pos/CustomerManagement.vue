@@ -1,7 +1,7 @@
 <template>
   <div class="customer-management-container">
     <div class="page-header">
-      <h2 class="mb-0">Customer Management</h2>
+      <h2 class="mb-0">{{ $t('pos.customerManagement.title') }}</h2>
       <div class="d-flex align-items-center">
         <b-button 
           v-if="isPosUser" 
@@ -10,15 +10,15 @@
           class="mr-2"
         >
           <feather-icon icon="ArrowLeftIcon" size="16" class="mr-1" />
-          Back
+          {{ $t('pos.customerManagement.back') }}
         </b-button>
         <b-button variant="outline-primary" @click="loadCustomers" class="mr-2">
           <feather-icon icon="RefreshCwIcon" size="16" />
-          Refresh
+          {{ $t('pos.customerManagement.refresh') }}
         </b-button>
         <b-button variant="primary" @click="openAddCustomerModal" disabled>
           <feather-icon icon="PlusIcon" size="16" />
-          Add Customer
+          {{ $t('pos.customerManagement.addCustomer') }}
         </b-button>
       </div>
     </div>
@@ -27,12 +27,17 @@
     <b-card class="mb-3">
       <b-row>
         <b-col cols="12" lg="6">
-          <b-form-group label="Search" label-for="search-input" class="mb-lg-0">
+          <b-form-group :label="$t('pos.customerManagement.search')" label-for="search-input" class="mb-lg-0">
             <b-input-group>
+              <b-input-group-prepend>
+                <b-input-group-text class="bg-white">
+                  <feather-icon icon="SearchIcon" size="16" />
+                </b-input-group-text>
+              </b-input-group-prepend>
               <b-form-input
                 id="search-input"
                 v-model="searchTerm"
-                placeholder="Customer Code, Name, Email, Phone..."
+                :placeholder="$t('pos.customerManagement.searchPlaceholder')"
               />
               <b-input-group-append>
                 <b-button variant="outline-secondary" @click="clearSearch" :disabled="!searchTerm">
@@ -43,34 +48,19 @@
           </b-form-group>
         </b-col>
         <b-col cols="12" lg="6">
-          <b-row>
-            <b-col cols="12" md="6">
-              <b-form-group label="Filter by Status" label-for="status-filter" class="mb-md-0">
-                <b-form-select
-                  id="status-filter"
-                  v-model="statusFilter"
-                  :options="statusFilterOptions"
-                />
-              </b-form-group>
-            </b-col>
-            <b-col cols="12" md="6">
-              <b-form-group label="Filter by Default" label-for="default-filter" class="mb-md-0">
-                <b-form-checkbox
-                  id="default-filter"
-                  v-model="showDefaultOnly"
-                  class="mt-2"
-                >
-                  Show Default Only
-                </b-form-checkbox>
-              </b-form-group>
-            </b-col>
-          </b-row>
+          <b-form-group :label="$t('pos.customerManagement.filterByStatus')" label-for="status-filter" class="mb-md-0">
+            <b-form-select
+              id="status-filter"
+              v-model="statusFilter"
+              :options="statusFilterOptions"
+            />
+          </b-form-group>
         </b-col>
       </b-row>
       <b-row class="mt-1">
         <b-col cols="12" class="d-flex align-items-end justify-content-lg-end">
           <small class="text-muted">
-            Showing {{ totalRows }} {{ totalRows === 1 ? 'customer' : 'customers' }}
+            {{ $t('pos.customerManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('pos.customerManagement.customer') : $t('pos.customerManagement.customers') }}
           </small>
         </b-col>
       </b-row>
@@ -90,26 +80,26 @@
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
+            <strong>{{ $t('pos.customerManagement.loading') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center py-4">
             <feather-icon icon="InboxIcon" size="48" class="text-muted mb-2" />
-            <p class="text-muted mb-0">No customers found.</p>
+            <p class="text-muted mb-0">{{ $t('pos.customerManagement.noCustomersFound') }}</p>
           </div>
         </template>
 
         <template #cell(active)="row">
           <b-badge :variant="row.item.active ? 'success' : 'danger'">
-            {{ row.item.active ? 'Active' : 'Inactive' }}
+            {{ row.item.active ? $t('pos.customerManagement.active') : $t('pos.customerManagement.inactive') }}
           </b-badge>
         </template>
 
-        <template #cell(isDefault)="row">
+        <template #cell(isDefault)="row" v-if="!isPosUser">
           <b-badge :variant="row.item.isDefault ? 'success' : 'secondary'">
-            {{ row.item.isDefault ? 'Default' : 'No' }}
+            {{ row.item.isDefault ? $t('pos.customerManagement.default') : $t('pos.customerManagement.no') }}
           </b-badge>
         </template>
 
@@ -140,8 +130,8 @@
           </div>
           <span v-else class="text-muted small">-</span>
         </template>
- 
-        <template #cell(actions)="row">
+
+        <template #cell(actions)="row" v-if="!isPosUser">
           <div class="d-flex justify-content-end">
             <b-button 
               variant="outline-primary" 
@@ -150,7 +140,7 @@
               :disabled="row.item.isDefault"
             >
               <feather-icon icon="StarIcon" size="14" />
-              Set as Default
+              {{ $t('pos.customerManagement.setAsDefault') }}
             </b-button>
           </div>
         </template>
@@ -160,7 +150,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="customers-per-page" class="mr-2 mb-0">Items per page:</label>
+              <label for="customers-per-page" class="mr-2 mb-0">{{ $t('pos.customerManagement.itemsPerPage') }}</label>
               <b-form-select
                 id="customers-per-page"
                 v-model="perPage"
@@ -173,7 +163,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} customers
+                {{ $t('pos.customerManagement.showing') }} {{ startIndex }} {{ $t('pos.customerManagement.to') }} {{ endIndex }} {{ $t('pos.customerManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('pos.customerManagement.customer') : $t('pos.customerManagement.customers') }}
               </small>
             </div>
           </b-col>
@@ -192,7 +182,7 @@
     <!-- Add/Edit Customer Modal -->
     <b-modal
       v-model="showAddCustomerModal"
-      :title="editingCustomer ? 'Edit Customer' : 'Add New Customer'"
+      :title="editingCustomer ? $t('pos.customerManagement.editCustomer') : $t('pos.customerManagement.addNewCustomer')"
       size="lg"
       @ok="saveCustomer"
       @cancel="resetCustomerForm"
@@ -201,44 +191,44 @@
       <b-form>
         <b-row>
           <b-col md="6" v-if="editingCustomer">
-            <b-form-group label="Customer Code" label-for="customerCode">
+            <b-form-group :label="$t('pos.customerManagement.customerCode')" label-for="customerCode">
               <b-form-input
                 id="customerCode"
                 v-model="customerForm.customerCode"
                 disabled
-                placeholder="Auto-generated"
+                :placeholder="$t('pos.customerManagement.autoGenerated')"
                 readonly
               />
               <small class="form-text text-muted">
-                Customer code is auto-generated and cannot be changed
+                {{ $t('pos.customerManagement.autoGenerated') }}
               </small>
             </b-form-group>
           </b-col>
           <b-col md="6" v-else>
-            <b-form-group label="Customer Code" label-for="customerCode">
+            <b-form-group :label="$t('pos.customerManagement.customerCode')" label-for="customerCode">
               <b-form-input
                 id="customerCode"
-                value="Auto-generated on save"
+                :value="$t('pos.customerManagement.autoGeneratedOnSave')"
                 disabled
-                placeholder="Will be auto-generated"
+                :placeholder="$t('pos.customerManagement.willBeAutoGenerated')"
                 readonly
               />
               <small class="form-text text-muted">
-                Customer code will be auto-generated when you save
+                {{ $t('pos.customerManagement.willBeAutoGenerated') }}
               </small>
             </b-form-group>
           </b-col>
           <b-col md="6">
-            <b-form-group label="Name" label-for="name">
+            <b-form-group :label="$t('pos.customerManagement.customerName')" label-for="name">
               <b-form-input
                 id="name"
                 v-model="customerForm.name"
                 required
-                placeholder="Customer Name"
+                :placeholder="$t('pos.customerManagement.customerNamePlaceholder')"
                 :state="customerForm.name && customerForm.name.trim().length > 0 ? null : false"
               />
               <b-form-invalid-feedback>
-                Name is required
+                {{ $t('common.name') }} {{ $t('common.required') }}
               </b-form-invalid-feedback>
             </b-form-group>
           </b-col>
@@ -246,55 +236,55 @@
 
         <b-row>
           <b-col md="6">
-            <b-form-group label="Email" label-for="email">
+            <b-form-group :label="$t('common.email')" label-for="email">
               <b-form-input
                 id="email"
                 v-model="customerForm.email"
                 type="email"
-                placeholder="customer@example.com"
+                :placeholder="$t('pos.customerManagement.emailPlaceholder')"
               />
             </b-form-group>
           </b-col>
           <b-col md="6">
-            <b-form-group label="Phone" label-for="phone">
+            <b-form-group :label="$t('pos.customerManagement.phone')" label-for="phone">
               <b-form-input
                 id="phone"
                 v-model="customerForm.phone"
                 required
-                placeholder="+216 98 123 456"
+                :placeholder="$t('pos.customerManagement.phonePlaceholder')"
                 :state="customerForm.phone && customerForm.phone.trim().length > 0 ? null : false"
               />
               <b-form-invalid-feedback>
-                Phone is required
+                {{ $t('pos.customerManagement.phone') }} {{ $t('common.required') }}
               </b-form-invalid-feedback>
             </b-form-group>
           </b-col>
         </b-row>
 
-        <b-form-group label="Address" label-for="address">
+        <b-form-group :label="$t('pos.customerManagement.address')" label-for="address">
           <b-form-input
             id="address"
             v-model="customerForm.address"
-            placeholder="Street address"
+            :placeholder="$t('pos.customerManagement.streetAddress')"
           />
         </b-form-group>
 
         <b-row>
           <b-col md="6">
-            <b-form-group label="City" label-for="city">
+            <b-form-group :label="$t('pos.customerManagement.city')" label-for="city">
               <b-form-input
                 id="city"
                 v-model="customerForm.city"
-                placeholder="City"
+                :placeholder="$t('pos.customerManagement.cityPlaceholder')"
               />
             </b-form-group>
           </b-col>
           <b-col md="6">
-            <b-form-group label="Country" label-for="country">
+            <b-form-group :label="$t('pos.customerManagement.country')" label-for="country">
               <b-form-input
                 id="country"
                 v-model="customerForm.country"
-                placeholder="Country"
+                :placeholder="$t('pos.customerManagement.countryPlaceholder')"
               />
             </b-form-group>
           </b-col>
@@ -302,16 +292,16 @@
 
         <b-row>
           <b-col md="6">
-            <b-form-group label="Tax ID" label-for="taxId">
+            <b-form-group :label="$t('pos.customerManagement.taxId')" label-for="taxId">
               <b-form-input
                 id="taxId"
                 v-model="customerForm.taxId"
-                placeholder="12345678-A"
+                :placeholder="$t('pos.customerManagement.taxIdPlaceholder')"
               />
             </b-form-group>
           </b-col>
           <b-col md="6">
-            <b-form-group label="Credit Limit" label-for="creditLimit">
+            <b-form-group :label="$t('pos.customerManagement.creditLimit')" label-for="creditLimit">
               <b-input-group prepend="$">
                 <b-form-input
                   id="creditLimit"
@@ -319,25 +309,25 @@
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="0.00"
+                  :placeholder="$t('pos.customerManagement.creditLimitPlaceholder')"
                 />
               </b-input-group>
             </b-form-group>
           </b-col>
         </b-row>
 
-        <b-form-group label="Notes" label-for="notes">
+        <b-form-group :label="$t('common.notes')" label-for="notes">
           <b-form-textarea
             id="notes"
             v-model="customerForm.notes"
             rows="3"
-            placeholder="Additional notes..."
+            :placeholder="$t('pos.customerManagement.notesPlaceholder')"
           />
         </b-form-group>
 
         <b-form-group v-if="editingCustomer">
           <b-form-checkbox v-model="customerForm.active">
-            Active
+            {{ $t('pos.customerManagement.active') }}
           </b-form-checkbox>
         </b-form-group>
       </b-form>
@@ -346,16 +336,16 @@
     <!-- Delete Confirmation Modal -->
     <b-modal
       v-model="showDeleteModal"
-      title="Delete Customer"
+      :title="$t('pos.customerManagement.deleteCustomer')"
       @ok="deleteCustomer"
       ok-variant="danger"
     >
       <p>
-        Are you sure you want to delete customer
+        {{ $t('pos.customerManagement.confirmDelete') }}
         <strong>{{ customerToDelete && customerToDelete.name ? customerToDelete.name : '' }}</strong>
         ({{ customerToDelete && customerToDelete.customerCode ? customerToDelete.customerCode : '' }})?
       </p>
-      <p class="text-danger">This action cannot be undone.</p>
+      <p class="text-danger">{{ $t('pos.customerManagement.deleteWarning') }}</p>
     </b-modal>
 
   </div>
@@ -373,12 +363,6 @@ export default {
       loading: false,
       searchTerm: '',
       statusFilter: 'all',
-      statusFilterOptions: [
-        { value: 'all', text: 'All' },
-        { value: 'active', text: 'Active Only' },
-        { value: 'inactive', text: 'Inactive Only' }
-      ],
-      showDefaultOnly: false,
       currentPage: 1,
       perPage: 10,
       perPageOptions: [
@@ -404,19 +388,32 @@ export default {
         creditLimit: null,
         notes: '',
         active: true
-      },
-      customerFields: [
-        { key: 'customerCode', label: 'Code', sortable: true },
-        { key: 'name', label: 'Name', sortable: true },
-        { key: 'contact', label: 'Contact' },
-        { key: 'address', label: 'Address' },
-        { key: 'active', label: 'Status', sortable: true },
-        { key: 'isDefault', label: 'Default', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false, thClass: 'text-right', tdClass: 'text-right' }
-      ]
+      }
     }
   },
   computed: {
+    statusFilterOptions() {
+      return [
+        { value: 'all', text: this.$t('pos.customerManagement.statusFilterOptions.all') },
+        { value: 'active', text: this.$t('pos.customerManagement.statusFilterOptions.active') },
+        { value: 'inactive', text: this.$t('pos.customerManagement.statusFilterOptions.inactive') }
+      ]
+    },
+    customerFields() {
+      const fields = [
+        { key: 'customerCode', label: this.$t('pos.customerManagement.tableHeaders.code'), sortable: true },
+        { key: 'name', label: this.$t('pos.customerManagement.tableHeaders.name'), sortable: true },
+        { key: 'contact', label: this.$t('pos.customerManagement.tableHeaders.contact') },
+        { key: 'address', label: this.$t('pos.customerManagement.tableHeaders.address') },
+        { key: 'active', label: this.$t('pos.customerManagement.tableHeaders.status'), sortable: true }
+      ]
+      // Add Default and Actions columns only for admin users (not POS users)
+      if (!this.isPosUser) {
+        fields.push({ key: 'isDefault', label: this.$t('pos.customerManagement.default'), sortable: true })
+        fields.push({ key: 'actions', label: this.$t('pos.customerManagement.tableHeaders.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' })
+      }
+      return fields
+    },
     isPosUser() {
       const userData = getUserData()
       return userData && userData.role === 'POS_USER'
@@ -429,11 +426,6 @@ export default {
         filtered = filtered.filter(customer => customer.active === true)
       } else if (this.statusFilter === 'inactive') {
         filtered = filtered.filter(customer => customer.active === false)
-      }
-
-      // Filter by default status
-      if (this.showDefaultOnly) {
-        filtered = filtered.filter(customer => customer.isDefault === true)
       }
 
       // Filter by search term
@@ -484,9 +476,6 @@ export default {
     statusFilter() {
       this.currentPage = 1
     },
-    showDefaultOnly() {
-      this.currentPage = 1
-    },
     perPage() {
       this.currentPage = 1
     },
@@ -518,9 +507,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to load customers',
+            text: this.$t('pos.customerManagement.errors.failedToLoad'),
             variant: 'danger'
           }
         })
@@ -554,9 +543,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Validation Error',
+            title: this.$t('pos.customerManagement.errors.validationError'),
             icon: 'AlertCircleIcon',
-            text: 'Please fill in required fields (Name and Phone)',
+            text: this.$t('pos.customerManagement.errors.fillRequiredFields'),
             variant: 'warning'
           }
         })
@@ -584,9 +573,11 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: `Customer ${this.editingCustomer ? 'updated' : 'created'} successfully`,
+              text: this.editingCustomer 
+                ? this.$t('pos.customerManagement.success.customerUpdated')
+                : this.$t('pos.customerManagement.success.customerCreated'),
               variant: 'success'
             }
           })
@@ -596,14 +587,16 @@ export default {
         }
       } catch (error) {
         console.error('Error saving customer:', error)
-        let errorMessage = `Failed to ${this.editingCustomer ? 'update' : 'create'} customer. Please try again.`
+        let errorMessage = this.editingCustomer 
+          ? this.$t('pos.customerManagement.errors.failedToUpdate')
+          : this.$t('pos.customerManagement.errors.failedToCreate')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -620,9 +613,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Cannot Delete',
+            title: this.$t('pos.customerManagement.errors.cannotDelete'),
             icon: 'AlertCircleIcon',
-            text: 'The passenger customer cannot be deleted as it is required by the system.',
+            text: this.$t('pos.customerManagement.errors.passengerCannotDelete'),
             variant: 'warning'
           }
         })
@@ -640,9 +633,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Cannot Delete',
+            title: this.$t('pos.customerManagement.errors.cannotDelete'),
             icon: 'AlertCircleIcon',
-            text: 'The passenger customer cannot be deleted as it is required by the system.',
+            text: this.$t('pos.customerManagement.errors.passengerCannotDelete'),
             variant: 'warning'
           }
         })
@@ -657,9 +650,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Customer deleted successfully',
+              text: this.$t('pos.customerManagement.success.customerDeleted'),
               variant: 'success'
             }
           })
@@ -669,14 +662,14 @@ export default {
         }
       } catch (error) {
         console.error('Error deleting customer:', error)
-        let errorMessage = 'Failed to delete customer. Please try again.'
+        let errorMessage = this.$t('pos.customerManagement.errors.failedToDelete')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -753,12 +746,15 @@ export default {
     async setAsDefaultCustomer(customer) {
       try {
         const { value: confirmed } = await this.$swal({
-          title: 'Set as Default Customer?',
-          text: `Are you sure you want to set "${customer.name}" (${customer.customerCode}) as the default customer?`,
+          title: this.$t('pos.customerManagement.setAsDefaultModal.title'),
+          text: this.$t('pos.customerManagement.setAsDefaultModal.message', {
+            name: customer.name,
+            code: customer.customerCode
+          }),
           icon: 'question',
           showCancelButton: true,
-          confirmButtonText: 'Yes, set as default',
-          cancelButtonText: 'Cancel',
+          confirmButtonText: this.$t('pos.customerManagement.setAsDefaultModal.confirm'),
+          cancelButtonText: this.$t('pos.customerManagement.setAsDefaultModal.cancel'),
           customClass: {
             confirmButton: 'btn btn-primary',
             cancelButton: 'btn btn-outline-secondary ml-1',
@@ -777,9 +773,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'Default customer updated successfully',
+              text: this.$t('pos.customerManagement.defaultCustomerUpdated'),
               variant: 'success'
             }
           })
@@ -787,14 +783,14 @@ export default {
         }
       } catch (error) {
         console.error('Error setting default customer:', error)
-        let errorMessage = 'Failed to set default customer'
+        let errorMessage = this.$t('pos.customerManagement.failedToSetDefault')
         if (error.response && error.response.data) {
           errorMessage = error.response.data || errorMessage
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'

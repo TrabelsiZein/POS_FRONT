@@ -1,10 +1,10 @@
 <template>
   <div class="user-management-container">
     <div class="page-header">
-      <h2 class="mb-0">User Management</h2>
+      <h2 class="mb-0">{{ $t('admin.userManagement.title') }}</h2>
       <b-button variant="primary" @click="openAddUserModal">
         <feather-icon icon="PlusIcon" size="16" />
-        Add User
+        {{ $t('admin.userManagement.addUser') }}
       </b-button>
     </div>
 
@@ -14,19 +14,19 @@
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
+            <strong>{{ $t('admin.userManagement.loading') }}</strong>
           </div>
         </template>
 
         <template #cell(role)="row">
           <b-badge :variant="getRoleBadgeVariant(row.item.role)">
-            {{ row.item.role }}
+            {{ getRoleLabel(row.item.role) }}
           </b-badge>
         </template>
 
         <template #cell(active)="row">
           <b-badge :variant="row.item.active ? 'success' : 'danger'">
-            {{ row.item.active ? 'Active' : 'Inactive' }}
+            {{ row.item.active ? $t('admin.userManagement.status.active') : $t('admin.userManagement.status.inactive') }}
           </b-badge>
         </template>
 
@@ -45,46 +45,46 @@
     </b-card>
 
     <!-- Add/Edit User Modal -->
-    <b-modal v-model="showAddUserModal" :title="editingUser ? 'Edit User' : 'Add New User'" @ok="saveUser"
+    <b-modal v-model="showAddUserModal" :title="editingUser ? $t('admin.userManagement.editUser') : $t('admin.userManagement.addNewUser')" @ok="saveUser"
       @cancel="resetUserForm">
       <b-form>
-        <b-form-group label="Username" label-for="username">
+        <b-form-group :label="$t('admin.userManagement.form.username')" label-for="username">
           <b-form-input id="username" v-model="userForm.username" :disabled="editingUser" required />
         </b-form-group>
 
-        <b-form-group label="Full Name" label-for="fullName">
+        <b-form-group :label="$t('admin.userManagement.form.fullName')" label-for="fullName">
           <b-form-input id="fullName" v-model="userForm.fullName" />
         </b-form-group>
 
-        <b-form-group label="Email" label-for="email">
+        <b-form-group :label="$t('admin.userManagement.form.email')" label-for="email">
           <b-form-input id="email" v-model="userForm.email" type="email" />
         </b-form-group>
 
-        <b-form-group label="Password" label-for="password">
+        <b-form-group :label="$t('admin.userManagement.form.password')" label-for="password">
           <b-form-input id="password" v-model="userForm.password" type="password" :required="!editingUser" />
           <small class="form-text text-muted" v-if="editingUser">
-            Leave empty to keep current password
+            {{ $t('admin.userManagement.form.passwordHelp') }}
           </small>
         </b-form-group>
 
-        <b-form-group label="Role" label-for="role">
+        <b-form-group :label="$t('admin.userManagement.form.role')" label-for="role">
           <b-form-select id="role" v-model="userForm.role" :options="roleOptions" required />
         </b-form-group>
 
-        <b-form-group label="Status" v-if="editingUser">
+        <b-form-group :label="$t('admin.userManagement.form.status')" v-if="editingUser">
           <b-form-checkbox v-model="userForm.active">
-            Active
+            {{ $t('admin.userManagement.status.active') }}
           </b-form-checkbox>
         </b-form-group>
       </b-form>
     </b-modal>
 
     <!-- Delete Confirmation Modal -->
-    <b-modal v-model="showDeleteModal" title="Delete User" @ok="deleteUser">
-      <p>Are you sure you want to delete user <strong>{{ userToDelete && userToDelete.username ? userToDelete.username :
+    <b-modal v-model="showDeleteModal" :title="$t('admin.userManagement.deleteUser')" @ok="deleteUser">
+      <p>{{ $t('admin.userManagement.deleteConfirmation') }} <strong>{{ userToDelete && userToDelete.username ? userToDelete.username :
           ''
           }}</strong>?</p>
-      <p class="text-danger">This action cannot be undone.</p>
+      <p class="text-danger">{{ $t('admin.userManagement.deleteWarning') }}</p>
     </b-modal>
   </div>
 </template>
@@ -109,19 +109,25 @@ export default {
         password: '',
         role: 'POS_USER',
         active: true
-      },
-      userFields: [
-        { key: 'username', label: 'Username', sortable: true },
-        { key: 'fullName', label: 'Full Name', sortable: true },
-        { key: 'email', label: 'Email', sortable: true },
-        { key: 'role', label: 'Role', sortable: true },
-        { key: 'active', label: 'Status', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false }
-      ],
-      roleOptions: [
-        { value: 'ADMIN', text: 'Administrator' },
-        { value: 'RESPONSIBLE', text: 'Responsible' },
-        { value: 'POS_USER', text: 'POS User' }
+      }
+    }
+  },
+  computed: {
+    userFields() {
+      return [
+        { key: 'username', label: this.$t('admin.userManagement.tableHeaders.username'), sortable: true },
+        { key: 'fullName', label: this.$t('admin.userManagement.tableHeaders.fullName'), sortable: true },
+        { key: 'email', label: this.$t('admin.userManagement.tableHeaders.email'), sortable: true },
+        { key: 'role', label: this.$t('admin.userManagement.tableHeaders.role'), sortable: true },
+        { key: 'active', label: this.$t('admin.userManagement.tableHeaders.status'), sortable: true },
+        { key: 'actions', label: this.$t('admin.userManagement.tableHeaders.actions'), sortable: false }
+      ]
+    },
+    roleOptions() {
+      return [
+        { value: 'ADMIN', text: this.$t('admin.userManagement.roles.administrator') },
+        { value: 'RESPONSIBLE', text: this.$t('admin.userManagement.roles.responsible') },
+        { value: 'POS_USER', text: this.$t('admin.userManagement.roles.posUser') }
       ]
     }
   },
@@ -143,9 +149,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'AlertCircleIcon',
-            text: 'Failed to load users',
+            text: this.$t('admin.userManagement.messages.failedToLoad'),
             variant: 'danger'
           }
         })
@@ -183,9 +189,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'User updated successfully',
+              text: this.$t('admin.userManagement.messages.userUpdated'),
               variant: 'success'
             }
           })
@@ -195,9 +201,9 @@ export default {
           this.$toast({
             component: ToastificationContent,
             props: {
-              title: 'Success',
+              title: this.$t('common.success'),
               icon: 'CheckCircleIcon',
-              text: 'User created successfully',
+              text: this.$t('admin.userManagement.messages.userCreated'),
               variant: 'success'
             }
           })
@@ -207,14 +213,14 @@ export default {
         this.loadUsers()
       } catch (error) {
         console.error('Error saving user:', error)
-        let errorMessage = 'Failed to save user'
+        let errorMessage = this.$t('admin.userManagement.messages.failedToSave')
         if (error.response && error.response.data && error.response.data.error) {
           errorMessage = error.response.data.error
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -232,9 +238,9 @@ export default {
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Success',
+            title: this.$t('common.success'),
             icon: 'CheckCircleIcon',
-            text: 'User deleted successfully',
+            text: this.$t('admin.userManagement.messages.userDeleted'),
             variant: 'success'
           }
         })
@@ -243,14 +249,14 @@ export default {
         this.loadUsers()
       } catch (error) {
         console.error('Error deleting user:', error)
-        let errorMessage = 'Failed to delete user'
+        let errorMessage = this.$t('admin.userManagement.messages.failedToDelete')
         if (error.response && error.response.data && error.response.data.error) {
           errorMessage = error.response.data.error
         }
         this.$toast({
           component: ToastificationContent,
           props: {
-            title: 'Error',
+            title: this.$t('common.error'),
             icon: 'XIcon',
             text: errorMessage,
             variant: 'danger'
@@ -269,6 +275,14 @@ export default {
         active: true
       }
       this.showAddUserModal = false
+    },
+    getRoleLabel(role) {
+      const roleMap = {
+        'ADMIN': this.$t('admin.userManagement.roles.administrator'),
+        'RESPONSIBLE': this.$t('admin.userManagement.roles.responsible'),
+        'POS_USER': this.$t('admin.userManagement.roles.posUser')
+      }
+      return roleMap[role] || role
     },
     getRoleBadgeVariant(role) {
       switch (role) {

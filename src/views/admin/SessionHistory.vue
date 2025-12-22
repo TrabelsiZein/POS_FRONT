@@ -1,10 +1,10 @@
 <template>
   <div class="session-history-container">
     <div class="page-header">
-      <h2 class="mb-0">Session History</h2>
+      <h2 class="mb-0">{{ $t('admin.sessionHistory.title') }}</h2>
       <b-button variant="outline-primary" @click="loadSessions">
         <feather-icon icon="RefreshCwIcon" size="16" />
-        Refresh
+        {{ $t('admin.sessionHistory.refresh') }}
       </b-button>
     </div>
 
@@ -15,8 +15,8 @@
           <div class="d-flex align-items-center">
             <feather-icon icon="FilterIcon" size="18" class="mr-2 text-primary" />
             <h6 class="mb-0 text-primary font-weight-bold">
-              Filters
-              <span class="text-muted font-weight-normal ml-2">(Total: {{ totalRows }} {{ totalRows === 1 ? 'session' : 'sessions' }})</span>
+              {{ $t('admin.sessionHistory.filters') }}
+              <span class="text-muted font-weight-normal ml-2">({{ $t('admin.sessionHistory.total') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.sessionHistory.session') : $t('admin.sessionHistory.sessions') }})</span>
             </h6>
           </div>
           <feather-icon :icon="filtersExpanded ? 'ChevronUpIcon' : 'ChevronDownIcon'" size="20" class="text-primary" />
@@ -26,7 +26,7 @@
         <div class="pt-2">
           <b-row>
             <b-col cols="12" sm="6" md="6" lg="6" class="mb-2">
-              <b-form-group label="Search" label-for="search-input" class="mb-0">
+              <b-form-group :label="$t('admin.sessionHistory.search')" label-for="search-input" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -34,7 +34,7 @@
                     </b-input-group-text>
                   </b-input-group-prepend>
                   <b-form-input id="search-input" v-model="filters.search"
-                    placeholder="Search by session number, cashier..." @input="onFilterChange" />
+                    :placeholder="$t('admin.sessionHistory.searchPlaceholder')" @input="onFilterChange" />
                   <b-input-group-append>
                     <b-button variant="outline-secondary" @click="clearSearch" :disabled="!filters.search">
                       <feather-icon icon="XIcon" size="14" />
@@ -44,7 +44,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Date From" label-for="date-from" class="mb-0">
+              <b-form-group :label="$t('admin.sessionHistory.dateFrom')" label-for="date-from" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -56,7 +56,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="3" lg="3" class="mb-2">
-              <b-form-group label="Date To" label-for="date-to" class="mb-0">
+              <b-form-group :label="$t('admin.sessionHistory.dateTo')" label-for="date-to" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -70,7 +70,7 @@
           </b-row>
           <b-row>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Status" label-for="status-filter" class="mb-0">
+              <b-form-group :label="$t('admin.sessionHistory.status')" label-for="status-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -83,7 +83,7 @@
               </b-form-group>
             </b-col>
             <b-col cols="12" sm="6" md="4" lg="4" class="mb-2">
-              <b-form-group label="Sync Status" label-for="sync-status-filter" class="mb-0">
+              <b-form-group :label="$t('admin.sessionHistory.syncStatus')" label-for="sync-status-filter" class="mb-0">
                 <b-input-group>
                   <b-input-group-prepend>
                     <b-input-group-text class="bg-white">
@@ -107,14 +107,14 @@
         <template #table-busy>
           <div class="text-center my-2">
             <b-spinner class="align-middle"></b-spinner>
-            <strong>Loading...</strong>
+            <strong>{{ $t('admin.sessionHistory.loadingText') }}</strong>
           </div>
         </template>
 
         <template #empty>
           <div class="text-center text-muted py-4">
-            <p>No sessions found</p>
-            <p class="small">Try adjusting your filters</p>
+            <p>{{ $t('admin.sessionHistory.noSessionsText') }}</p>
+            <p class="small">{{ $t('admin.sessionHistory.tryAdjustingFilters') }}</p>
           </div>
         </template>
 
@@ -128,7 +128,7 @@
 
         <template #cell(status)="row">
           <b-badge :variant="getStatusBadgeVariant(row.item.status)">
-            {{ row.item.status }}
+            {{ getStatusLabel(row.item.status) }}
           </b-badge>
         </template>
 
@@ -139,7 +139,7 @@
               {{ formatSyncStatus(row.item.synchronizationStatus) }}
             </b-badge>
             <small v-if="row.item.erpNo" class="text-muted d-block mt-1">
-              ERP: {{ row.item.erpNo }}
+              {{ $t('admin.sessionHistory.modal.erp') }} {{ row.item.erpNo }}
             </small>
           </div>
         </template>
@@ -179,7 +179,7 @@
 
         <template #cell(actions)="row">
           <b-button variant="primary" size="sm" @click.stop="viewSessionDetails(row.item)">
-            View Details
+            {{ $t('admin.sessionHistory.viewDetails') }}
           </b-button>
         </template>
       </b-table>
@@ -189,7 +189,7 @@
         <b-row align-v="center">
           <b-col cols="12" md="6" class="mb-2 mb-md-0">
             <div class="d-flex align-items-center">
-              <label for="per-page-select" class="mr-2 mb-0">Items per page:</label>
+              <label for="per-page-select" class="mr-2 mb-0">{{ $t('admin.sessionHistory.itemsPerPage') }}</label>
               <b-form-select id="per-page-select" v-model="perPage" :options="perPageOptions" size="sm"
                 style="width: auto;" @change="onPerPageChange" />
             </div>
@@ -197,7 +197,7 @@
           <b-col cols="12" md="6">
             <div class="text-center text-md-right">
               <small class="text-muted">
-                Showing {{ startIndex }} to {{ endIndex }} of {{ totalRows }} sessions
+                {{ $t('admin.sessionHistory.showing') }} {{ startIndex }} {{ $t('admin.sessionHistory.to') }} {{ endIndex }} {{ $t('admin.sessionHistory.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.sessionHistory.session') : $t('admin.sessionHistory.sessions') }}
               </small>
             </div>
           </b-col>
@@ -211,7 +211,7 @@
     <!-- Session Details Modal -->
     <b-modal
       v-model="showDetailsModal"
-      title="Session Details"
+      :title="$t('admin.sessionHistory.sessionDetails')"
       size="xl"
       @hide="resetDetailsForm"
       scrollable
@@ -219,55 +219,55 @@
       <div v-if="sessionDetails" class="session-details">
         <!-- Session Info -->
         <b-card class="mb-3">
-          <h5 class="mb-3">Session Information</h5>
+          <h5 class="mb-3">{{ $t('admin.sessionHistory.modal.sessionInformation') }}</h5>
           <b-row>
             <b-col cols="12" md="6">
               <div class="detail-item">
-                <strong>Session Number:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.sessionNumber') }}</strong>
                 <span class="ml-2">{{ sessionDetails.session.sessionNumber }}</span>
               </div>
               <div class="detail-item">
-                <strong>Cashier:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.cashier') }}</strong>
                 <span class="ml-2">{{ sessionDetails.session.cashierName }}</span>
               </div>
               <div class="detail-item">
-                <strong>Opened At:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.openedAt') }}</strong>
                 <span class="ml-2">{{ formatDateTime(sessionDetails.session.openedAt) }}</span>
               </div>
               <div class="detail-item">
-                <strong>Closed At:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.closedAt') }}</strong>
                 <span class="ml-2">{{ formatDateTime(sessionDetails.session.closedAt) || '-' }}</span>
               </div>
               <div class="detail-item">
-                <strong>Status:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.status') }}</strong>
                 <b-badge :variant="getStatusBadgeVariant(sessionDetails.session.status)" class="ml-2">
-                  {{ sessionDetails.session.status }}
+                  {{ getStatusLabel(sessionDetails.session.status) }}
                 </b-badge>
               </div>
             </b-col>
             <b-col cols="12" md="6">
               <div class="detail-item">
-                <strong>Opening Cash:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.openingCash') }}</strong>
                 <span class="ml-2">{{ formatPrice(sessionDetails.session.openingCash) }} TND</span>
               </div>
               <div class="detail-item">
-                <strong>Real Cash:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.realCash') }}</strong>
                 <span class="ml-2">{{ formatPrice(sessionDetails.session.realCash) }} TND</span>
               </div>
               <div class="detail-item">
-                <strong>POS User Closure Cash:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.posUserClosureCash') }}</strong>
                 <span class="ml-2">{{ formatPrice(sessionDetails.session.posUserClosureCash) }} TND</span>
               </div>
               <div class="detail-item" v-if="sessionDetails.session.responsibleClosureCash">
-                <strong>Responsible Closure Cash:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.responsibleClosureCash') }}</strong>
                 <span class="ml-2">{{ formatPrice(sessionDetails.session.responsibleClosureCash) }} TND</span>
               </div>
               <div class="detail-item">
-                <strong>Sales Count:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.salesCount') }}</strong>
                 <span class="ml-2">{{ sessionDetails.salesCount }}</span>
               </div>
               <div class="detail-item">
-                <strong>Total Sales:</strong>
+                <strong>{{ $t('admin.sessionHistory.modal.totalSales') }}</strong>
                 <span class="ml-2">{{ formatPrice(sessionDetails.totalSalesAmount) }} TND</span>
               </div>
             </b-col>
@@ -278,12 +278,12 @@
         <b-card class="mb-3 sync-info-card">
           <div class="d-flex align-items-center mb-3">
             <feather-icon icon="CloudIcon" size="20" class="mr-2 text-primary" />
-            <h5 class="mb-0">ERP Synchronization</h5>
+            <h5 class="mb-0">{{ $t('admin.sessionHistory.modal.erpSynchronization') }}</h5>
           </div>
           <b-row>
             <b-col md="6">
               <div class="sync-detail-item">
-                <label class="sync-label">Synchronization Status</label>
+                <label class="sync-label">{{ $t('admin.sessionHistory.modal.synchronizationStatus') }}</label>
                 <div class="sync-value">
                   <b-badge :variant="getSyncStatusVariant(sessionDetails.session.synchronizationStatus)" class="sync-badge-large">
                     <feather-icon :icon="getSyncStatusIcon(sessionDetails.session.synchronizationStatus)" size="14" class="mr-1" />
@@ -294,10 +294,10 @@
             </b-col>
             <b-col md="6">
               <div class="sync-detail-item">
-                <label class="sync-label">ERP Document Number</label>
+                <label class="sync-label">{{ $t('admin.sessionHistory.modal.erpDocumentNumber') }}</label>
                 <div class="sync-value">
                   <code v-if="sessionDetails.session.erpNo" class="erp-number">{{ sessionDetails.session.erpNo }}</code>
-                  <span v-else class="text-muted">Not synchronized</span>
+                  <span v-else class="text-muted">{{ $t('admin.sessionHistory.modal.notSynchronized') }}</span>
                 </div>
               </div>
             </b-col>
@@ -306,12 +306,12 @@
 
         <!-- Payment Headers and Lines -->
         <b-card class="mb-3" v-if="sessionDetails.paymentHeaders && sessionDetails.paymentHeaders.length > 0">
-          <h5 class="mb-3">Payment Headers & Lines</h5>
+          <h5 class="mb-3">{{ $t('admin.sessionHistory.modal.paymentHeadersLines') }}</h5>
           <div v-for="header in sessionDetails.paymentHeaders" :key="header.id" class="payment-header-section mb-4">
             <b-card class="bg-light">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                  <strong>Payment Class:</strong> {{ header.paymentClass }}
+                  <strong>{{ $t('admin.sessionHistory.modal.paymentClass') }}</strong> {{ header.paymentClass }}
                   <span class="ml-2">
                     <b-badge :variant="getSyncStatusVariant(header.synchronizationStatus)" class="sync-badge">
                       <feather-icon :icon="getSyncStatusIcon(header.synchronizationStatus)" size="12" class="mr-1" />
@@ -320,9 +320,9 @@
                   </span>
                 </div>
                 <div>
-                  <small class="text-muted">Post Date: {{ formatDate(header.postDate) }}</small>
+                  <small class="text-muted">{{ $t('admin.sessionHistory.modal.postDate') }} {{ formatDate(header.postDate) }}</small>
                   <span v-if="header.erpNo" class="ml-2">
-                    <small class="text-muted">ERP: <code>{{ header.erpNo }}</code></small>
+                    <small class="text-muted">{{ $t('admin.sessionHistory.modal.erp') }} <code>{{ header.erpNo }}</code></small>
                   </span>
                 </div>
               </div>
@@ -346,7 +346,7 @@
                 <template #cell(synched)="row">
                   <b-badge :variant="row.item.synched ? 'success' : 'secondary'" class="sync-indicator">
                     <feather-icon :icon="row.item.synched ? 'CheckIcon' : 'XIcon'" size="12" class="mr-1" />
-                    {{ row.item.synched ? 'Synced' : 'Not Synced' }}
+                    {{ row.item.synched ? $t('admin.sessionHistory.modal.synced') : $t('admin.sessionHistory.modal.notSynced') }}
                   </b-badge>
                 </template>
               </b-table>
@@ -356,7 +356,7 @@
 
         <!-- Cash Count Lines (POS User) -->
         <b-card class="mb-3" v-if="posUserCashCounts.length > 0">
-          <h5>Cash Count - POS User</h5>
+          <h5>{{ $t('admin.sessionHistory.modal.cashCountPosUser') }}</h5>
           <b-table
             :items="posUserCashCounts"
             :fields="cashCountFields"
@@ -364,7 +364,7 @@
             striped
           >
             <template #cell(paymentMethod)="row">
-              {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
+              {{ row.item.paymentMethod ? row.item.paymentMethod.name : $t('common.cash') }}
             </template>
             <template #cell(lineTotal)="row">
               {{ formatPrice(row.item.lineTotal) }} TND
@@ -374,13 +374,13 @@
             </template>
           </b-table>
           <div class="mt-2">
-            <strong>Total: {{ formatPrice(posUserCashCountsTotal) }} TND</strong>
+            <strong>{{ $t('admin.sessionHistory.modal.total') }}: {{ formatPrice(posUserCashCountsTotal) }} TND</strong>
           </div>
         </b-card>
 
         <!-- Cash Count Lines (Responsible) -->
         <b-card class="mb-3" v-if="responsibleCashCounts.length > 0">
-          <h5>Cash Count - Responsible</h5>
+          <h5>{{ $t('admin.sessionHistory.modal.cashCountResponsible') }}</h5>
           <b-table
             :items="responsibleCashCounts"
             :fields="cashCountFields"
@@ -388,7 +388,7 @@
             striped
           >
             <template #cell(paymentMethod)="row">
-              {{ row.item.paymentMethod ? row.item.paymentMethod.name : 'Cash' }}
+              {{ row.item.paymentMethod ? row.item.paymentMethod.name : $t('common.cash') }}
             </template>
             <template #cell(lineTotal)="row">
               {{ formatPrice(row.item.lineTotal) }} TND
@@ -398,7 +398,7 @@
             </template>
           </b-table>
           <div class="mt-2">
-            <strong>Total: {{ formatPrice(responsibleCashCountsTotal) }} TND</strong>
+            <strong>{{ $t('admin.sessionHistory.modal.total') }}: {{ formatPrice(responsibleCashCountsTotal) }} TND</strong>
           </div>
         </b-card>
       </div>
@@ -437,53 +437,43 @@ export default {
         dateTo: '',
         status: 'TERMINATED',
         syncStatus: 'all'
-      },
-      statusOptions: [
-        { value: 'all', text: 'All Status' },
-        { value: 'TERMINATED', text: 'Terminated' },
-        { value: 'CLOSED', text: 'Closed' },
-        { value: 'OPENED', text: 'Opened' }
-      ],
-      syncStatusOptions: [
-        { value: 'all', text: 'All' },
-        { value: 'NOT_SYNCHED', text: 'Not Synced' },
-        { value: 'PARTIALLY_SYNCHED', text: 'Partially Synced' },
-        { value: 'TOTALLY_SYNCHED', text: 'Totally Synced' }
-      ],
-      sessionFields: [
-        { key: 'sessionNumber', label: 'Session #', sortable: true },
-        { key: 'cashierFullName', label: 'Cashier', sortable: true },
-        { key: 'status', label: 'Status', sortable: true },
-        { key: 'synchronizationStatus', label: 'Sync Status', sortable: true },
-        { key: 'openedAt', label: 'Opened At', sortable: true },
-        { key: 'closedAt', label: 'Closed At', sortable: true },
-        { key: 'salesCount', label: 'Sales', sortable: true },
-        { key: 'totalSalesAmount', label: 'Total Sales', sortable: true },
-        { key: 'realCash', label: 'Real Cash', sortable: true },
-        { key: 'posUserClosureCash', label: 'POS Closure', sortable: true },
-        { key: 'responsibleClosureCash', label: 'Resp Closure', sortable: true },
-        { key: 'cashDifference', label: 'Difference', sortable: true },
-        { key: 'actions', label: 'Actions', sortable: false }
-      ],
-      cashCountFields: [
-        { key: 'denominationValue', label: 'Value' },
-        { key: 'quantity', label: 'Qty' },
-        { key: 'paymentMethod', label: 'Payment Method' },
-        { key: 'referenceNumber', label: 'Reference' },
-        { key: 'lineTotal', label: 'Total' },
-        { key: 'counterType', label: 'Counter' }
-      ],
-      paymentLineFields: [
-        { key: 'custNo', label: 'Customer' },
-        { key: 'amount', label: 'Amount' },
-        { key: 'ticketNo', label: 'Ticket #' },
-        { key: 'fenceNo', label: 'Fence #' },
-        { key: 'titleNumber', label: 'Title #' },
-        { key: 'synched', label: 'Synced', class: 'text-center' }
-      ]
+      }
     }
   },
   computed: {
+    sessionFields() {
+      return [
+        { key: 'sessionNumber', label: this.$t('admin.sessionHistory.tableHeaders.sessionNumber'), sortable: true },
+        { key: 'cashierFullName', label: this.$t('admin.sessionHistory.tableHeaders.cashier'), sortable: true },
+        { key: 'status', label: this.$t('admin.sessionHistory.tableHeaders.status'), sortable: true },
+        { key: 'synchronizationStatus', label: this.$t('admin.sessionHistory.tableHeaders.syncStatus'), sortable: true },
+        { key: 'openedAt', label: this.$t('admin.sessionHistory.tableHeaders.openedAt'), sortable: true },
+        { key: 'closedAt', label: this.$t('admin.sessionHistory.tableHeaders.closedAt'), sortable: true },
+        { key: 'salesCount', label: this.$t('admin.sessionHistory.tableHeaders.sales'), sortable: true },
+        { key: 'totalSalesAmount', label: this.$t('admin.sessionHistory.tableHeaders.totalSales'), sortable: true },
+        { key: 'realCash', label: this.$t('admin.sessionHistory.tableHeaders.realCash'), sortable: true },
+        { key: 'posUserClosureCash', label: this.$t('admin.sessionHistory.tableHeaders.posClosure'), sortable: true },
+        { key: 'responsibleClosureCash', label: this.$t('admin.sessionHistory.tableHeaders.respClosure'), sortable: true },
+        { key: 'cashDifference', label: this.$t('admin.sessionHistory.tableHeaders.difference'), sortable: true },
+        { key: 'actions', label: this.$t('admin.sessionHistory.tableHeaders.actions'), sortable: false }
+      ]
+    },
+    statusOptions() {
+      return [
+        { value: 'all', text: this.$t('admin.sessionHistory.statusValues.all') },
+        { value: 'TERMINATED', text: this.$t('admin.sessionHistory.statusValues.terminated') },
+        { value: 'CLOSED', text: this.$t('admin.sessionHistory.statusValues.closed') },
+        { value: 'OPENED', text: this.$t('admin.sessionHistory.statusValues.opened') }
+      ]
+    },
+    syncStatusOptions() {
+      return [
+        { value: 'all', text: this.$t('admin.sessionHistory.syncStatusValues.all') },
+        { value: 'NOT_SYNCHED', text: this.$t('admin.sessionHistory.syncStatusValues.notSynced') },
+        { value: 'PARTIALLY_SYNCHED', text: this.$t('admin.sessionHistory.syncStatusValues.partiallySynced') },
+        { value: 'TOTALLY_SYNCHED', text: this.$t('admin.sessionHistory.syncStatusValues.totallySynced') }
+      ]
+    },
     totalRows() {
       return this.filteredSessions.length
     },
@@ -511,6 +501,26 @@ export default {
     },
     responsibleCashCountsTotal() {
       return this.responsibleCashCounts.reduce((sum, line) => sum + (line.lineTotal || 0), 0)
+    },
+    cashCountFields() {
+      return [
+        { key: 'denominationValue', label: this.$t('admin.sessionHistory.modal.value') },
+        { key: 'quantity', label: this.$t('admin.sessionHistory.modal.qty') },
+        { key: 'paymentMethod', label: this.$t('admin.sessionHistory.modal.paymentMethod') },
+        { key: 'referenceNumber', label: this.$t('admin.sessionHistory.modal.reference') },
+        { key: 'lineTotal', label: this.$t('admin.sessionHistory.modal.total') },
+        { key: 'counterType', label: this.$t('admin.sessionHistory.modal.counter') }
+      ]
+    },
+    paymentLineFields() {
+      return [
+        { key: 'custNo', label: this.$t('admin.sessionHistory.modal.customer') },
+        { key: 'amount', label: this.$t('admin.sessionHistory.modal.amount') },
+        { key: 'ticketNo', label: this.$t('admin.sessionHistory.modal.ticketNumber') },
+        { key: 'fenceNo', label: this.$t('admin.sessionHistory.modal.fenceNumber') },
+        { key: 'titleNumber', label: this.$t('admin.sessionHistory.modal.titleNumber') },
+        { key: 'synched', label: this.$t('admin.sessionHistory.modal.synced'), class: 'text-center' }
+      ]
     }
   },
   watch: {
@@ -540,7 +550,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'AlertCircleIcon',
-            text: 'Failed to load sessions',
+            text: this.$t('admin.sessionHistory.errors.failedToLoadSessions'),
             variant: 'danger'
           }
         })
@@ -629,7 +639,7 @@ export default {
           props: {
             title: 'Error',
             icon: 'AlertCircleIcon',
-            text: 'Failed to load session details',
+            text: this.$t('admin.sessionHistory.errors.failedToLoadSessionDetails'),
             variant: 'danger'
           }
         })
@@ -655,11 +665,21 @@ export default {
       return moment(dateString).format('YYYY-MM-DD')
     },
     formatSyncStatus(status) {
-      if (!status) return 'Not Synced'
-      return status
-        .split('_')
-        .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-        .join(' ')
+      if (!status) return this.$t('admin.sessionHistory.syncStatusValues.notSynced')
+      const statusMap = {
+        'NOT_SYNCHED': this.$t('admin.sessionHistory.syncStatusValues.notSynced'),
+        'PARTIALLY_SYNCHED': this.$t('admin.sessionHistory.syncStatusValues.partiallySynced'),
+        'TOTALLY_SYNCHED': this.$t('admin.sessionHistory.syncStatusValues.totallySynced')
+      }
+      return statusMap[status] || status.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')
+    },
+    getStatusLabel(status) {
+      const statusMap = {
+        'OPENED': this.$t('admin.sessionHistory.statusValues.opened'),
+        'CLOSED': this.$t('admin.sessionHistory.statusValues.closed'),
+        'TERMINATED': this.$t('admin.sessionHistory.statusValues.terminated')
+      }
+      return statusMap[status] || status
     },
     getSyncStatusVariant(status) {
       if (!status) return 'secondary'
