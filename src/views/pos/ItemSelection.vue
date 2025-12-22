@@ -155,7 +155,7 @@
               <feather-icon icon="ListIcon" size="16" class="mr-50" />
               {{ $t('pos.itemSelection.ticketsList') }}
             </b-button>
-            <b-button variant="outline-danger" block class="action-btn" @click="showCloseSessionModal = true">
+            <b-button variant="outline-danger" block class="action-btn" @click="handleCloseSessionClick">
               <feather-icon icon="PowerIcon" size="16" class="mr-50" />
               {{ $t('pos.itemSelection.closeSession') }}
             </b-button>
@@ -500,15 +500,47 @@
         {{ $t('pos.itemSelection.discountModal.cancel') }}
       </template>
     </b-modal>
+
+    <!-- Badge Scan Popup for Customer Management -->
+    <BadgeScanPopup
+      :show="showBadgeScanPopupForCustomer"
+      :required-permission="'CONSULT_CUSTOMER_LIST'"
+      :session-id="currentSessionId"
+      @badge-scanned="onBadgeScannedForCustomer"
+      @close="onBadgeScanCloseForCustomer"
+    />
+
+    <!-- Badge Scan Popup for Return Products -->
+    <BadgeScanPopup
+      :show="showBadgeScanPopupForReturn"
+      :required-permission="'MAKE_RETURN'"
+      :session-id="currentSessionId"
+      @badge-scanned="onBadgeScannedForReturn"
+      @close="onBadgeScanCloseForReturn"
+    />
+
+    <!-- Badge Scan Popup for Line Discount -->
+    <BadgeScanPopup
+      :show="showBadgeScanPopupForLineDiscount"
+      :required-permission="'APPLY_LINE_DISCOUNT'"
+      :session-id="currentSessionId"
+      @badge-scanned="onBadgeScannedForLineDiscount"
+      @close="onBadgeScanCloseForLineDiscount"
+    />
   </div>
 </template>
 
 <script>
 import useJwt from '@/auth/jwt/useJwt'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
+import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
 
 export default {
   name: 'ItemSelection',
+  components: {
+    BadgeScanPopup
+  },
   data() {
     return {
       families: [],
@@ -539,6 +571,14 @@ export default {
         notes: '',
         cashCountLines: []
       },
+      showBadgeScanPopupForCustomer: false,
+      badgeScannedForCustomer: false,
+      showBadgeScanPopupForReturn: false,
+      badgeScannedForReturn: false,
+      showBadgeScanPopupForLineDiscount: false,
+      badgeScannedForLineDiscount: false,
+      pendingLineDiscountIndex: null,
+      selectedCustomerObj: null,
       keyboardLayout: [
         ['7', '8', '9'],
         ['4', '5', '6'],
@@ -712,6 +752,18 @@ export default {
     currentSession() {
       return this.$store.state.pos.currentSession
     },
+    currentSessionId() {
+      const session = this.$store.state.pos?.currentSession
+      return session ? session.id : null
+    },
+    selectedCustomer() {
+      // Get selected customer from store
+      const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+      if (!selectedCustomerId || !this.selectedCustomerObj) {
+        return null
+      }
+      return this.selectedCustomerObj
+    },
     paymentMethodOptions() {
       return this.paymentMethods.filter(pm => pm.active !== false)
     },
@@ -749,13 +801,15 @@ export default {
       return false
     }
   },
-  mounted() {
+  async mounted() {
     document.body.classList.add('pos-no-scroll')
     this.loadCurrentSession()
     this.loadFamilies()
     // this.loadItemsWithBarcodes()
     // this.loadPaymentMethods()
     this.loadPendingTicketsCount()
+    // Load selected customer from store if exists
+    await this.loadSelectedCustomer()
 
     // Cart is now always loaded from store via computed property
     // Focus on barcode input when component mounts
@@ -1434,16 +1488,81 @@ export default {
       })
       this.$router.push({ name: 'pos-payment' })
     },
-    goToCustomerManagement() {
+    async goToCustomerManagement() {
+      // Check if badge scan is required before navigating
+      const badgeRequired = await this.checkBadgeRequirementForCustomer()
+      if (badgeRequired && !this.badgeScannedForCustomer) {
+        // Show badge scan popup
+        this.showBadgeScanPopupForCustomer = true
+        return
+      }
       // Navigate to customer management page with return route
       this.$router.push({
         name: 'pos-customers',
         query: { returnTo: 'pos-item-selection' }
       })
     },
-    goToReturn() {
+    async checkBadgeRequirementForCustomer() {
+      try {
+        const alwaysShow = await getAlwaysShowBadgeScan(this.$http)
+        if (alwaysShow) {
+          return true
+        }
+        const permissionCheck = await checkCurrentUserPermission(BADGE_PERMISSIONS.CONSULT_CUSTOMER_LIST, this.$http)
+        // Return true if badge scan is required (user doesn't have valid permission)
+        return !permissionCheck.hasValidPermission
+      } catch (error) {
+        console.error('Error checking badge requirement for customer:', error)
+        return true // On error, require badge scan
+      }
+    },
+    onBadgeScannedForCustomer() {
+      this.badgeScannedForCustomer = true
+      this.showBadgeScanPopupForCustomer = false
+      // Navigate to customer management page after successful badge scan
+      this.$router.push({
+        name: 'pos-customers',
+        query: { returnTo: 'pos-item-selection' }
+      })
+    },
+    onBadgeScanCloseForCustomer() {
+      this.showBadgeScanPopupForCustomer = false
+      // Don't navigate if user closed without scanning
+    },
+    async goToReturn() {
+      // Check if badge scan is required before navigating
+      const badgeRequired = await this.checkBadgeRequirementForReturn()
+      if (badgeRequired && !this.badgeScannedForReturn) {
+        // Show badge scan popup
+        this.showBadgeScanPopupForReturn = true
+        return
+      }
       // Navigate to return products page
       this.$router.push({ name: 'pos-return' })
+    },
+    async checkBadgeRequirementForReturn() {
+      try {
+        const alwaysShow = await getAlwaysShowBadgeScan(this.$http)
+        if (alwaysShow) {
+          return true
+        }
+        const permissionCheck = await checkCurrentUserPermission(BADGE_PERMISSIONS.MAKE_RETURN, this.$http)
+        // Return true if badge scan is required (user doesn't have valid permission)
+        return !permissionCheck.hasValidPermission
+      } catch (error) {
+        console.error('Error checking badge requirement for return:', error)
+        return true // On error, require badge scan
+      }
+    },
+    onBadgeScannedForReturn() {
+      this.badgeScannedForReturn = true
+      this.showBadgeScanPopupForReturn = false
+      // Navigate to return products page after successful badge scan
+      this.$router.push({ name: 'pos-return' })
+    },
+    onBadgeScanCloseForReturn() {
+      this.showBadgeScanPopupForReturn = false
+      // Don't navigate if user closed without scanning
     },
     clearPendingTicket() {
       // Clear pending ticket ID and reset to normal flow
@@ -1485,6 +1604,32 @@ export default {
           ]
         })
     },
+    async loadSelectedCustomer() {
+      const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+      if (selectedCustomerId) {
+        try {
+          const response = await this.$http.get(`/customer/${selectedCustomerId}`)
+          this.selectedCustomerObj = response.data
+        } catch (error) {
+          console.error('Error loading selected customer:', error)
+          // Clear invalid customer ID from store
+          this.$store.dispatch('pos/clearSelectedCustomerId')
+        }
+      }
+    },
+    clearSelectedCustomer() {
+      this.selectedCustomerObj = null
+      this.$store.dispatch('pos/clearSelectedCustomerId')
+      this.$toast({
+        component: ToastificationContent,
+        props: {
+          title: this.$t('pos.itemSelection.customerCleared'),
+          icon: 'CheckCircleIcon',
+          text: this.$t('pos.itemSelection.customerClearedText'),
+          variant: 'success'
+        }
+      })
+    },
     addCashCountLine() {
       this.closeSessionData.cashCountLines.push({
         denominationValue: null,
@@ -1506,6 +1651,10 @@ export default {
     updateCashCountTotals() {
       // Trigger reactivity update
       this.$forceUpdate()
+    },
+    handleCloseSessionClick() {
+      // Show close session modal directly (no badge check needed)
+      this.showCloseSessionModal = true
     },
     async closeSession() {
       // Check for pending tickets first
@@ -1600,9 +1749,22 @@ export default {
         cashCountLines: []
       }
     },
-    openLineDiscountModal(index) {
+    async openLineDiscountModal(index) {
       if (index < 0 || index >= this.cart.length) return
 
+      // Check if badge scan is required before opening discount modal
+      const badgeRequired = await this.checkBadgeRequirementForLineDiscount()
+      if (badgeRequired && !this.badgeScannedForLineDiscount) {
+        // Store the index for after badge scan
+        this.pendingLineDiscountIndex = index
+        this.showBadgeScanPopupForLineDiscount = true
+        return
+      }
+
+      // Open discount modal
+      this.openLineDiscountModalInternal(index)
+    },
+    openLineDiscountModalInternal(index) {
       this.discountModalItemIndex = index
       const item = this.cart[index]
 
@@ -1619,6 +1781,34 @@ export default {
       }
 
       this.showDiscountModal = true
+    },
+    async checkBadgeRequirementForLineDiscount() {
+      try {
+        const alwaysShow = await getAlwaysShowBadgeScan(this.$http)
+        if (alwaysShow) {
+          return true
+        }
+        const permissionCheck = await checkCurrentUserPermission(BADGE_PERMISSIONS.APPLY_LINE_DISCOUNT, this.$http)
+        // Return true if badge scan is required (user doesn't have valid permission)
+        return !permissionCheck.hasValidPermission
+      } catch (error) {
+        console.error('Error checking badge requirement for line discount:', error)
+        return true // On error, require badge scan
+      }
+    },
+    onBadgeScannedForLineDiscount() {
+      this.badgeScannedForLineDiscount = true
+      this.showBadgeScanPopupForLineDiscount = false
+      // Open discount modal after successful badge scan
+      if (this.pendingLineDiscountIndex !== null) {
+        this.openLineDiscountModalInternal(this.pendingLineDiscountIndex)
+        this.pendingLineDiscountIndex = null
+      }
+    },
+    onBadgeScanCloseForLineDiscount() {
+      this.showBadgeScanPopupForLineDiscount = false
+      this.pendingLineDiscountIndex = null
+      // Don't open discount modal if user closed without scanning
     },
     getDiscountModalItem() {
       if (this.discountModalItemIndex === null || this.discountModalItemIndex >= this.cart.length) {

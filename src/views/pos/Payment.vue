@@ -127,9 +127,29 @@
                   <!-- Amount Input -->
                   <b-form-group :label="$t('pos.payment.amount')" class="mb-2">
                     <b-input-group>
-                      <b-form-input v-model.number="card.amount" type="number" step="0.01" min="0.01" :placeholder="$t('pos.payment.amountPlaceholder')"
-                        @input="updatePaymentTotal" @click.stop :disabled="isReturnVoucherPayment(card) || loading"
-                        :readonly="isReturnVoucherPayment(card)" size="" :ref="`amount-input-${index}`" />
+                      <b-form-input 
+                        v-if="!isReturnVoucherPayment(card)"
+                        v-model.number="card.amount" 
+                        type="number" 
+                        step="0.01" 
+                        min="0.01" 
+                        :placeholder="$t('pos.payment.amountPlaceholder')"
+                        @input="updatePaymentTotal" 
+                        @click.stop 
+                        :disabled="loading" 
+                        size="" 
+                        :ref="`amount-input-${index}`" 
+                      />
+                      <b-form-input 
+                        v-else
+                        :value="formatTunCurrencyWithoutSuffix(card.amount || 0)"
+                        type="text"
+                        readonly
+                        @click.stop 
+                        :disabled="loading" 
+                        size="" 
+                        class="text-left"
+                      />
                       <b-input-group-append>
                         <span class="input-group-text">TND</span>
                       </b-input-group-append>
@@ -141,7 +161,14 @@
 
                   <!-- Dynamic Required Fields -->
                   <b-form-group v-if="requiresTitleNumber(card)" :label="$t('pos.payment.titleNumber')" class="mb-2">
-                    <b-form-input v-model="card.titleNumber" :placeholder="$t('pos.payment.titleNumberPlaceholder')" @click.stop size="sm" />
+                    <b-form-input 
+                      v-model="card.titleNumber" 
+                      :placeholder="$t('pos.payment.titleNumberPlaceholder')" 
+                      @click.stop 
+                      @input="validateTitleNumber(card)"
+                      maxlength="7"
+                      size="sm" 
+                    />
                   </b-form-group>
 
                   <b-form-group v-if="requiresDueDate(card)" :label="$t('pos.payment.dueDate')" class="mb-2">
@@ -279,16 +306,30 @@
         </div>
       </div>
     </b-modal>
+
+    <!-- Badge Scan Popup for Total Discount -->
+    <BadgeScanPopup
+      :show="showBadgeScanPopupForTotalDiscount"
+      :required-permission="'APPLY_TOTAL_DISCOUNT'"
+      :session-id="currentSessionId"
+      @badge-scanned="onBadgeScannedForTotalDiscount"
+      @close="onBadgeScanCloseForTotalDiscount"
+    />
   </div>
 </template>
 
 <script>
 import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
+import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
 import JsBarcode from 'jsbarcode'
 
 export default {
   name: 'Payment',
+  components: {
+    BadgeScanPopup
+  },
   data() {
     return {
       cart: [],
@@ -311,7 +352,9 @@ export default {
       cardIdCounter: 0, // For generating unique card IDs
       showDiscountDialog: false,
       discountType: 'percentage', // 'percentage' or 'amount'
-      discountValue: null
+      discountValue: null,
+      showBadgeScanPopupForTotalDiscount: false,
+      badgeScannedForTotalDiscount: false
     }
   },
   computed: {
@@ -386,6 +429,9 @@ export default {
         if (paymentMethod.requireTitleNumber && (!card.titleNumber || !card.titleNumber.trim())) {
           return false
         }
+        if (paymentMethod.requireTitleNumber && card.titleNumber && card.titleNumber.length > 7) {
+          return false
+        }
         if (paymentMethod.requireDueDate && (!card.dueDate || card.dueDate === '')) {
           return false
         }
@@ -402,6 +448,10 @@ export default {
       // Enable when fully paid (0) or overpaid (negative), with tolerance for floating point
       // Use <= 0.01 instead of <= 0 to handle floating point precision issues
       return allValid && this.remainingBalance <= 0.01
+    },
+    currentSessionId() {
+      const session = this.$store.state.pos?.currentSession
+      return session ? session.id : null
     }
   },
   watch: {
@@ -421,7 +471,13 @@ export default {
     await this.loadPassengerCustomer()
     this.loadPendingTicketsCount()
 
-    this.resetCustomerToPassenger()
+    // Load selected customer from store if exists, otherwise reset to passenger
+    const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+    if (selectedCustomerId) {
+      await this.loadSelectedCustomerFromStore()
+    } else {
+      this.resetCustomerToPassenger()
+    }
 
     // Initialize with CLIENT_ESPECES selected
     this.initializeDefaultPayment()
@@ -512,6 +568,23 @@ export default {
         this.$store.dispatch('pos/setSelectedCustomerId', this.passengerCustomer.id)
       }
     },
+    async loadSelectedCustomerFromStore() {
+      const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+      if (selectedCustomerId) {
+        try {
+          const response = await this.$http.get(`/customer/${selectedCustomerId}`)
+          this.selectedCustomerObj = response.data
+          this.selectedCustomerId = response.data.id
+          this.customerSearchTerm = `${response.data.customerCode} - ${response.data.name}`
+          this.showCustomerDropdown = false
+          this.onCustomerChange()
+        } catch (error) {
+          console.error('Error loading selected customer from store:', error)
+          // Fallback to passenger customer
+          this.resetCustomerToPassenger()
+        }
+      }
+    },
     async loadSelectedCustomerDetails() {
       if (!this.selectedCustomerId) return
       try {
@@ -576,19 +649,25 @@ export default {
         this.$store.dispatch('pos/setSelectedCustomerId', this.selectedCustomerId)
       }
     },
-    openCustomerDialog() {
-      // Placeholder for future implementation
-      this.$toast({
-        component: ToastificationContent,
-        props: {
-          title: this.$t('pos.payment.errors.comingSoon'),
-          icon: 'InfoIcon',
-          text: this.$t('pos.payment.errors.customerDialogComingSoon'),
-          variant: 'info'
-        }
+    async openCustomerDialog() {
+      // Navigate to customer management page with return route
+      this.$router.push({
+        name: 'pos-customers',
+        query: { returnTo: 'pos-payment' }
       })
     },
-    openDiscountDialog() {
+    async openDiscountDialog() {
+      // Check if badge scan is required before opening discount dialog
+      const badgeRequired = await this.checkBadgeRequirementForTotalDiscount()
+      if (badgeRequired && !this.badgeScannedForTotalDiscount) {
+        // Show badge scan popup
+        this.showBadgeScanPopupForTotalDiscount = true
+        return
+      }
+      // Open discount dialog
+      this.openDiscountDialogInternal()
+    },
+    openDiscountDialogInternal() {
       // Initialize dialog with existing discount values
       if (this.orderSummary && this.orderSummary.discountPercent && this.orderSummary.discountPercent > 0) {
         this.discountType = 'percentage'
@@ -601,6 +680,30 @@ export default {
         this.discountValue = null
       }
       this.showDiscountDialog = true
+    },
+    async checkBadgeRequirementForTotalDiscount() {
+      try {
+        const alwaysShow = await getAlwaysShowBadgeScan(this.$http)
+        if (alwaysShow) {
+          return true
+        }
+        const permissionCheck = await checkCurrentUserPermission(BADGE_PERMISSIONS.APPLY_TOTAL_DISCOUNT, this.$http)
+        // Return true if badge scan is required (user doesn't have valid permission)
+        return !permissionCheck.hasValidPermission
+      } catch (error) {
+        console.error('Error checking badge requirement for total discount:', error)
+        return true // On error, require badge scan
+      }
+    },
+    onBadgeScannedForTotalDiscount() {
+      this.badgeScannedForTotalDiscount = true
+      this.showBadgeScanPopupForTotalDiscount = false
+      // Open discount dialog after successful badge scan
+      this.openDiscountDialogInternal()
+    },
+    onBadgeScanCloseForTotalDiscount() {
+      this.showBadgeScanPopupForTotalDiscount = false
+      // Don't open discount dialog if user closed without scanning
     },
     applyHeaderDiscount() {
       const summary = this.$store.state.pos?.orderSummary || this.orderSummary
@@ -825,6 +928,12 @@ export default {
       const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.requireIssuingBank
     },
+    validateTitleNumber(card) {
+      // Limit to 7 characters
+      if (card.titleNumber && card.titleNumber.length > 7) {
+        card.titleNumber = card.titleNumber.substring(0, 7)
+      }
+    },
     onPaymentMethodChange(card) {
       if (!this.isReturnVoucherPayment(card)) {
         card.voucherNumber = ''
@@ -987,6 +1096,10 @@ export default {
       const amount = parseFloat(value) || 0
       const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       return `${formatted} TND`
+    },
+    formatTunCurrencyWithoutSuffix(value) {
+      const amount = parseFloat(value) || 0
+      return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     },
     goBack() {
       this.$router.push({ name: 'pos-item-selection' })

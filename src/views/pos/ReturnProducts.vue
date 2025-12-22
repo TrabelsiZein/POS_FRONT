@@ -115,13 +115,10 @@
           </div>
         </template>
         <template #cell(returnQty)="row">
-          <b-form-input v-model.number="row.item.returnQuantity" type="number" :min="0" :max="row.item.remainingQuantity || row.item.quantity"
+          <b-form-input v-model.number="row.item.returnQuantity" type="number" :min="0"
             @input="onReturnQuantityChange(row.item)" @blur="onReturnQuantityBlur(row.item)"
             @keyup.enter="onReturnQuantityBlur(row.item)" :disabled="loading" style="width: 100px;"
-            :state="getReturnQtyState(row.item)" class="return-qty-input" />
-          <b-form-invalid-feedback v-if="row.item.returnQuantity > (row.item.remainingQuantity || row.item.quantity)" :state="false">
-            {{ $t('pos.returnProducts.cannotExceed', { max: row.item.remainingQuantity !== undefined ? row.item.remainingQuantity : row.item.quantity }) }}
-          </b-form-invalid-feedback>
+            class="return-qty-input" />
         </template>
         <template #cell(returnAmount)="row">
           <div>
@@ -179,22 +176,39 @@
         {{ $t('pos.returnProducts.processReturn') }}
       </b-button>
     </div>
+
+    <!-- Badge Scan Popup -->
+    <BadgeScanPopup
+      :show="showBadgeScanPopup"
+      :required-permission="'MAKE_RETURN'"
+      :session-id="currentSessionId"
+      @badge-scanned="onBadgeScanned"
+      @close="onBadgeScanClose"
+    />
   </div>
 </template>
 
 <script>
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
+import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
+import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
 import JsBarcode from 'jsbarcode'
 
 export default {
   name: 'ReturnProducts',
+  components: {
+    BadgeScanPopup
+  },
   data() {
     return {
       ticketNumber: '',
       ticketData: null,
       returnType: 'RETURN_VOUCHER',
-      loading: false
+      loading: false,
+      showBadgeScanPopup: false,
+      badgeScanned: false,
+      pendingReturnData: null
     }
   },
   computed: {
@@ -270,6 +284,10 @@ export default {
       if (!this.hasReturnItems) return false
       if (this.returnType === 'SIMPLE_RETURN' && !this.ticketData.isSimpleReturnEnabled) return false
       return true
+    },
+    currentSessionId() {
+      const session = this.$store.state.pos?.currentSession
+      return session ? session.id : null
     }
   },
   mounted() {
@@ -342,32 +360,12 @@ export default {
       }
     },
     onReturnQuantityChange(line) {
-      // Validate and fix quantity in real-time
+      // Only handle NaN or invalid values, don't limit max value
       let qty = parseFloat(line.returnQuantity)
 
       // Handle NaN or invalid values
       if (isNaN(qty) || qty === null || qty === undefined) {
         qty = 0
-      }
-
-      // Get the maximum returnable quantity (remaining quantity)
-      const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
-
-      // Ensure quantity doesn't exceed remaining returnable quantity
-      if (qty > maxReturnable) {
-        qty = maxReturnable
-        // Show warning
-        this.$nextTick(() => {
-          this.$toast({
-            component: ToastificationContent,
-            props: {
-              title: this.$t('common.warning'),
-              icon: 'AlertCircleIcon',
-              text: this.$t('pos.returnProducts.errors.returnQuantityExceededMessage', { maxReturnable }),
-              variant: 'warning'
-            }
-          })
-        })
       }
 
       // Ensure quantity is not negative
@@ -382,42 +380,21 @@ export default {
       this.$set(line, 'returnQuantity', qty)
     },
     onReturnQuantityBlur(line) {
-      // Final validation on blur/enter
+      // Only handle NaN or invalid values, don't limit max value
       let qty = parseFloat(line.returnQuantity)
 
       if (isNaN(qty) || qty === null || qty === undefined) {
         qty = 0
       }
 
-      // Get the maximum returnable quantity (remaining quantity)
-      const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
-
-      // Cap at remaining returnable quantity
-      if (qty > maxReturnable) {
-        qty = maxReturnable
-      }
-
+      // Ensure quantity is not negative
       if (qty < 0) {
         qty = 0
       }
 
+      // Round to integer
       qty = Math.round(qty)
       this.$set(line, 'returnQuantity', qty)
-    },
-    getReturnQtyState(line) {
-      if (line.returnQuantity === null || line.returnQuantity === undefined) {
-        return null
-      }
-      const qty = parseFloat(line.returnQuantity)
-      if (isNaN(qty)) {
-        return false
-      }
-      // Get the maximum returnable quantity (remaining quantity)
-      const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
-      if (qty < 0 || qty > maxReturnable) {
-        return false
-      }
-      return null
     },
     getReturnAmount(line) {
       let returnQty = parseFloat(line.returnQuantity) || 0
@@ -450,37 +427,26 @@ export default {
     async processReturn() {
       if (!this.canProcessReturn) return
 
-      // Frontend validation before calling backend API
-      const validationErrors = []
-      const returnLines = []
+      // Check if badge scan is required
+      const badgeRequired = await this.checkBadgeRequirement()
+      if (badgeRequired && !this.badgeScanned) {
+        // Store return data for after badge scan
+        this.pendingReturnData = {
+          returnLines: this.prepareReturnLines(),
+          returnType: this.returnType
+        }
+        this.showBadgeScanPopup = true
+        return
+      }
 
+      // Proceed with return processing
+      await this.executeReturn()
+    },
+    prepareReturnLines() {
+      const returnLines = []
       for (const line of this.ticketData.salesLines) {
         let returnQty = parseFloat(line.returnQuantity) || 0
-
-        // Validate return quantity
-        if (isNaN(returnQty)) {
-          validationErrors.push(this.$t('pos.returnProducts.errors.invalidReturnQuantity', { itemName: line.item.name }))
-          continue
-        }
-
-        // Round to integer
         returnQty = Math.round(returnQty)
-
-        // Validate range
-        if (returnQty < 0) {
-          validationErrors.push(this.$t('pos.returnProducts.errors.returnQuantityNegative', { itemName: line.item.name }))
-          continue
-        }
-
-        // Get the maximum returnable quantity (remaining quantity)
-        const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
-        
-        if (returnQty > maxReturnable) {
-          validationErrors.push(this.$t('pos.returnProducts.errors.returnQuantityExceeded', { itemName: line.item.name, returnQty, maxReturnable }))
-          continue
-        }
-
-        // Only add to return lines if quantity is greater than 0
         if (returnQty > 0) {
           returnLines.push({
             salesLineId: line.id,
@@ -488,19 +454,97 @@ export default {
           })
         }
       }
+      return returnLines
+    },
+    async checkBadgeRequirement() {
+      try {
+        const alwaysShow = await getAlwaysShowBadgeScan(this.$http)
+        if (alwaysShow) {
+          return true
+        }
+        const permissionCheck = await checkCurrentUserPermission(BADGE_PERMISSIONS.MAKE_RETURN, this.$http)
+        // Return true if badge scan is required (user doesn't have valid permission)
+        return !permissionCheck.hasValidPermission
+      } catch (error) {
+        console.error('Error checking badge requirement:', error)
+        return true // On error, require badge scan
+      }
+    },
+    onBadgeScanned() {
+      this.badgeScanned = true
+      this.showBadgeScanPopup = false
+      // Execute the pending return
+      if (this.pendingReturnData) {
+        this.executeReturn()
+      }
+    },
+    onBadgeScanClose() {
+      this.showBadgeScanPopup = false
+      this.pendingReturnData = null
+    },
+    async executeReturn() {
+      if (!this.canProcessReturn) return
 
-      // Show validation errors if any
-      if (validationErrors.length > 0) {
-        this.$toast({
-          component: ToastificationContent,
-          props: {
-            title: this.$t('pos.returnProducts.errors.validationError'),
-            icon: 'XIcon',
-            text: validationErrors.join('. '),
-            variant: 'danger'
+      // Use pending return data if available, otherwise prepare from form
+      let returnLines = []
+      let returnType = this.returnType
+
+      if (this.pendingReturnData) {
+        returnLines = this.pendingReturnData.returnLines
+        returnType = this.pendingReturnData.returnType
+        this.pendingReturnData = null
+      } else {
+        // Frontend validation before calling backend API
+        const validationErrors = []
+
+        for (const line of this.ticketData.salesLines) {
+          let returnQty = parseFloat(line.returnQuantity) || 0
+
+          // Validate return quantity
+          if (isNaN(returnQty)) {
+            validationErrors.push(this.$t('pos.returnProducts.errors.invalidReturnQuantity', { itemName: line.item.name }))
+            continue
           }
-        })
-        return
+
+          // Round to integer
+          returnQty = Math.round(returnQty)
+
+          // Validate range
+          if (returnQty < 0) {
+            validationErrors.push(this.$t('pos.returnProducts.errors.returnQuantityNegative', { itemName: line.item.name }))
+            continue
+          }
+
+          // Get the maximum returnable quantity (remaining quantity)
+          const maxReturnable = line.remainingQuantity !== undefined ? line.remainingQuantity : line.quantity
+          
+          if (returnQty > maxReturnable) {
+            validationErrors.push(this.$t('pos.returnProducts.errors.returnQuantityExceeded', { itemName: line.item.name, returnQty, maxReturnable }))
+            continue
+          }
+
+          // Only add to return lines if quantity is greater than 0
+          if (returnQty > 0) {
+            returnLines.push({
+              salesLineId: line.id,
+              quantity: returnQty
+            })
+          }
+        }
+
+        // Show validation errors if any
+        if (validationErrors.length > 0) {
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: this.$t('pos.returnProducts.errors.validationError'),
+              icon: 'XIcon',
+              text: validationErrors.join('. '),
+              variant: 'danger'
+            }
+          })
+          return
+        }
       }
 
       if (returnLines.length === 0) {
@@ -520,7 +564,7 @@ export default {
       try {
         const request = {
           ticketNumber: this.ticketNumber.trim(),
-          returnType: this.returnType,
+          returnType: returnType,
           returnLines: returnLines,
           notes: ''
         }

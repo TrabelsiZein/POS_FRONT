@@ -52,6 +52,13 @@ export default [
         resource: 'admin-erp-communications',
         action: 'read',
       },
+      {
+        title: 'admin.badgeScanHistory.title',
+        icon: 'ShieldIcon',
+        route: { name: 'admin-badge-scan-history' },
+        resource: 'admin-badge-scan-history',
+        action: 'read',
+      },
     ],
   },
   {

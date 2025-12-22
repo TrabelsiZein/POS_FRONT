@@ -237,6 +237,7 @@ export default {
               { action: 'read', subject: 'admin-returns' },
               { action: 'read', subject: 'admin-erp-jobs' },
               { action: 'read', subject: 'admin-erp-communications' },
+              { action: 'read', subject: 'admin-badge-scan-history' },
               { action: 'write', subject: 'admin-users' },
               { action: 'delete', subject: 'admin-users' },
               { action: 'write', subject: 'admin-customers' },
@@ -254,6 +255,7 @@ export default {
               { action: 'read', subject: 'admin-item-barcodes' },
               { action: 'read', subject: 'admin-customers' },
               { action: 'read', subject: 'admin-returns' },
+              { action: 'read', subject: 'admin-badge-scan-history' },
               { action: 'write', subject: 'responsible-sessions' },
               { action: 'write', subject: 'admin-customers' },
               { action: 'delete', subject: 'admin-customers' }

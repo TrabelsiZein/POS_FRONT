@@ -78,38 +78,43 @@ export default {
   },
   methods: {
     showErrorMessage(error) {
-
-      if (error.data.message) {
-        this.$swal({
-          title: "Une erreur inattendue s'est manifestée.",
-          text: error.data.message,
-          icon: 'error',
-          customClass: {
-            confirmButton: 'btn btn-primary',
-          },
-          buttonsStyling: false,
-        })
+      // Skip showing Swal if this is a badge scan error (handled in BadgeScanPopup)
+      if (error && error.data && error.data.failureReason) {
+        return
       }
-      else if (error.data.error) {
-        this.$swal({
-          title: "Une erreur inattendue s'est manifestée.",
-          text: error.data.error,
-          icon: 'error',
-          customClass: {
-            confirmButton: 'btn btn-primary',
-          },
-          buttonsStyling: false,
-        })
-      } else {
-        this.$swal({
-          title: "Une erreur inattendue s'est manifestée.",
-          text: error.data,
-          icon: 'error',
-          customClass: {
-            confirmButton: 'btn btn-primary',
-          },
-          buttonsStyling: false,
-        })
+
+      if (error && error.data) {
+        if (error.data.message) {
+          this.$swal({
+            title: "Une erreur inattendue s'est manifestée.",
+            text: error.data.message,
+            icon: 'error',
+            customClass: {
+              confirmButton: 'btn btn-primary',
+            },
+            buttonsStyling: false,
+          })
+        } else if (error.data.error) {
+          this.$swal({
+            title: "Une erreur inattendue s'est manifestée.",
+            text: error.data.error,
+            icon: 'error',
+            customClass: {
+              confirmButton: 'btn btn-primary',
+            },
+            buttonsStyling: false,
+          })
+        } else if (error.data) {
+          this.$swal({
+            title: "Une erreur inattendue s'est manifestée.",
+            text: typeof error.data === 'string' ? error.data : JSON.stringify(error.data),
+            icon: 'error',
+            customClass: {
+              confirmButton: 'btn btn-primary',
+            },
+            buttonsStyling: false,
+          })
+        }
       }
     },
   }

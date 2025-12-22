@@ -140,6 +140,8 @@
         "discount": "Discount:",
         "total": "Total:"
       },
+      "customerCleared": "Customer Cleared",
+      "customerClearedText": "Customer selection has been cleared. Default customer will be used.",
       "keyboard": {
         "show": "Show Keyboard",
         "hide": "Hide Keyboard",
@@ -233,6 +235,7 @@
       "amountAutoSet": "Amount is automatically set from voucher",
       "titleNumber": "N° Titre *",
       "titleNumberPlaceholder": "N° du titre",
+      "titleNumberMaxLength": "N° Titre cannot exceed 7 characters",
       "dueDate": "Date Échéance *",
       "drawerName": "Nom du tireur *",
       "drawerNamePlaceholder": "Nom du tireur",
@@ -388,6 +391,7 @@
       "of": "of",
       "customer": "customer",
       "customers": "customers",
+      "select": "Select",
       "setAsDefault": "Set as Default",
       "setAsDefaultModal": {
         "title": "Set as Default Customer?",
@@ -456,10 +460,46 @@
         "failedToDelete": "Failed to delete customer. Please try again."
       },
       "success": {
+        "customerSelected": "Customer Selected",
+        "customerSelectedText": "Customer \"{name}\" has been selected for this ticket",
         "customerCreated": "Customer created successfully",
         "customerUpdated": "Customer updated successfully",
         "customerDeleted": "Customer deleted successfully"
       }
+    },
+    "badge": {
+      "scanBadge": "Scan Badge",
+      "badgeCode": "Badge Code",
+      "scanBadgePlaceholder": "Scan or enter badge code...",
+      "requiredPermission": "Required Permission",
+      "scan": "Scan",
+      "scanInstructions": "Scan the badge code or enter it manually to authorize this action",
+      "permissions": {
+        "consult_customer_list": "Consult Customer List",
+        "make_return": "Make Return",
+        "apply_line_discount": "Apply Line Discount",
+        "apply_total_discount": "Apply Total Discount"
+      },
+      "badgeScannedSuccessfully": "Badge scanned successfully",
+      "scanFailed": "Scan Failed",
+      "messages": {
+        "badgeNotFound": "Badge not found",
+        "badgeNoAccess": "Badge does not have required permission",
+        "badgeExpired": "Badge has expired",
+        "badgeRevoked": "Badge has been revoked",
+        "rateLimitExceeded": "Too many failed attempts. Please try again later.",
+        "unknownError": "An error occurred during badge scan"
+      }
+    },
+    "badgeScanPopup": {
+      "title": "Badge Scan Required",
+      "instruction": "Please scan your badge or the responsible's badge to continue",
+      "permissionRequired": "Required permission: {permission}",
+      "badgeCode": "Badge Code",
+      "placeholder": "Scan badge barcode or QR code...",
+      "emptyBadgeCode": "Please enter a badge code",
+      "scanSuccess": "Badge validated successfully",
+      "scanFailed": "Badge validation failed"
     }
   },
   "admin": {
@@ -476,7 +516,10 @@
         "fullName": "Full Name",
         "email": "Email",
         "role": "Role",
+        "badgeCode": "Badge Code",
+        "badgeStatus": "Badge Status",
         "status": "Status",
+        "actions": "Actions",
         "actions": "Actions"
       },
       "form": {
@@ -506,7 +549,49 @@
         "userDeleted": "User deleted successfully",
         "failedToLoad": "Failed to load users",
         "failedToSave": "Failed to save user",
-        "failedToDelete": "Failed to delete user"
+        "failedToDelete": "Failed to delete user",
+        "failedToLoadBadgePermissions": "Failed to load badge permissions"
+      },
+      "badge": {
+        "title": "Badge Management",
+        "badgeCode": "Badge Code",
+        "badgeCodePlaceholder": "Enter badge code or click Generate",
+        "badgeCodeHelp": "Unique identifier for the badge (barcode/QR code)",
+        "badgeExpirationDate": "Badge Expiration Date",
+        "badgeExpirationDateHelp": "Optional: Set when the badge expires. Leave empty for no expiration.",
+        "expirationDate": "Expiration Date",
+        "selectDate": "Select expiration date",
+        "badgePermissions": "Badge Permissions",
+        "badgePermissionsHelp": "Select the permissions that this badge should have access to",
+        "currentStatus": "Current Status",
+        "permissions": "Badge Permissions",
+        "generate": "Generate",
+        "autoGenerate": "Auto-generate",
+        "revokeBadge": "Revoke Badge",
+        "revokeReason": "Revoke Reason",
+        "revokeReasonPlaceholder": "Enter the reason for revoking this badge (optional)",
+        "revokeConfirmation": "Are you sure you want to revoke the badge for user {username}?",
+        "revokeWarning": "This action cannot be undone. The badge will be immediately invalidated.",
+        "badgeGenerated": "Badge code generated successfully",
+        "badgeRevoked": "Badge revoked successfully",
+        "failedToGenerateBadge": "Failed to generate badge code",
+        "failedToRevokeBadge": "Failed to revoke badge",
+        "usernameRequiredForBadge": "Username is required to generate a badge",
+        "noBadge": "No badge assigned",
+        "revokedInfo": "Badge revoked on {date} by {by}",
+        "unknown": "Unknown",
+        "status": {
+          "active": "Active",
+          "expired": "Expired",
+          "revoked": "Revoked",
+          "noBadge": "No Badge"
+        },
+        "permissions": {
+          "consult_customer_list": "Consult Customer List",
+          "make_return": "Make Return",
+          "apply_line_discount": "Apply Line Discount",
+          "apply_total_discount": "Apply Total Discount"
+        }
       }
     },
     "locationManagement": {
@@ -641,6 +726,55 @@
       "failedToUpdateStatus": "Failed to update job status",
       "failedToLoad": "Failed to load ERP jobs",
       "unknown": "Unknown"
+    },
+    "badgeScanHistory": {
+      "title": "Badge Scan History",
+      "refresh": "Refresh",
+      "export": "Export CSV",
+      "filters": "Filters",
+      "records": "records",
+      "badgeCode": "Badge Code",
+      "badgeCodePlaceholder": "Filter by badge code...",
+      "user": "User",
+      "userPlaceholder": "Filter by user...",
+      "permission": "Permission",
+      "allPermissions": "All Permissions",
+      "success": "Success",
+      "failure": "Failure",
+      "all": "All",
+      "dateFrom": "Date From",
+      "dateTo": "Date To",
+      "selectDate": "Select date",
+      "scanType": "Scan Type",
+      "barcode": "Barcode",
+      "qrCode": "QR Code",
+      "clearFilters": "Clear Filters",
+      "loading": "Loading...",
+      "noRecords": "No scan records found",
+      "tryAdjustingFilters": "Try adjusting your filters",
+      "showing": "Showing",
+      "of": "of",
+      "exportSuccess": "Scan history exported successfully",
+      "stats": {
+        "totalScans": "Total Scans",
+        "successfulScans": "Successful Scans",
+        "failedScans": "Failed Scans",
+        "successRate": "Success Rate"
+      },
+      "tableHeaders": {
+        "timestamp": "Timestamp",
+        "scannedBy": "Scanned By",
+        "badgeCode": "Badge Code",
+        "badgeOwner": "Badge Owner",
+        "permission": "Permission",
+        "success": "Success",
+        "failureReason": "Failure Reason",
+        "scanType": "Scan Type"
+      },
+      "errors": {
+        "failedToLoad": "Failed to load scan history",
+        "exportFailed": "Failed to export scan history"
+      }
     },
     "erpCommunications": {
       "title": "ERP Communications",

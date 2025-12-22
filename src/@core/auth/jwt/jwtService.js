@@ -40,7 +40,21 @@ export default class JwtService {
       error => {
         // const { config, response: { status } } = error
         const { config, response } = error
-        eventBus.$emit('show-sweetalert-error', response);
+        
+        // Skip global error popup for badge scan errors (handled in BadgeScanPopup component)
+        const isBadgeScanError = config && config.url && (
+          config.url.includes('/badge/scan') || 
+          config.url.includes('/badge/check-permission')
+        )
+        
+        // Also check if response has failureReason (badge scan error format)
+        const hasFailureReason = response && response.data && response.data.failureReason
+        
+        // Only show global error popup if it's not a badge scan error
+        if (!isBadgeScanError && !hasFailureReason) {
+          eventBus.$emit('show-sweetalert-error', response);
+        }
+        
         const originalRequest = config
 
         // if (status === 401) {

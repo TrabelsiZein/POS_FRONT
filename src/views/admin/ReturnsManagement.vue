@@ -148,7 +148,7 @@
         </template>
 
         <template #cell(totalReturnAmount)="row">
-          <strong>{{ formatPrice(row.item.totalReturnAmount) }} TND</strong>
+          <strong>{{ formatTunCurrency(row.item.totalReturnAmount) }}</strong>
         </template>
 
         <template #cell(originalTicket)="row">
@@ -163,7 +163,7 @@
             <div><strong>{{ row.item.returnVoucher.voucherNumber }}</strong></div>
             <div class="small text-muted">
               <span v-if="row.item.returnVoucher.status === 'PENDING'">
-                {{ $t('admin.returnsManagement.remaining') }} {{ formatPrice(getRemainingAmount(row.item.returnVoucher)) }} TND
+                {{ $t('admin.returnsManagement.remaining') }} {{ formatTunCurrency(getRemainingAmount(row.item.returnVoucher)) }}
               </span>
               <b-badge :variant="getVoucherStatusVariant(row.item.returnVoucher.status)" class="mt-1">
                 {{ row.item.returnVoucher.status }}
@@ -239,8 +239,7 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ $t('admin.returnsManagement.modal.totalAmount') }}</span>
-                <span class="detail-value"><strong>{{ formatPrice(selectedReturn.totalReturnAmount) }}
-                    TND</strong></span>
+                <span class="detail-value"><strong>{{ formatTunCurrency(selectedReturn.totalReturnAmount) }}</strong></span>
               </div>
             </b-col>
             <b-col cols="12" md="6">
@@ -312,18 +311,16 @@
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ $t('admin.returnsManagement.modal.voucherAmount') }}</span>
-                <span class="detail-value"><strong>{{ formatPrice(selectedReturn.returnVoucher.voucherAmount) }}
-                    TND</strong></span>
+                <span class="detail-value"><strong>{{ formatTunCurrency(selectedReturn.returnVoucher.voucherAmount) }}</strong></span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ $t('admin.returnsManagement.modal.usedAmount') }}</span>
-                <span class="detail-value">{{ formatPrice(selectedReturn.returnVoucher.usedAmount || 0) }} TND</span>
+                <span class="detail-value">{{ formatTunCurrency(selectedReturn.returnVoucher.usedAmount || 0) }}</span>
               </div>
               <div class="detail-row">
                 <span class="detail-label">{{ $t('admin.returnsManagement.modal.remainingAmount') }}</span>
                 <span class="detail-value">
-                  <strong class="text-success">{{ formatPrice(getRemainingAmount(selectedReturn.returnVoucher)) }}
-                    TND</strong>
+                  <strong class="text-success">{{ formatTunCurrency(getRemainingAmount(selectedReturn.returnVoucher)) }}</strong>
                 </span>
               </div>
             </b-col>
@@ -374,11 +371,11 @@
             </template>
 
             <template #cell(unitPrice)="row">
-              {{ formatPrice(row.item.unitPrice) }} TND
+              {{ formatTunCurrency(row.item.unitPrice) }}
             </template>
 
             <template #cell(lineTotal)="row">
-              <strong>{{ formatPrice(row.item.lineTotalIncludingVat || row.item.lineTotal) }} TND</strong>
+              <strong>{{ formatTunCurrency(row.item.lineTotalIncludingVat || row.item.lineTotal) }}</strong>
             </template>
 
             <template #cell(synched)="row">
@@ -906,9 +903,14 @@ export default {
           return 'secondary'
       }
     },
+    formatTunCurrency(value) {
+      const amount = parseFloat(value) || 0
+      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return `${formatted} TND`
+    },
     formatPrice(price) {
-      if (!price && price !== 0) return '0.00'
-      return parseFloat(price).toFixed(2)
+      // Keep for backward compatibility, but use formatTunCurrency instead
+      return this.formatTunCurrency(price)
     },
     formatDate(dateString) {
       if (!dateString) return ''

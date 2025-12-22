@@ -140,6 +140,8 @@
         "discount": "Remise:",
         "total": "Total:"
       },
+      "customerCleared": "Client effacé",
+      "customerClearedText": "La sélection du client a été effacée. Le client par défaut sera utilisé.",
       "keyboard": {
         "show": "Afficher le clavier",
         "hide": "Masquer le clavier",
@@ -197,6 +199,7 @@
       "amountAutoSet": "Le montant est automatiquement défini à partir du bon",
       "titleNumber": "N° Titre *",
       "titleNumberPlaceholder": "N° du titre",
+      "titleNumberMaxLength": "Le N° Titre ne peut pas dépasser 7 caractères",
       "dueDate": "Date d'échéance *",
       "drawerName": "Nom du tireur *",
       "drawerNamePlaceholder": "Nom du tireur",
@@ -352,6 +355,7 @@
       "of": "de",
       "customer": "client",
       "customers": "clients",
+      "select": "Sélectionner",
       "setAsDefault": "Définir par défaut",
       "setAsDefaultModal": {
         "title": "Définir comme client par défaut ?",
@@ -420,10 +424,46 @@
         "failedToDelete": "Échec de la suppression du client. Veuillez réessayer."
       },
       "success": {
+        "customerSelected": "Client sélectionné",
+        "customerSelectedText": "Le client \"{name}\" a été sélectionné pour ce ticket",
         "customerCreated": "Client créé avec succès",
         "customerUpdated": "Client mis à jour avec succès",
         "customerDeleted": "Client supprimé avec succès"
       }
+    },
+    "badge": {
+      "scanBadge": "Scanner le badge",
+      "badgeCode": "Code du badge",
+      "scanBadgePlaceholder": "Scanner ou entrer le code du badge...",
+      "requiredPermission": "Permission requise",
+      "scan": "Scanner",
+      "scanInstructions": "Scanner le code du badge ou l'entrer manuellement pour autoriser cette action",
+      "permissions": {
+        "consult_customer_list": "Consulter la liste des clients",
+        "make_return": "Effectuer un retour",
+        "apply_line_discount": "Appliquer une remise sur la ligne",
+        "apply_total_discount": "Appliquer une remise sur le total"
+      },
+      "badgeScannedSuccessfully": "Badge scanné avec succès",
+      "scanFailed": "Échec du scan",
+      "messages": {
+        "badgeNotFound": "Badge introuvable",
+        "badgeNoAccess": "Le badge n'a pas la permission requise",
+        "badgeExpired": "Le badge a expiré",
+        "badgeRevoked": "Le badge a été révoqué",
+        "rateLimitExceeded": "Trop de tentatives échouées. Veuillez réessayer plus tard.",
+        "unknownError": "Une erreur s'est produite lors du scan du badge"
+      }
+    },
+    "badgeScanPopup": {
+      "title": "Scan de badge requis",
+      "instruction": "Veuillez scanner votre badge ou le badge du responsable pour continuer",
+      "permissionRequired": "Permission requise: {permission}",
+      "badgeCode": "Code du badge",
+      "placeholder": "Scanner le code-barres ou le QR code du badge...",
+      "emptyBadgeCode": "Veuillez entrer un code de badge",
+      "scanSuccess": "Badge validé avec succès",
+      "scanFailed": "Échec de la validation du badge"
     }
   },
   "admin": {
@@ -435,11 +475,14 @@
       "editUser": "Modifier l'utilisateur",
       "addNewUser": "Ajouter un nouvel utilisateur",
       "deleteUser": "Supprimer l'utilisateur",
+      "userInfo": "Informations utilisateur",
       "tableHeaders": {
         "username": "Nom d'utilisateur",
         "fullName": "Nom complet",
         "email": "Email",
         "role": "Rôle",
+        "badgeCode": "Code du badge",
+        "badgeStatus": "Statut du badge",
         "status": "Statut",
         "actions": "Actions"
       },
@@ -470,7 +513,49 @@
         "userDeleted": "Utilisateur supprimé avec succès",
         "failedToLoad": "Échec du chargement des utilisateurs",
         "failedToSave": "Échec de l'enregistrement de l'utilisateur",
-        "failedToDelete": "Échec de la suppression de l'utilisateur"
+        "failedToDelete": "Échec de la suppression de l'utilisateur",
+        "failedToLoadBadgePermissions": "Échec du chargement des permissions de badge"
+      },
+      "badge": {
+        "title": "Gestion des badges",
+        "badgeCode": "Code du badge",
+        "badgeCodePlaceholder": "Entrez le code du badge ou cliquez sur Générer",
+        "badgeCodeHelp": "Identifiant unique pour le badge (code-barres/QR code)",
+        "badgeExpirationDate": "Date d'expiration du badge",
+        "badgeExpirationDateHelp": "Optionnel : Définir quand le badge expire. Laisser vide pour aucune expiration.",
+        "expirationDate": "Date d'expiration",
+        "selectDate": "Sélectionner la date d'expiration",
+        "badgePermissions": "Permissions du badge",
+        "badgePermissionsHelp": "Sélectionnez les permissions auxquelles ce badge doit avoir accès",
+        "currentStatus": "Statut actuel",
+        "permissions": "Permissions du badge",
+        "generate": "Générer",
+        "autoGenerate": "Génération automatique",
+        "revokeBadge": "Révoquer le badge",
+        "revokeReason": "Raison de révocation",
+        "revokeReasonPlaceholder": "Entrez la raison de la révocation de ce badge (optionnel)",
+        "revokeConfirmation": "Êtes-vous sûr de vouloir révoquer le badge de l'utilisateur {username}?",
+        "revokeWarning": "Cette action est irréversible. Le badge sera immédiatement invalidé.",
+        "badgeGenerated": "Code de badge généré avec succès",
+        "badgeRevoked": "Badge révoqué avec succès",
+        "failedToGenerateBadge": "Échec de la génération du code de badge",
+        "failedToRevokeBadge": "Échec de la révocation du badge",
+        "usernameRequiredForBadge": "Le nom d'utilisateur est requis pour générer un badge",
+        "noBadge": "Aucun badge assigné",
+        "revokedInfo": "Badge révoqué le {date} par {by}",
+        "unknown": "Inconnu",
+        "status": {
+          "active": "Actif",
+          "expired": "Expiré",
+          "revoked": "Révoqué",
+          "noBadge": "Aucun badge"
+        },
+        "permissions": {
+          "consult_customer_list": "Consulter la liste des clients",
+          "make_return": "Effectuer un retour",
+          "apply_line_discount": "Appliquer une remise sur la ligne",
+          "apply_total_discount": "Appliquer une remise sur le total"
+        }
       }
     },
     "locationManagement": {
@@ -605,6 +690,55 @@
       "failedToUpdateStatus": "Échec de la mise à jour du statut de la tâche",
       "failedToLoad": "Échec du chargement des tâches ERP",
       "unknown": "Inconnu"
+    },
+    "badgeScanHistory": {
+      "title": "Historique des scans de badges",
+      "refresh": "Actualiser",
+      "export": "Exporter CSV",
+      "filters": "Filtres",
+      "records": "enregistrements",
+      "badgeCode": "Code du badge",
+      "badgeCodePlaceholder": "Filtrer par code de badge...",
+      "user": "Utilisateur",
+      "userPlaceholder": "Filtrer par utilisateur...",
+      "permission": "Permission",
+      "allPermissions": "Toutes les permissions",
+      "success": "Succès",
+      "failure": "Échec",
+      "all": "Tous",
+      "dateFrom": "Date de début",
+      "dateTo": "Date de fin",
+      "selectDate": "Sélectionner la date",
+      "scanType": "Type de scan",
+      "barcode": "Code-barres",
+      "qrCode": "QR Code",
+      "clearFilters": "Effacer les filtres",
+      "loading": "Chargement...",
+      "noRecords": "Aucun enregistrement de scan trouvé",
+      "tryAdjustingFilters": "Essayez d'ajuster vos filtres",
+      "showing": "Affichage",
+      "of": "de",
+      "exportSuccess": "Historique des scans exporté avec succès",
+      "stats": {
+        "totalScans": "Total des scans",
+        "successfulScans": "Scans réussis",
+        "failedScans": "Scans échoués",
+        "successRate": "Taux de succès"
+      },
+      "tableHeaders": {
+        "timestamp": "Horodatage",
+        "scannedBy": "Scanné par",
+        "badgeCode": "Code du badge",
+        "badgeOwner": "Propriétaire du badge",
+        "permission": "Permission",
+        "success": "Succès",
+        "failureReason": "Raison de l'échec",
+        "scanType": "Type de scan"
+      },
+      "errors": {
+        "failedToLoad": "Échec du chargement de l'historique des scans",
+        "exportFailed": "Échec de l'export de l'historique des scans"
+      }
     },
     "erpCommunications": {
       "title": "Communications ERP",

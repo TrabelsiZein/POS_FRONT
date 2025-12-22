@@ -38,7 +38,7 @@ const router = new VueRouter({
     {
       path: '/pos/customers',
       name: 'pos-customers',
-      component: () => import('@/views/pos/CustomerManagement.vue'),
+      component: () => import('@/views/pos/CustomerList.vue'),
       meta: {
         requiresAuth: true,
         requiredRole: 'POS_USER',
@@ -49,7 +49,7 @@ const router = new VueRouter({
     {
       path: '/admin/customers',
       name: 'admin-customers',
-      component: () => import('@/views/pos/CustomerManagement.vue'),
+      component: () => import('@/views/admin/CustomerManagement.vue'),
       meta: {
         requiresAuth: true,
         allowedRoles: ['ADMIN', 'RESPONSIBLE']
@@ -204,6 +204,15 @@ const router = new VueRouter({
       path: '/admin/returns',
       name: 'admin-returns',
       component: () => import('@/views/admin/ReturnsManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN', 'RESPONSIBLE']
+      }
+    },
+    {
+      path: '/admin/badge-scan-history',
+      name: 'admin-badge-scan-history',
+      component: () => import('@/views/admin/BadgeScanHistory.vue'),
       meta: {
         requiresAuth: true,
         allowedRoles: ['ADMIN', 'RESPONSIBLE']

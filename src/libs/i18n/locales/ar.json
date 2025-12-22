@@ -140,6 +140,8 @@
         "discount": "الخصم:",
         "total": "المجموع:"
       },
+      "customerCleared": "تم مسح العميل",
+      "customerClearedText": "تم مسح اختيار العميل. سيتم استخدام العميل الافتراضي.",
       "keyboard": {
         "show": "إظهار لوحة المفاتيح",
         "hide": "إخفاء لوحة المفاتيح",
@@ -197,6 +199,7 @@
       "amountAutoSet": "يتم تعيين المبلغ تلقائيًا من القسيمة",
       "titleNumber": "رقم العنوان *",
       "titleNumberPlaceholder": "رقم العنوان",
+      "titleNumberMaxLength": "لا يمكن أن يتجاوز رقم العنوان 7 أحرف",
       "dueDate": "تاريخ الاستحقاق *",
       "drawerName": "اسم الساحب *",
       "drawerNamePlaceholder": "اسم الساحب",
@@ -352,6 +355,7 @@
       "of": "من",
       "customer": "عميل",
       "customers": "عملاء",
+      "select": "اختيار",
       "setAsDefault": "تعيين كافتراضي",
       "setAsDefaultModal": {
         "title": "تعيين كعميل افتراضي؟",
@@ -420,10 +424,46 @@
         "failedToDelete": "فشل حذف العميل. يرجى المحاولة مرة أخرى."
       },
       "success": {
+        "customerSelected": "تم اختيار العميل",
+        "customerSelectedText": "تم اختيار العميل \"{name}\" لهذا التذكرة",
         "customerCreated": "تم إنشاء العميل بنجاح",
         "customerUpdated": "تم تحديث العميل بنجاح",
         "customerDeleted": "تم حذف العميل بنجاح"
       }
+    },
+    "badge": {
+      "scanBadge": "مسح الشارة",
+      "badgeCode": "رمز الشارة",
+      "scanBadgePlaceholder": "امسح أو أدخل رمز الشارة...",
+      "requiredPermission": "الإذن المطلوب",
+      "scan": "مسح",
+      "scanInstructions": "امسح رمز الشارة أو أدخله يدويًا للسماح بهذا الإجراء",
+      "permissions": {
+        "consult_customer_list": "استشارة قائمة العملاء",
+        "make_return": "إجراء إرجاع",
+        "apply_line_discount": "تطبيق خصم على السطر",
+        "apply_total_discount": "تطبيق خصم على الإجمالي"
+      },
+      "badgeScannedSuccessfully": "تم مسح الشارة بنجاح",
+      "scanFailed": "فشل المسح",
+      "messages": {
+        "badgeNotFound": "الشارة غير موجودة",
+        "badgeNoAccess": "الشارة لا تملك الصلاحية المطلوبة",
+        "badgeExpired": "انتهت صلاحية الشارة",
+        "badgeRevoked": "تم إلغاء الشارة",
+        "rateLimitExceeded": "عدد كبير جدًا من المحاولات الفاشلة. يرجى المحاولة مرة أخرى لاحقًا.",
+        "unknownError": "حدث خطأ أثناء مسح الشارة"
+      }
+    },
+    "badgeScanPopup": {
+      "title": "مطلوب مسح الشارة",
+      "instruction": "يرجى مسح شارتك أو شارة المسؤول للمتابعة",
+      "permissionRequired": "الصلاحية المطلوبة: {permission}",
+      "badgeCode": "رمز الشارة",
+      "placeholder": "امسح باركود أو رمز QR للشارة...",
+      "emptyBadgeCode": "يرجى إدخال رمز الشارة",
+      "scanSuccess": "تم التحقق من الشارة بنجاح",
+      "scanFailed": "فشل التحقق من الشارة"
     }
   },
   "admin": {
@@ -435,11 +475,14 @@
       "editUser": "تعديل المستخدم",
       "addNewUser": "إضافة مستخدم جديد",
       "deleteUser": "حذف المستخدم",
+      "userInfo": "معلومات المستخدم",
       "tableHeaders": {
         "username": "اسم المستخدم",
         "fullName": "الاسم الكامل",
         "email": "البريد الإلكتروني",
         "role": "الدور",
+        "badgeCode": "رمز الشارة",
+        "badgeStatus": "حالة الشارة",
         "status": "الحالة",
         "actions": "الإجراءات"
       },
@@ -470,7 +513,49 @@
         "userDeleted": "تم حذف المستخدم بنجاح",
         "failedToLoad": "فشل تحميل المستخدمين",
         "failedToSave": "فشل حفظ المستخدم",
-        "failedToDelete": "فشل حذف المستخدم"
+        "failedToDelete": "فشل حذف المستخدم",
+        "failedToLoadBadgePermissions": "فشل تحميل أذونات الشارة"
+      },
+      "badge": {
+        "title": "إدارة الشارات",
+        "badgeCode": "رمز الشارة",
+        "badgeCodePlaceholder": "أدخل رمز الشارة أو انقر على إنشاء",
+        "badgeCodeHelp": "معرف فريد للشارة (الباركود/رمز QR)",
+        "badgeExpirationDate": "تاريخ انتهاء صلاحية الشارة",
+        "badgeExpirationDateHelp": "اختياري: حدد متى تنتهي صلاحية الشارة. اتركه فارغًا لعدم وجود انتهاء صلاحية.",
+        "expirationDate": "تاريخ انتهاء الصلاحية",
+        "selectDate": "اختر تاريخ انتهاء الصلاحية",
+        "badgePermissions": "أذونات الشارة",
+        "badgePermissionsHelp": "حدد الأذونات التي يجب أن يكون لهذا الشارة الوصول إليها",
+        "currentStatus": "الحالة الحالية",
+        "permissions": "أذونات الشارة",
+        "generate": "إنشاء",
+        "autoGenerate": "إنشاء تلقائي",
+        "revokeBadge": "إلغاء الشارة",
+        "revokeReason": "سبب الإلغاء",
+        "revokeReasonPlaceholder": "أدخل سبب إلغاء هذه الشارة (اختياري)",
+        "revokeConfirmation": "هل أنت متأكد أنك تريد إلغاء الشارة للمستخدم {username}?",
+        "revokeWarning": "لا يمكن التراجع عن هذا الإجراء. سيتم إلغاء الشارة فورًا.",
+        "badgeGenerated": "تم إنشاء رمز الشارة بنجاح",
+        "badgeRevoked": "تم إلغاء الشارة بنجاح",
+        "failedToGenerateBadge": "فشل إنشاء رمز الشارة",
+        "failedToRevokeBadge": "فشل إلغاء الشارة",
+        "usernameRequiredForBadge": "اسم المستخدم مطلوب لإنشاء شارة",
+        "noBadge": "لا توجد شارة مخصصة",
+        "revokedInfo": "تم إلغاء الشارة في {date} بواسطة {by}",
+        "unknown": "غير معروف",
+        "status": {
+          "active": "نشط",
+          "expired": "منتهي الصلاحية",
+          "revoked": "ملغي",
+          "noBadge": "لا توجد شارة"
+        },
+        "permissions": {
+          "consult_customer_list": "استشارة قائمة العملاء",
+          "make_return": "إجراء إرجاع",
+          "apply_line_discount": "تطبيق خصم على السطر",
+          "apply_total_discount": "تطبيق خصم على الإجمالي"
+        }
       }
     },
     "locationManagement": {
@@ -605,6 +690,55 @@
       "failedToUpdateStatus": "فشل في تحديث حالة المهمة",
       "failedToLoad": "فشل في تحميل مهام ERP",
       "unknown": "غير معروف"
+    },
+    "badgeScanHistory": {
+      "title": "سجل مسح الشارات",
+      "refresh": "تحديث",
+      "export": "تصدير CSV",
+      "filters": "المرشحات",
+      "records": "سجلات",
+      "badgeCode": "رمز الشارة",
+      "badgeCodePlaceholder": "تصفية حسب رمز الشارة...",
+      "user": "المستخدم",
+      "userPlaceholder": "تصفية حسب المستخدم...",
+      "permission": "الصلاحية",
+      "allPermissions": "جميع الصلاحيات",
+      "success": "نجح",
+      "failure": "فشل",
+      "all": "الكل",
+      "dateFrom": "من تاريخ",
+      "dateTo": "إلى تاريخ",
+      "selectDate": "اختر التاريخ",
+      "scanType": "نوع المسح",
+      "barcode": "الباركود",
+      "qrCode": "رمز QR",
+      "clearFilters": "مسح المرشحات",
+      "loading": "جار التحميل...",
+      "noRecords": "لم يتم العثور على سجلات المسح",
+      "tryAdjustingFilters": "حاول تعديل المرشحات",
+      "showing": "عرض",
+      "of": "من",
+      "exportSuccess": "تم تصدير سجل المسح بنجاح",
+      "stats": {
+        "totalScans": "إجمالي المسوحات",
+        "successfulScans": "المسوحات الناجحة",
+        "failedScans": "المسوحات الفاشلة",
+        "successRate": "معدل النجاح"
+      },
+      "tableHeaders": {
+        "timestamp": "الطابع الزمني",
+        "scannedBy": "تم المسح بواسطة",
+        "badgeCode": "رمز الشارة",
+        "badgeOwner": "مالك الشارة",
+        "permission": "الصلاحية",
+        "success": "نجح",
+        "failureReason": "سبب الفشل",
+        "scanType": "نوع المسح"
+      },
+      "errors": {
+        "failedToLoad": "فشل تحميل سجل المسح",
+        "exportFailed": "فشل تصدير سجل المسح"
+      }
     },
     "erpCommunications": {
       "title": "اتصالات ERP",
