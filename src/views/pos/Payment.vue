@@ -165,8 +165,6 @@
                       v-model="card.titleNumber" 
                       :placeholder="$t('pos.payment.titleNumberPlaceholder')" 
                       @click.stop 
-                      @input="validateTitleNumber(card)"
-                      maxlength="7"
                       size="sm" 
                     />
                   </b-form-group>
@@ -427,9 +425,6 @@ export default {
         }
 
         if (paymentMethod.requireTitleNumber && (!card.titleNumber || !card.titleNumber.trim())) {
-          return false
-        }
-        if (paymentMethod.requireTitleNumber && card.titleNumber && card.titleNumber.length > 7) {
           return false
         }
         if (paymentMethod.requireDueDate && (!card.dueDate || card.dueDate === '')) {
@@ -927,12 +922,6 @@ export default {
     requiresIssuingBank(card) {
       const paymentMethod = this.getPaymentMethodById(card ? card.paymentMethodId : null)
       return paymentMethod && paymentMethod.requireIssuingBank
-    },
-    validateTitleNumber(card) {
-      // Limit to 7 characters
-      if (card.titleNumber && card.titleNumber.length > 7) {
-        card.titleNumber = card.titleNumber.substring(0, 7)
-      }
     },
     onPaymentMethodChange(card) {
       if (!this.isReturnVoucherPayment(card)) {
