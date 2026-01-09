@@ -108,10 +108,12 @@
                 </div>
                 <div class="payment-card-body">
                   <!-- Return Voucher Number -->
-                  <b-form-group v-if="isReturnVoucherPayment(card)" :label="$t('pos.payment.voucherNumber')" class="mb-2">
+                  <b-form-group v-if="isReturnVoucherPayment(card)" :label="$t('pos.payment.voucherNumber')"
+                    class="mb-2">
                     <b-input-group>
-                      <b-form-input v-model="card.voucherNumber" :placeholder="$t('pos.payment.voucherNumberPlaceholder')"
-                        @keyup.enter="validateVoucher(card)" @click.stop :disabled="loading" size="sm" />
+                      <b-form-input v-model="card.voucherNumber"
+                        :placeholder="$t('pos.payment.voucherNumberPlaceholder')" @keyup.enter="validateVoucher(card)"
+                        @click.stop :disabled="loading" size="sm" />
                       <b-input-group-append>
                         <b-button variant="outline-primary" @click="validateVoucher(card)"
                           :disabled="loading || !card.voucherNumber" size="sm">
@@ -127,29 +129,12 @@
                   <!-- Amount Input -->
                   <b-form-group :label="$t('pos.payment.amount')" class="mb-2">
                     <b-input-group>
-                      <b-form-input 
-                        v-if="!isReturnVoucherPayment(card)"
-                        v-model.number="card.amount" 
-                        type="number" 
-                        step="0.01" 
-                        min="0.01" 
-                        :placeholder="$t('pos.payment.amountPlaceholder')"
-                        @input="updatePaymentTotal" 
-                        @click.stop 
-                        :disabled="loading" 
-                        size="" 
-                        :ref="`amount-input-${index}`" 
-                      />
-                      <b-form-input 
-                        v-else
-                        :value="formatTunCurrencyWithoutSuffix(card.amount || 0)"
-                        type="text"
-                        readonly
-                        @click.stop 
-                        :disabled="loading" 
-                        size="" 
-                        class="text-left"
-                      />
+                      <b-form-input v-if="!isReturnVoucherPayment(card)" v-model.number="card.amount" type="number"
+                        step="0.01" min="0.01" :placeholder="$t('pos.payment.amountPlaceholder')"
+                        @input="updatePaymentTotal" @click.stop :disabled="loading" size=""
+                        :ref="`amount-input-${index}`" />
+                      <b-form-input v-else :value="formatTunCurrencyWithoutSuffix(card.amount || 0)" type="text"
+                        readonly @click.stop :disabled="loading" size="" class="text-left" />
                       <b-input-group-append>
                         <span class="input-group-text">TND</span>
                       </b-input-group-append>
@@ -161,12 +146,8 @@
 
                   <!-- Dynamic Required Fields -->
                   <b-form-group v-if="requiresTitleNumber(card)" :label="$t('pos.payment.titleNumber')" class="mb-2">
-                    <b-form-input 
-                      v-model="card.titleNumber" 
-                      :placeholder="$t('pos.payment.titleNumberPlaceholder')" 
-                      @click.stop 
-                      size="sm" 
-                    />
+                    <b-form-input v-model="card.titleNumber" :placeholder="$t('pos.payment.titleNumberPlaceholder')"
+                      @click.stop size="sm" />
                   </b-form-group>
 
                   <b-form-group v-if="requiresDueDate(card)" :label="$t('pos.payment.dueDate')" class="mb-2">
@@ -174,11 +155,13 @@
                   </b-form-group>
 
                   <b-form-group v-if="requiresDrawerName(card)" :label="$t('pos.payment.drawerName')" class="mb-2">
-                    <b-form-input v-model="card.drawerName" :placeholder="$t('pos.payment.drawerNamePlaceholder')" @click.stop size="sm" />
+                    <b-form-input v-model="card.drawerName" :placeholder="$t('pos.payment.drawerNamePlaceholder')"
+                      @click.stop size="sm" />
                   </b-form-group>
 
                   <b-form-group v-if="requiresIssuingBank(card)" :label="$t('pos.payment.issuingBank')" class="mb-2">
-                    <b-form-input v-model="card.issuingBank" :placeholder="$t('pos.payment.issuingBankPlaceholder')" @click.stop size="sm" />
+                    <b-form-input v-model="card.issuingBank" :placeholder="$t('pos.payment.issuingBankPlaceholder')"
+                      @click.stop size="sm" />
                   </b-form-group>
                 </div>
               </div>
@@ -227,40 +210,27 @@
     </div>
 
     <!-- Discount Dialog -->
-    <b-modal
-      v-model="showDiscountDialog"
-      :title="$t('pos.payment.headerDiscount.title')"
-      hide-footer
-      centered
-      size="md"
-      no-close-on-backdrop
-      @hide="showDiscountDialog = false"
-    >
+    <b-modal v-model="showDiscountDialog" :title="$t('pos.payment.headerDiscount.title')" hide-footer centered size="md"
+      no-close-on-backdrop @hide="showDiscountDialog = false">
       <div class="discount-dialog">
         <!-- Discount Type Selection -->
         <b-form-group :label="$t('pos.payment.headerDiscount.discountType')" class="mb-3">
-          <b-form-radio-group
-            v-model="discountType"
-            :options="[
-              { text: $t('pos.payment.headerDiscount.percentage') + ' (%)', value: 'percentage' },
-              { text: $t('pos.payment.headerDiscount.amount') + ' (TND)', value: 'amount' }
-            ]"
-            class="discount-type-radio"
-          ></b-form-radio-group>
+          <b-form-radio-group v-model="discountType" :options="[
+            { text: $t('pos.payment.headerDiscount.percentage') + ' (%)', value: 'percentage' },
+            { text: $t('pos.payment.headerDiscount.amount') + ' (TND)', value: 'amount' }
+          ]" class="discount-type-radio"></b-form-radio-group>
         </b-form-group>
 
         <!-- Discount Value Input -->
-        <b-form-group :label="discountType === 'percentage' ? $t('pos.payment.headerDiscount.discountPercentage') : $t('pos.payment.headerDiscount.discountAmount')" class="mb-3">
+        <b-form-group
+          :label="discountType === 'percentage' ? $t('pos.payment.headerDiscount.discountPercentage') : $t('pos.payment.headerDiscount.discountAmount')"
+          class="mb-3">
           <b-input-group>
-            <b-form-input
-              v-model.number="discountValue"
-              type="number"
-              :step="discountType === 'percentage' ? 0.01 : 0.01"
-              :min="0"
+            <b-form-input v-model.number="discountValue" type="number"
+              :step="discountType === 'percentage' ? 0.01 : 0.01" :min="0"
               :max="discountType === 'percentage' ? 100 : orderSummary.totalAmount"
               :placeholder="discountType === 'percentage' ? $t('pos.payment.headerDiscount.placeholderPercentage') : $t('pos.payment.headerDiscount.placeholderAmount')"
-              @input="updateDiscountPreview"
-            />
+              @input="updateDiscountPreview" />
             <b-input-group-append v-if="discountType === 'percentage'">
               <span class="input-group-text">%</span>
             </b-input-group-append>
@@ -295,7 +265,8 @@
           <b-button variant="secondary" @click="showDiscountDialog = false" class="mr-2">
             {{ $t('pos.payment.headerDiscount.cancel') }}
           </b-button>
-          <b-button variant="danger" @click="clearHeaderDiscount" v-if="orderSummary.discountAmount > 0 || orderSummary.discountPercent > 0" class="mr-2">
+          <b-button variant="danger" @click="clearHeaderDiscount"
+            v-if="orderSummary.discountAmount > 0 || orderSummary.discountPercent > 0" class="mr-2">
             {{ $t('pos.payment.headerDiscount.clearDiscount') }}
           </b-button>
           <b-button variant="primary" @click="applyHeaderDiscount" :disabled="!discountValue || discountValue <= 0">
@@ -306,13 +277,14 @@
     </b-modal>
 
     <!-- Badge Scan Popup for Total Discount -->
-    <BadgeScanPopup
-      :show="showBadgeScanPopupForTotalDiscount"
-      :required-permission="'APPLY_TOTAL_DISCOUNT'"
-      :session-id="currentSessionId"
-      @badge-scanned="onBadgeScannedForTotalDiscount"
-      @close="onBadgeScanCloseForTotalDiscount"
-    />
+    <BadgeScanPopup :show="showBadgeScanPopupForTotalDiscount" :required-permission="'APPLY_TOTAL_DISCOUNT'"
+      :session-id="currentSessionId" @badge-scanned="onBadgeScannedForTotalDiscount"
+      @close="onBadgeScanCloseForTotalDiscount" />
+
+    <!-- Badge Scan Popup for Customer Management -->
+    <BadgeScanPopup :show="showBadgeScanPopupForCustomer" :required-permission="'CONSULT_CUSTOMER_LIST'"
+      :session-id="currentSessionId" @badge-scanned="onBadgeScannedForCustomer"
+      @close="onBadgeScanCloseForCustomer" />
   </div>
 </template>
 
@@ -321,7 +293,6 @@ import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
 import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
-import JsBarcode from 'jsbarcode'
 
 export default {
   name: 'Payment',
@@ -352,7 +323,9 @@ export default {
       discountType: 'percentage', // 'percentage' or 'amount'
       discountValue: null,
       showBadgeScanPopupForTotalDiscount: false,
-      badgeScannedForTotalDiscount: false
+      badgeScannedForTotalDiscount: false,
+      showBadgeScanPopupForCustomer: false,
+      badgeScannedForCustomer: false
     }
   },
   computed: {
@@ -378,7 +351,7 @@ export default {
       const summary = this.$store.state.pos?.orderSummary || this.orderSummary
       if (!summary || !summary.totalAmount) return 0
       const total = summary.totalAmount
-      
+
       // Prefer discountAmount if available (more accurate)
       if (summary.discountAmount && summary.discountAmount > 0) {
         return summary.discountAmount
@@ -645,11 +618,45 @@ export default {
       }
     },
     async openCustomerDialog() {
+      // Check if badge scan is required before opening customer dialog
+      const badgeRequired = await this.checkBadgeRequirementForCustomer()
+      if (badgeRequired && !this.badgeScannedForCustomer) {
+        // Show badge scan popup
+        this.showBadgeScanPopupForCustomer = true
+        return
+      }
       // Navigate to customer management page with return route
+      this.openCustomerDialogInternal()
+    },
+    openCustomerDialogInternal() {
       this.$router.push({
         name: 'pos-customers',
         query: { returnTo: 'pos-payment' }
       })
+    },
+    async checkBadgeRequirementForCustomer() {
+      try {
+        const alwaysShow = await getAlwaysShowBadgeScan(this.$http)
+        if (alwaysShow) {
+          return true
+        }
+        const permissionCheck = await checkCurrentUserPermission(BADGE_PERMISSIONS.CONSULT_CUSTOMER_LIST, this.$http)
+        // Return true if badge scan is required (user doesn't have valid permission)
+        return !permissionCheck.hasValidPermission
+      } catch (error) {
+        console.error('Error checking badge requirement for customer:', error)
+        return true // On error, require badge scan
+      }
+    },
+    onBadgeScannedForCustomer() {
+      this.badgeScannedForCustomer = true
+      this.showBadgeScanPopupForCustomer = false
+      // Navigate to customer management page after successful badge scan
+      this.openCustomerDialogInternal()
+    },
+    onBadgeScanCloseForCustomer() {
+      this.showBadgeScanPopupForCustomer = false
+      // Don't navigate if user closed without scanning
     },
     async openDiscountDialog() {
       // Check if badge scan is required before opening discount dialog
@@ -707,10 +714,10 @@ export default {
         this.clearHeaderDiscount()
         return
       }
-      
+
       let discountPercentage = null
       let discountAmount = null
-      
+
       if (this.discountType === 'percentage') {
         const percentage = Math.min(100, Math.max(0, parseFloat(this.discountValue) || 0))
         discountPercentage = percentage
@@ -720,7 +727,7 @@ export default {
         discountAmount = amount
         discountPercentage = total > 0 ? (discountAmount / total) * 100 : 0
       }
-      
+
       // Update order summary in store - watcher will sync to local orderSummary
       if (this.$store.state.pos) {
         this.$store.dispatch('pos/updateOrderSummary', {
@@ -732,7 +739,7 @@ export default {
         this.$set(this.orderSummary, 'discountAmount', discountAmount)
         this.$set(this.orderSummary, 'discountPercent', discountPercentage)
       }
-      
+
       this.showDiscountDialog = false
       this.discountValue = null
     },
@@ -747,14 +754,14 @@ export default {
         this.$set(this.orderSummary, 'discountAmount', 0)
         this.$set(this.orderSummary, 'discountPercent', 0)
       }
-      
+
       this.showDiscountDialog = false
       this.discountValue = null
     },
     calculatePreviewDiscount() {
       if (!this.discountValue || !this.orderSummary?.totalAmount) return 0
       const total = this.orderSummary.totalAmount
-      
+
       if (this.discountType === 'percentage') {
         const percentage = Math.min(100, Math.max(0, parseFloat(this.discountValue) || 0))
         return total * (percentage / 100)
@@ -1123,26 +1130,6 @@ export default {
       await this.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 200))
 
-      const barcodeValue = saleData.salesNumber || null
-      if (barcodeValue && instance.$el) {
-        try {
-          const svgElement = instance.$el.querySelector('.barcode-svg')
-          if (svgElement) {
-            JsBarcode(svgElement, barcodeValue, {
-              format: 'CODE128',
-              width: 1.5,
-              height: 40,
-              displayValue: false,
-              margin: 5,
-              background: '#ffffff',
-              lineColor: '#000000'
-            })
-          }
-        } catch (error) {
-          console.error('Error generating barcode:', error)
-        }
-      }
-
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -1155,16 +1142,37 @@ export default {
             }
             body {
               margin: 0;
-              padding: 10mm;
+              padding: 0 0 10mm 0;
               font-family: 'Courier New', monospace;
               font-size: 12px;
               line-height: 1.4;
               background: white;
-              color: black;
+              color: #000000 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .receipt-template {
               width: 100%;
               max-width: 80mm;
+              color: #000000 !important;
+            }
+            .receipt-template * {
+              color: #000000 !important;
+              font-weight: 500 !important;
+            }
+            .receipt-template .receipt-row .value,
+            .receipt-template .receipt-row.total,
+            .receipt-template .receipt-row.header-row,
+            .receipt-template .receipt-section-header,
+            .receipt-template .receipt-header h2,
+            .receipt-template .receipt-header h3,
+            .receipt-template b,
+            .receipt-template strong {
+              font-weight: 700 !important;
+            }
+            .receipt-template .receipt-divider,
+            .receipt-template .item-vat {
+              color: #000000 !important;
             }
             .receipt-header { margin-bottom: 15px; }
             .receipt-header h2 { font-size: 16px; margin: 5px 0; font-weight: bold; text-align: center; }
@@ -1178,7 +1186,7 @@ export default {
             .item-name { flex: 2; text-align: left; }
             .item-qty { flex: 0.5; text-align: center; }
             .item-total { flex: 1; text-align: right; }
-            .item-code { font-size: 10px; color: #666; margin-left: 10px; margin-bottom: 6px; }
+            .item-vat { font-size: 10px; color: #000000 !important; font-weight: 500 !important; margin-left: 10px; margin-bottom: 6px; }
             .receipt-section-header { font-weight: bold; text-align: center; margin: 8px 0; }
             .receipt-footer { margin-top: 20px; text-align: center; font-size: 11px; }
             .receipt-item { margin-bottom: 8px; }
@@ -1249,7 +1257,7 @@ export default {
             const lineTotal = item.unitPrice * item.quantity
             const vatPercent = item.defaultVAT || 0
             const originalLineTotalIncludingVat = lineTotal * (1 + (vatPercent / 100))
-            
+
             // Calculate discount - discount is applied to total including VAT
             let discountAmount = 0
             if (item.discountPercentage) {
@@ -1257,16 +1265,16 @@ export default {
             } else if (item.discountAmount) {
               discountAmount = item.discountAmount
             }
-            
+
             // Calculate totals after discount
             const lineTotalIncludingVat = Math.max(0, originalLineTotalIncludingVat - discountAmount)
-            
+
             // Calculate excluding VAT total from including VAT total
             const discountedLineTotal = lineTotalIncludingVat / (1 + (vatPercent / 100))
             const vatAmount = lineTotalIncludingVat - discountedLineTotal
-            
+
             const unitPriceIncludingVat = item.unitPrice * (1 + (vatPercent / 100))
-            
+
             return {
               itemId: item.id,
               quantity: item.quantity,
@@ -1365,7 +1373,7 @@ export default {
             const lineTotal = item.unitPrice * item.quantity
             const vatPercent = item.defaultVAT || 0
             const originalLineTotalIncludingVat = lineTotal * (1 + (vatPercent / 100))
-            
+
             // Calculate discount - discount is applied to total including VAT
             let discountAmount = 0
             if (item.discountPercentage) {
@@ -1373,16 +1381,16 @@ export default {
             } else if (item.discountAmount) {
               discountAmount = item.discountAmount
             }
-            
+
             // Calculate totals after discount
             const lineTotalIncludingVat = Math.max(0, originalLineTotalIncludingVat - discountAmount)
-            
+
             // Calculate excluding VAT total from including VAT total
             const discountedLineTotal = lineTotalIncludingVat / (1 + (vatPercent / 100))
             const vatAmount = lineTotalIncludingVat - discountedLineTotal
-            
+
             const unitPriceIncludingVat = item.unitPrice * (1 + (vatPercent / 100))
-            
+
             return {
               itemId: item.id,
               quantity: item.quantity,
@@ -1486,14 +1494,15 @@ export default {
   grid-area: summary;
   background: #fff;
   border-bottom: 2px solid #e0e0e0;
-  padding: 12px 15px;
+  padding: 8px 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
+  flex-wrap: nowrap;
+  gap: 10px;
   height: auto;
-  max-height: 120px;
+  min-height: 60px;
+  max-height: 80px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
   width: 100%;
@@ -1505,67 +1514,92 @@ export default {
 .summary-left {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 10px;
   flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .back-btn {
-  min-width: 100px;
-  height: 40px;
+  min-width: 80px;
+  height: 36px;
   font-weight: 600;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
   touch-action: manipulation;
+  flex-shrink: 0;
 }
 
 .summary-customer {
   flex: 0 0 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .customer-info-display {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-width: 0;
 }
 
 .customer-info-display strong {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: #2c3e50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* No max-width by default - allows full name on large screens */
+}
+
+/* Only apply max-width on smaller screens to prevent header wrapping */
+@media (max-width: 1200px) {
+  .customer-info-display strong {
+    max-width: 300px;
+  }
 }
 
 .customer-info-display small {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #6c757d;
+  white-space: nowrap;
 }
 
 .summary-totals {
   flex: 1;
   display: flex;
-  gap: 30px;
-  flex-wrap: wrap;
+  gap: 15px;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: center;
   min-width: 0;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 2px;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .summary-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #6c757d;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .summary-value {
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: bold;
   color: #2c3e50;
+  white-space: nowrap;
 }
 
 /* Main Content Area */
@@ -1965,7 +1999,15 @@ export default {
   }
 
   .summary-totals {
-    gap: 20px;
+    gap: 12px;
+  }
+  
+  .summary-label {
+    font-size: 0.7rem;
+  }
+  
+  .summary-value {
+    font-size: 0.9rem;
   }
 }
 

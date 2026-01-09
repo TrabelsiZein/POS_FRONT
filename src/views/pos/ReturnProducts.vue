@@ -193,7 +193,6 @@ import ToastificationContent from '@core/components/toastification/Toastificatio
 import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
 import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
 import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
-import JsBarcode from 'jsbarcode'
 
 export default {
   name: 'ReturnProducts',
@@ -735,27 +734,6 @@ export default {
       await this.$nextTick()
       await new Promise(resolve => setTimeout(resolve, 200))
       
-      // Generate barcode in the component if voucher_number exists
-      const barcodeValue = returnData.returnVoucher.voucherNumber || null
-      if (barcodeValue && instance.$el) {
-        try {
-          const svgElement = instance.$el.querySelector('.barcode-svg')
-          if (svgElement) {
-            JsBarcode(svgElement, barcodeValue, {
-              format: 'CODE128',
-              width: 1.5,
-              height: 40,
-              displayValue: false,
-              margin: 5,
-              background: '#ffffff',
-              lineColor: '#000000'
-            })
-          }
-        } catch (error) {
-          console.error('Error generating barcode:', error)
-        }
-      }
-      
       // Write receipt HTML to new window
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -769,16 +747,37 @@ export default {
             }
             body {
               margin: 0;
-              padding: 10mm;
+              padding: 0 0 10mm 0;
               font-family: 'Courier New', monospace;
               font-size: 12px;
               line-height: 1.4;
               background: white;
-              color: black;
+              color: #000000 !important;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             .receipt-template {
               width: 100%;
               max-width: 80mm;
+              color: #000000 !important;
+            }
+            .receipt-template * {
+              color: #000000 !important;
+              font-weight: 500 !important;
+            }
+            .receipt-template .receipt-row .value,
+            .receipt-template .receipt-row.total,
+            .receipt-template .receipt-row.header-row,
+            .receipt-template .receipt-section-header,
+            .receipt-template .receipt-header h2,
+            .receipt-template .receipt-header h3,
+            .receipt-template b,
+            .receipt-template strong {
+              font-weight: 700 !important;
+            }
+            .receipt-template .receipt-divider,
+            .receipt-template .item-vat {
+              color: #000000 !important;
             }
             .receipt-header { margin-bottom: 15px; }
             .receipt-header h2 { font-size: 16px; margin: 5px 0; font-weight: bold; text-align: center; }
@@ -792,7 +791,7 @@ export default {
             .item-name { flex: 2; text-align: left; }
             .item-qty { flex: 0.5; text-align: center; }
             .item-total { flex: 1; text-align: right; }
-            .item-code { font-size: 10px; color: #666; margin-left: 10px; margin-bottom: 6px; }
+            .item-vat { font-size: 10px; color: #000000 !important; font-weight: 500 !important; margin-left: 10px; margin-bottom: 6px; }
             .receipt-section-header { font-weight: bold; text-align: center; margin: 8px 0; }
             .receipt-footer { margin-top: 20px; text-align: center; font-size: 11px; }
             .receipt-item { margin-bottom: 8px; }

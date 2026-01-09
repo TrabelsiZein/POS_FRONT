@@ -6,15 +6,15 @@
     <div v-else class="receipt-content">
       <!-- Header -->
       <div class="receipt-header">
-        <h2 class="text-center">POS SYSTEM</h2>
+        <h2 class="text-center">ZS Retail</h2>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
-        <h3 v-if="isVoucher" class="text-center voucher-title">RETURN VOUCHER</h3>
-        <h3 v-else class="text-center">SALES RECEIPT</h3>
+        <h3 v-if="isVoucher" class="text-center voucher-title">BON DE RETOUR</h3>
+        <h3 v-else class="text-center">REÇU DE VENTE</h3>
         <div v-if="isDuplicate && !isVoucher" class="duplicate-badge">
-          ═══ DUPLICATE ═══
+          ═══ DUPLICATA ═══
         </div>
         <div v-if="isVoucher && saleData.voucherInfo" class="voucher-badge">
-          VOUCHER #{{ saleData.voucherInfo.voucherNumber }}
+          BON #{{ saleData.voucherInfo.voucherNumber }}
         </div>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
       </div>
@@ -22,27 +22,27 @@
       <!-- Sale Information -->
       <div v-if="saleData" class="receipt-info">
         <div class="receipt-row">
-          <span class="label">{{ isVoucher ? 'Voucher Number:' : 'Sale Number:' }}</span>
-          <span class="value">{{ saleData.salesNumber || 'N/A' }}</span>
+          <span class="label">{{ isVoucher ? 'Numéro de bon :' : 'Numéro de vente :' }}</span>
+          <span class="value">{{ saleData.salesNumber || 'N/D' }}</span>
         </div>
         <div v-if="isVoucher && saleData.voucherInfo && saleData.voucherInfo.originalTicket" class="receipt-row">
-          <span class="label">Original Ticket:</span>
+          <span class="label">Ticket original :</span>
           <span class="value">{{ saleData.voucherInfo.originalTicket }}</span>
         </div>
         <div class="receipt-row">
-          <span class="label">Date:</span>
+          <span class="label">Date :</span>
           <span class="value">{{ formatDate(saleData.salesDate) }}</span>
         </div>
         <div v-if="isVoucher && saleData.voucherInfo && saleData.voucherInfo.expiryDate" class="receipt-row">
-          <span class="label">Valid Until:</span>
+          <span class="label">Valide jusqu'au :</span>
           <span class="value">{{ formatDate(saleData.voucherInfo.expiryDate) }}</span>
         </div>
         <div v-if="saleData.createdByUser" class="receipt-row">
-          <span class="label">Cashier:</span>
+          <span class="label">Caissier :</span>
           <span class="value">{{ saleData.createdByUser.fullName || saleData.createdByUser.username }}</span>
         </div>
         <div v-if="saleData.cashierSession" class="receipt-row">
-          <span class="label">Session:</span>
+          <span class="label">Session :</span>
           <span class="value">{{ saleData.cashierSession.sessionNumber }}</span>
         </div>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
@@ -51,77 +51,62 @@
       <!-- Items / Returned Items -->
       <div v-if="saleData && saleData.salesLines" class="receipt-items">
         <div class="receipt-row header-row">
-          <span class="item-name">{{ isVoucher ? 'Returned Item' : 'Item' }}</span>
-          <span class="item-qty">Qty</span>
+          <span class="item-name">{{ isVoucher ? 'Article retourné' : 'Article' }}</span>
+          <span class="item-qty">Qté</span>
           <span class="item-total">Total</span>
         </div>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
-        
+
         <div v-for="(line, index) in saleData.salesLines" :key="index" class="receipt-item">
           <div class="receipt-row">
-            <span class="item-name">{{ line.item ? line.item.name : 'Unknown Item' }}</span>
+            <span class="item-name">{{ line.item ? line.item.name : 'Article inconnu' }}</span>
             <span class="item-qty">{{ line.quantity }}</span>
-            <span class="item-total">${{ formatPrice(line.lineTotal) }}</span>
+            <span class="item-total">{{ formatTunCurrency(line.lineTotalIncludingVat || line.lineTotal) }}</span>
           </div>
-          <div v-if="line.item && line.item.itemCode" class="receipt-row item-code">
-            <span class="item-name">Code: {{ line.item.itemCode }}</span>
+          <div v-if="line.vatPercent" class="receipt-row item-vat">
+            <span class="item-name">TVA : {{ line.vatPercent }}%</span>
           </div>
         </div>
-        
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
       </div>
 
       <!-- Totals -->
       <div v-if="saleData" class="receipt-totals">
-        <div v-if="!isVoucher" class="receipt-row">
-          <span class="label">Subtotal:</span>
-          <span class="value">${{ formatPrice(saleData.subtotal) }}</span>
-        </div>
-        <div v-if="!isVoucher && saleData.discountAmount && saleData.discountAmount > 0" class="receipt-row">
-          <span class="label">Discount:</span>
-          <span class="value">${{ formatPrice(saleData.discountAmount) }}</span>
-        </div>
-        <div v-if="!isVoucher && saleData.taxAmount && saleData.taxAmount > 0" class="receipt-row">
-          <span class="label">Tax:</span>
-          <span class="value">${{ formatPrice(saleData.taxAmount) }}</span>
-        </div>
-        <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
         <div class="receipt-row total">
-          <span class="label">{{ isVoucher ? 'VOUCHER AMOUNT:' : 'TOTAL:' }}</span>
-          <span class="value">${{ formatPrice(saleData.totalAmount) }}</span>
+          <span class="label">{{ isVoucher ? 'MONTANT DU BON :' : 'TOTAL :' }}</span>
+          <span class="value">{{ formatTunCurrency(saleData.totalAmount) }}</span>
         </div>
-        <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
       </div>
 
       <!-- Payments -->
-      <div v-if="saleData.paymentHeaders && saleData.paymentHeaders.length > 0" class="receipt-payments">
+      <div v-if="(saleData.paymentHeaders && saleData.paymentHeaders.length > 0) || (saleData.payments && saleData.payments.length > 0)" class="receipt-payments">
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
-        <div class="receipt-section-header">PAYMENTS:</div>
+        <div class="receipt-section-header">PAIEMENTS :</div>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
-        
-        <div v-for="(payment, index) in saleData.paymentHeaders" :key="index" class="payment-entry">
+
+        <div v-for="(payment, index) in (saleData.paymentHeaders || saleData.payments || [])" :key="index" class="payment-entry">
           <div class="receipt-row">
-            <span class="label">Method:</span>
-            <span class="value">{{ payment.paymentMethod ? payment.paymentMethod.name : 'N/A' }}</span>
+            <span class="label">Méthode :</span>
+            <span class="value">{{ payment.paymentMethod ? payment.paymentMethod.name : 'N/D' }}</span>
           </div>
           <div class="receipt-row">
-            <span class="label">Amount:</span>
-            <span class="value">${{ formatPrice(payment.totalAmount) }}</span>
+            <span class="label">Montant :</span>
+            <span class="value">{{ formatTunCurrency(payment.totalAmount) }}</span>
           </div>
           <div v-if="payment.paymentReference" class="receipt-row">
-            <span class="label">Reference:</span>
+            <span class="label">Référence :</span>
             <span class="value">{{ payment.paymentReference }}</span>
           </div>
           <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
         </div>
-        
+
         <div v-if="saleData.paidAmount" class="receipt-row">
-          <span class="label">Total Paid:</span>
-          <span class="value">${{ formatPrice(saleData.paidAmount) }}</span>
+          <span class="label">Total payé :</span>
+          <span class="value">{{ formatTunCurrency(saleData.paidAmount) }}</span>
         </div>
         <div v-if="saleData.changeAmount && saleData.changeAmount > 0" class="receipt-row">
-          <span class="label">Change:</span>
-          <span class="value">${{ formatPrice(saleData.changeAmount) }}</span>
+          <span class="label">Rendu :</span>
+          <span class="value">{{ formatTunCurrency(saleData.changeAmount) }}</span>
         </div>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
       </div>
@@ -141,13 +126,19 @@
       <!-- Footer -->
       <div class="receipt-footer">
         <div v-if="isVoucher" class="text-center">
-          <div>This voucher can be used for future purchases</div>
+          <div>Ce bon peut être utilisé pour de futurs achats</div>
           <div v-if="saleData.voucherInfo && saleData.voucherInfo.expiryDate" class="mt-2">
-            Valid until: {{ formatDate(saleData.voucherInfo.expiryDate) }}
+            Valide jusqu'au : {{ formatDate(saleData.voucherInfo.expiryDate) }}
           </div>
         </div>
-        <div v-else class="text-center">Thank you for your purchase!</div>
+        <div v-else class="text-center">Merci pour votre achat !</div>
         <div class="text-center receipt-divider">════════════════════════</div>
+        <div class="receipt-company-info">
+          <div class="receipt-company-row">Site Web : https://comptoir-hammami.com/</div>
+          <div class="receipt-company-row">Adresse E-mail : info@groupe-hammami.com</div>
+          <div class="receipt-company-row">Téléphone : (+216) 71 100 803 / (+216) 71 100 801</div>
+          <div class="receipt-company-row">MF : 0385191JAM000</div>
+        </div>
       </div>
     </div>
   </div>
@@ -196,7 +187,7 @@ export default {
   methods: {
     generateBarcode() {
       if (!this.saleData) return
-      
+
       // Determine barcode value: voucher_number for vouchers, sales_number for regular receipts
       let barcodeText = null
       if (this.isVoucher && this.saleData.voucherInfo && this.saleData.voucherInfo.voucherNumber) {
@@ -204,16 +195,16 @@ export default {
       } else if (!this.isVoucher && this.saleData.salesNumber) {
         barcodeText = this.saleData.salesNumber
       }
-      
+
       if (!barcodeText) return
-      
+
       this.barcodeValue = barcodeText
       this.barcodeId = `barcode-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      
+
       // Generate barcode after DOM is updated
       this.$nextTick(() => {
         try {
-          const svgElement = document.getElementById(this.barcodeId)
+          const svgElement = this.$el ? this.$el.querySelector(`#${this.barcodeId}`) : null
           if (svgElement) {
             JsBarcode(svgElement, barcodeText, {
               format: 'CODE128',
@@ -233,6 +224,11 @@ export default {
     formatPrice(price) {
       if (!price && price !== 0) return '0.00'
       return parseFloat(price).toFixed(2)
+    },
+    formatTunCurrency(value) {
+      const amount = parseFloat(value) || 0
+      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return `${formatted} TND`
     },
     formatDate(dateString) {
       if (!dateString) return ''
@@ -277,9 +273,13 @@ export default {
     width: 80mm;
     max-width: 80mm;
     margin: 0;
-    padding: 10mm;
+    padding: 0 0 10mm 0;
     font-size: 12px;
     line-height: 1.4;
+    /* Force pure black for thermal printers */
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .receipt-content {
@@ -294,6 +294,32 @@ export default {
   .receipt-template,
   .receipt-template * {
     visibility: visible;
+    /* Ensure all text is black and slightly bolder for thermal printers */
+    color: #000000 !important;
+    font-weight: 500 !important;
+  }
+
+  /* Make bold text even bolder */
+  .receipt-template b,
+  .receipt-template strong,
+  .receipt-template .receipt-row .value,
+  .receipt-template .receipt-row.total,
+  .receipt-template .receipt-row.header-row,
+  .receipt-template .receipt-section-header,
+  .receipt-template .receipt-header h2,
+  .receipt-template .receipt-header h3 {
+    font-weight: 700 !important;
+    color: #000000 !important;
+  }
+
+  /* Fix gray colors to pure black */
+  .receipt-template .receipt-divider {
+    color: #000000 !important;
+  }
+
+  .receipt-template .item-vat {
+    color: #000000 !important;
+    font-weight: 500 !important;
   }
 
   .receipt-template {
@@ -362,7 +388,7 @@ export default {
 .receipt-divider {
   margin: 8px 0;
   font-size: 10px;
-  color: #333;
+  color: #000000;
 }
 
 .receipt-info,
@@ -377,6 +403,7 @@ export default {
   justify-content: space-between;
   margin-bottom: 4px;
   font-size: 12px;
+  font-weight: 400;
 }
 
 .receipt-row.header-row {
@@ -414,11 +441,12 @@ export default {
   text-align: right;
 }
 
-.item-code {
+.item-vat {
   font-size: 10px;
-  color: #666;
+  color: #000000;
   margin-left: 10px;
   margin-bottom: 6px;
+  font-weight: 500;
 }
 
 .receipt-section-header {
@@ -435,6 +463,20 @@ export default {
   margin-top: 20px;
   text-align: center;
   font-size: 11px;
+}
+
+.receipt-company-info {
+  margin-top: 15px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.receipt-company-row {
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
 .receipt-barcode {
@@ -461,4 +503,3 @@ export default {
   letter-spacing: 1px;
 }
 </style>
-

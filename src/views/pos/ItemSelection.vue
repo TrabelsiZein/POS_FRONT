@@ -2,7 +2,7 @@
   <div class="pos-container">
     <b-row class="pos-content">
       <!-- Items Grid -->
-      <b-col cols="12" md="8" lg="9" class="items-column">
+      <b-col cols="12" md="8" lg="8" class="items-column">
         <div class="items-section" :class="{ 'compact-mode': compactMode }">
           <div class="items-header">
             <div class="input-row">
@@ -164,7 +164,7 @@
       </b-col>
 
       <!-- Cart Section -->
-      <b-col cols="12" md="4" lg="3" class="cart-section">
+      <b-col cols="12" md="4" lg="4" class="cart-section">
         <div class="cart-items" ref="cartList" :class="{ 'cart-items--scrolled': cartScrollShadow }">
           <div v-if="cart.length === 0" class="empty-cart">
             <feather-icon icon="ShoppingBagIcon" size="36" class="mb-1 text-muted" />
@@ -3100,5 +3100,45 @@ export default {
 <style>
 body.pos-no-scroll {
   overflow: hidden;
+}
+
+/* Make Close Session Modal full screen */
+#close-session-modal___BV_modal_outer_ .modal-dialog {
+  max-width: 95vw;
+  width: 95vw;
+  margin: 1rem auto;
+  height: calc(100vh - 2rem);
+  max-height: calc(100vh - 2rem);
+}
+
+#close-session-modal___BV_modal_outer_ .modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#close-session-modal___BV_modal_outer_ .modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Make Pending Tickets Modal full screen */
+#pending-tickets-modal___BV_modal_outer_ .modal-dialog {
+  max-width: 95vw;
+  width: 95vw;
+  margin: 1rem auto;
+  height: calc(100vh - 2rem);
+  max-height: calc(100vh - 2rem);
+}
+
+#pending-tickets-modal___BV_modal_outer_ .modal-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#pending-tickets-modal___BV_modal_outer_ .modal-body {
+  flex: 1;
+  overflow-y: auto;
 }
 </style>
