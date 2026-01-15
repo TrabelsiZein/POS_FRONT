@@ -156,6 +156,24 @@ const router = new VueRouter({
       }
     },
     {
+      path: '/admin/sales-prices',
+      name: 'admin-sales-prices',
+      component: () => import('@/views/admin/SalesPriceManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
+      path: '/admin/sales-discounts',
+      name: 'admin-sales-discounts',
+      component: () => import('@/views/admin/SalesDiscountManagement.vue'),
+      meta: {
+        requiresAuth: true,
+        allowedRoles: ['ADMIN']
+      }
+    },
+    {
       path: '/admin/payment-methods',
       name: 'admin-payment-methods',
       component: () => import('@/views/admin/PaymentMethodsManagement.vue'),

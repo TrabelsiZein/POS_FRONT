@@ -25,6 +25,20 @@ export default [
         action: 'read',
       },
       {
+        title: 'admin.salesPrices',
+        icon: 'DollarSignIcon',
+        route: { name: 'admin-sales-prices' },
+        resource: 'admin-sales-prices',
+        action: 'read',
+      },
+      {
+        title: 'admin.salesDiscounts',
+        icon: 'PercentIcon',
+        route: { name: 'admin-sales-discounts' },
+        resource: 'admin-sales-discounts',
+        action: 'read',
+      },
+      {
         title: 'admin.paymentMethods',
         icon: 'CreditCardIcon',
         route: { name: 'admin-payment-methods' },

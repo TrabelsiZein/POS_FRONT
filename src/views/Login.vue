@@ -232,6 +232,8 @@ export default {
               { action: 'read', subject: 'admin-item-subfamilies' },
               { action: 'read', subject: 'admin-customers' },
               { action: 'read', subject: 'admin-locations' },
+              { action: 'read', subject: 'admin-sales-prices' },
+              { action: 'read', subject: 'admin-sales-discounts' },
               { action: 'read', subject: 'admin-payment-methods' },
               { action: 'read', subject: 'admin-general-setup' },
               { action: 'read', subject: 'admin-returns' },
