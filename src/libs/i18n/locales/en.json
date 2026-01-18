@@ -51,7 +51,7 @@
       "customers": "Customers",
       "returnProducts": "Return Products",
       "pendingTickets": "Pending Tickets",
-      "ticketsList": "Tickets List (soon)",
+      "ticketsList": "Tickets List",
       "closeSession": "Close Session",
       "cartEmpty": "Cart is empty",
       "scanOrTap": "Scan a barcode or tap a product to add it.",
@@ -128,7 +128,9 @@
         "discount": "Discount:",
         "newLineTotal": "New Line Total:",
         "percentageLabel": "Percentage (%)",
-        "amountLabel": "Amount (TND)"
+        "amountLabel": "Amount (TND)",
+        "errorTitle": "Discount Error",
+        "maximumDiscountExceeded": "Maximum authorized discount is {max}%. Attempted discount: {attempted}%"
       },
       "cart": {
         "title": "Cart",
@@ -142,6 +144,19 @@
       },
       "customerCleared": "Customer Cleared",
       "customerClearedText": "Customer selection has been cleared. Default customer will be used.",
+      "customerChangeConfirm": {
+        "title": "Customer Changed",
+        "message": "You have changed the customer. The prices of items in your cart may change based on the new customer's pricing rules.",
+        "warning": "Warning",
+        "warningText": "All items in the cart will be recalculated with the new customer's prices and discounts. This may change the total amount.",
+        "confirm": "Recalculate Prices",
+        "cancel": "Cancel",
+        "recalculating": "Recalculating prices...",
+        "successTitle": "Prices Updated",
+        "successText": "All cart items have been recalculated with the new customer's prices.",
+        "errorTitle": "Recalculation Error",
+        "errorText": "An error occurred while recalculating prices. Please try again."
+      },
       "keyboard": {
         "show": "Show Keyboard",
         "hide": "Hide Keyboard",
@@ -355,6 +370,9 @@
       "customer": "customer",
       "customers": "customers",
       "select": "Select",
+      "selected": "Selected",
+      "selectedCustomer": "Selected customer",
+      "selectedCustomerShown": "Selected customer shown",
       "setAsDefault": "Set as Default",
       "setAsDefaultModal": {
         "title": "Set as Default Customer?",
@@ -364,6 +382,7 @@
       },
       "defaultCustomerUpdated": "Default customer updated successfully",
       "failedToSetDefault": "Failed to set default customer",
+      "cannotSetInactiveAsDefault": "Cannot set inactive customer as default. Please activate the customer first.",
       "active": "Active",
       "inactive": "Inactive",
       "default": "Default",
@@ -671,6 +690,7 @@
     },
     "generalSetupManagement": {
       "title": "General Setup",
+      "subtitle": "System-wide configuration settings and parameters",
       "refresh": "Refresh",
       "search": "Search",
       "searchPlaceholder": "Search by code, description, or value...",
@@ -687,13 +707,21 @@
       "editSetting": "Edit Setting",
       "code": "Code",
       "value": "Value",
+      "valuePlaceholder": "Enter value...",
+      "valueHelp": "Enter the value for this configuration setting",
       "description": "Description",
       "optionalDescription": "Optional description",
       "selectToEdit": "Select a setting to edit.",
       "readOnlyWarning": "This setting is read only and cannot be modified.",
       "updatedSuccessfully": "Setting updated successfully",
       "failedToUpdate": "Failed to update setting",
-      "failedToLoad": "Failed to load general setup"
+      "failedToLoad": "Failed to load general setup",
+      "auditInformation": "Audit Information",
+      "lastUpdatedBy": "Last Updated By",
+      "lastUpdatedAt": "Last Updated At",
+      "createdBy": "Created By",
+      "createdAt": "Created At",
+      "notAvailable": "Not Available"
     },
     "erpJobs": {
       "title": "ERP Sync Jobs",
@@ -841,6 +869,7 @@
     "salesDiscounts": "Sales Discounts",
     "paymentMethods": "Payment Methods",
     "generalSetup": "General Setup",
+    "erp": "ERP",
     "erpLogs": "ERP Logs",
     "tickets": "Tickets",
     "returns": "Returns",

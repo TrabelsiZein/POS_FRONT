@@ -61,10 +61,10 @@
           <div class="receipt-row">
             <span class="item-name">{{ line.item ? line.item.name : 'Article inconnu' }}</span>
             <span class="item-qty">{{ line.quantity }}</span>
-            <span class="item-total">{{ formatTunCurrency(line.lineTotalIncludingVat || line.lineTotal) }}</span>
+            <span class="item-total">{{ formatTunCurrency(getLineTotalForDisplay(line)) }}</span>
           </div>
-          <div v-if="line.vatPercent" class="receipt-row item-vat">
-            <span class="item-name">TVA : {{ line.vatPercent }}%</span>
+          <div v-if="getVatPercent(line)" class="receipt-row item-vat">
+            <span class="item-name">TVA : {{ getVatPercent(line) }}%</span>
           </div>
         </div>
         <div class="text-center receipt-divider">━━━━━━━━━━━━━━━━━━━━</div>
@@ -146,6 +146,7 @@
 
 <script>
 import JsBarcode from 'jsbarcode'
+import { formatCurrency, formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'ReceiptTemplate',
@@ -223,12 +224,10 @@ export default {
     },
     formatPrice(price) {
       if (!price && price !== 0) return '0.00'
-      return parseFloat(price).toFixed(2)
+      return formatCurrencyAmount(price)
     },
     formatTunCurrency(value) {
-      const amount = parseFloat(value) || 0
-      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      return `${formatted} TND`
+      return formatCurrency(value)
     },
     formatDate(dateString) {
       if (!dateString) return ''
@@ -251,6 +250,63 @@ export default {
           day: '2-digit'
         })
       }
+    },
+    getLineTotalForDisplay(line) {
+      // For vouchers, always show TTC (including VAT) price
+      if (this.isVoucher) {
+        // Always prioritize lineTotalIncludingVat for vouchers (TTC)
+        if (line.lineTotalIncludingVat !== null && line.lineTotalIncludingVat !== undefined && line.lineTotalIncludingVat > 0) {
+          return line.lineTotalIncludingVat
+        }
+        // If lineTotalIncludingVat is not available, calculate it from HT price and VAT
+        if (line.lineTotal !== null && line.lineTotal !== undefined && line.lineTotal > 0) {
+          const vatPercent = this.getVatPercent(line)
+          if (vatPercent && vatPercent > 0) {
+            const calculatedTTC = line.lineTotal * (1 + vatPercent / 100)
+            return Math.round(calculatedTTC * 100) / 100 // Round to 2 decimal places
+          }
+          // If we have unitPriceIncludingVat, use that to calculate
+          if (line.unitPriceIncludingVat && line.quantity) {
+            return line.unitPriceIncludingVat * line.quantity
+          }
+        }
+        // Fallback: if lineTotal exists, use it (though this shouldn't happen for vouchers)
+        return line.lineTotal || 0
+      } else {
+        // For regular receipts, use lineTotalIncludingVat if available, otherwise lineTotal
+        return line.lineTotalIncludingVat || line.lineTotal || 0
+      }
+    },
+    getVatPercent(line) {
+      // Try to get VAT percent from various sources
+      if (line.vatPercent !== null && line.vatPercent !== undefined && line.vatPercent > 0) {
+        return line.vatPercent
+      }
+      if (line.item && line.item.defaultVAT !== null && line.item.defaultVAT !== undefined && line.item.defaultVAT > 0) {
+        return line.item.defaultVAT
+      }
+      // For vouchers, calculate VAT percent from line totals (most reliable for returns)
+      if (this.isVoucher) {
+        if (line.lineTotal && line.lineTotalIncludingVat && line.lineTotal > 0 && line.lineTotalIncludingVat > line.lineTotal) {
+          const vatAmount = line.lineTotalIncludingVat - line.lineTotal
+          const vatPercent = (vatAmount / line.lineTotal) * 100
+          return Math.round(vatPercent * 100) / 100
+        }
+        // Fallback: Calculate from unit prices
+        if (line.unitPrice && line.unitPriceIncludingVat && line.unitPrice > 0 && line.unitPriceIncludingVat > line.unitPrice) {
+          const vatAmount = line.unitPriceIncludingVat - line.unitPrice
+          const vatPercent = (vatAmount / line.unitPrice) * 100
+          return Math.round(vatPercent * 100) / 100
+        }
+      } else {
+        // For regular receipts, calculate VAT percent from unitPrice and unitPriceIncludingVat
+        if (line.unitPrice && line.unitPriceIncludingVat && line.unitPrice > 0) {
+          const vatAmount = line.unitPriceIncludingVat - line.unitPrice
+          const vatPercent = (vatAmount / line.unitPrice) * 100
+          return Math.round(vatPercent * 100) / 100
+        }
+      }
+      return null
     }
   }
 }

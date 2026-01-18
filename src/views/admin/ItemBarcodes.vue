@@ -180,6 +180,7 @@
 
 <script>
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import { formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'ItemBarcodes',
@@ -440,7 +441,7 @@ export default {
     },
     formatPrice(price) {
       if (!price && price !== 0) return '0.00'
-      return parseFloat(price).toFixed(2)
+      return formatCurrencyAmount(price)
     }
   }
 }

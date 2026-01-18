@@ -71,7 +71,7 @@
         </div>
 
         <h5 class="cart-item-price">
-          ${{ item.price }}
+          {{ formatCurrency(item.price) }}
         </h5>
       </b-media>
     </vue-perfect-scrollbar>
@@ -86,7 +86,7 @@
           Total:
         </h6>
         <h6 class="text-primary font-weight-bolder mb-0">
-          ${{ totalAmount }}
+          {{ formatCurrency(totalAmount) }}
         </h6>
       </div>
       <b-button
@@ -114,6 +114,7 @@ import {
 } from 'bootstrap-vue'
 import VuePerfectScrollbar from 'vue-perfect-scrollbar'
 import Ripple from 'vue-ripple-directive'
+import { formatCurrency } from '@core/utils/filter'
 
 export default {
   components: {
@@ -146,6 +147,7 @@ export default {
     },
   },
   methods: {
+    formatCurrency,
     fetchItems() {
       this.$store.dispatch('app-ecommerce/fetchCartProducts')
         .then(response => {

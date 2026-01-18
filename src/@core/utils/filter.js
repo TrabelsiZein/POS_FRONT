@@ -52,3 +52,39 @@ export const formatDateToMonthShort = (value, toTimeForCurrentDay = true) => {
 
 // Strip all the tags from markup and return plain text
 export const filterTags = value => value.replace(/<\/?[^>]+(>|$)/g, '')
+
+/**
+ * Format currency amount with space as thousand separator and dot as decimal separator
+ * Format: 32 011.00 (space for thousands, dot for decimals)
+ * @param {Number|String} value - The amount to format
+ * @param {Number} decimals - Number of decimal places (default: 2)
+ * @returns {String} Formatted amount string
+ */
+export const formatCurrencyAmount = (value, decimals = 2) => {
+  const amount = parseFloat(value) || 0
+  
+  // Format with fixed decimals
+  const fixed = amount.toFixed(decimals)
+  
+  // Split integer and decimal parts
+  const parts = fixed.split('.')
+  const integerPart = parts[0]
+  const decimalPart = parts[1] || ''
+  
+  // Add space as thousand separator
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  
+  // Combine with decimal part
+  return decimalPart ? `${formattedInteger}.${decimalPart}` : formattedInteger
+}
+
+/**
+ * Format currency with TND suffix
+ * Format: "32 011.00 TND"
+ * @param {Number|String} value - The amount to format
+ * @param {Number} decimals - Number of decimal places (default: 2)
+ * @returns {String} Formatted currency string with TND suffix
+ */
+export const formatCurrency = (value, decimals = 2) => {
+  return `${formatCurrencyAmount(value, decimals)} TND`
+}

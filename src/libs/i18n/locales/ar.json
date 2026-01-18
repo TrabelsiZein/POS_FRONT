@@ -51,7 +51,7 @@
       "customers": "العملاء",
       "returnProducts": "إرجاع المنتجات",
       "pendingTickets": "التذاكر المعلقة",
-      "ticketsList": "قائمة التذاكر (قريبًا)",
+      "ticketsList": "قائمة التذاكر)",
       "closeSession": "إغلاق الجلسة",
       "cartEmpty": "السلة فارغة",
       "scanOrTap": "امسح الباركود أو اضغط على منتج لإضافته.",
@@ -128,7 +128,9 @@
         "discount": "الخصم:",
         "newLineTotal": "المجموع الجديد للسطر:",
         "percentageLabel": "النسبة المئوية (%)",
-        "amountLabel": "المبلغ (د.ت)"
+        "amountLabel": "المبلغ (د.ت)",
+        "errorTitle": "خطأ في الخصم",
+        "maximumDiscountExceeded": "الخصم المسموح به الأقصى هو {max}%. الخصم المحاول: {attempted}%"
       },
       "cart": {
         "title": "السلة",
@@ -142,6 +144,19 @@
       },
       "customerCleared": "تم مسح العميل",
       "customerClearedText": "تم مسح اختيار العميل. سيتم استخدام العميل الافتراضي.",
+      "customerChangeConfirm": {
+        "title": "تم تغيير العميل",
+        "message": "لقد قمت بتغيير العميل. قد تتغير أسعار العناصر في سلة التسوق الخاصة بك بناءً على قواعد تسعير العميل الجديد.",
+        "warning": "تحذير",
+        "warningText": "سيتم إعادة حساب جميع العناصر في السلة بأسعار وخصومات العميل الجديد. قد يغير هذا المبلغ الإجمالي.",
+        "confirm": "إعادة حساب الأسعار",
+        "cancel": "إلغاء",
+        "recalculating": "جارٍ إعادة حساب الأسعار...",
+        "successTitle": "تم تحديث الأسعار",
+        "successText": "تم إعادة حساب جميع عناصر السلة بأسعار العميل الجديد.",
+        "errorTitle": "خطأ في إعادة الحساب",
+        "errorText": "حدث خطأ أثناء إعادة حساب الأسعار. يرجى المحاولة مرة أخرى."
+      },
       "keyboard": {
         "show": "إظهار لوحة المفاتيح",
         "hide": "إخفاء لوحة المفاتيح",
@@ -356,6 +371,9 @@
       "customer": "عميل",
       "customers": "عملاء",
       "select": "اختيار",
+      "selected": "محدد",
+      "selectedCustomer": "العميل المحدد",
+      "selectedCustomerShown": "العميل المحدد معروض",
       "setAsDefault": "تعيين كافتراضي",
       "setAsDefaultModal": {
         "title": "تعيين كعميل افتراضي؟",
@@ -365,6 +383,7 @@
       },
       "defaultCustomerUpdated": "تم تحديث العميل الافتراضي بنجاح",
       "failedToSetDefault": "فشل في تعيين العميل الافتراضي",
+      "cannotSetInactiveAsDefault": "لا يمكن تعيين عميل غير نشط كافتراضي. يرجى تفعيل العميل أولاً.",
       "active": "نشط",
       "inactive": "غير نشط",
       "default": "افتراضي",
@@ -672,6 +691,7 @@
     },
     "generalSetupManagement": {
       "title": "الإعدادات العامة",
+      "subtitle": "إعدادات وتكوينات النظام",
       "refresh": "تحديث",
       "search": "بحث",
       "searchPlaceholder": "البحث بالرمز، الوصف أو القيمة...",
@@ -688,13 +708,21 @@
       "editSetting": "تعديل الإعداد",
       "code": "الرمز",
       "value": "القيمة",
+      "valuePlaceholder": "أدخل القيمة...",
+      "valueHelp": "أدخل القيمة لهذا الإعداد",
       "description": "الوصف",
       "optionalDescription": "وصف اختياري",
       "selectToEdit": "حدد إعدادًا للتعديل.",
       "readOnlyWarning": "هذا الإعداد للقراءة فقط ولا يمكن تعديله.",
       "updatedSuccessfully": "تم تحديث الإعداد بنجاح",
       "failedToUpdate": "فشل في تحديث الإعداد",
-      "failedToLoad": "فشل في تحميل الإعدادات العامة"
+      "failedToLoad": "فشل في تحميل الإعدادات العامة",
+      "auditInformation": "معلومات المراجعة",
+      "lastUpdatedBy": "آخر تعديل بواسطة",
+      "lastUpdatedAt": "آخر تعديل في",
+      "createdBy": "تم الإنشاء بواسطة",
+      "createdAt": "تم الإنشاء في",
+      "notAvailable": "غير متاح"
     },
     "erpJobs": {
       "title": "مهام مزامنة ERP",
@@ -842,6 +870,7 @@
     "salesDiscounts": "خصومات البيع",
     "paymentMethods": "طرق الدفع",
     "generalSetup": "الإعدادات العامة",
+    "erp": "ERP",
     "erpLogs": "سجلات ERP",
     "tickets": "التذاكر",
     "returns": "الإرجاعات",

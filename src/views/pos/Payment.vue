@@ -129,9 +129,9 @@
                   <!-- Amount Input -->
                   <b-form-group :label="$t('pos.payment.amount')" class="mb-2">
                     <b-input-group>
-                      <b-form-input v-if="!isReturnVoucherPayment(card)" v-model.number="card.amount" type="number"
-                        step="0.01" min="0.01" :placeholder="$t('pos.payment.amountPlaceholder')"
-                        @input="updatePaymentTotal" @click.stop :disabled="loading" size=""
+                      <b-form-input v-if="!isReturnVoucherPayment(card)" :value="getAmountDisplayValue(card)" type="text"
+                        inputmode="decimal" pattern="[0-9]*\.?[0-9]*" :placeholder="$t('pos.payment.amountPlaceholder')"
+                        @input="handleAmountInput($event, card)" @click.stop :disabled="loading" size=""
                         :ref="`amount-input-${index}`" />
                       <b-form-input v-else :value="formatTunCurrencyWithoutSuffix(card.amount || 0)" type="text"
                         readonly @click.stop :disabled="loading" size="" class="text-left" />
@@ -293,6 +293,7 @@ import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
 import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
+import { formatCurrency, formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'Payment',
@@ -447,8 +448,8 @@ export default {
       this.resetCustomerToPassenger()
     }
 
-    // Initialize with CLIENT_ESPECES selected
-    this.initializeDefaultPayment()
+    // Initialize with CLIENT_ESPECES selected if config allows
+    await this.initializeDefaultPayment()
 
     // Listen for keyboard input
     document.addEventListener('keydown', this.handleKeyboardInput)
@@ -801,11 +802,40 @@ export default {
     getClientEspecesPaymentMethod() {
       return this.paymentMethods.find(pm => pm.type === 'CLIENT_ESPECES') || null
     },
-    initializeDefaultPayment() {
-      const clientEspeces = this.getClientEspecesPaymentMethod()
-      if (clientEspeces) {
-        this.selectedPaymentMethodId = clientEspeces.id
-        this.addOrUpdatePaymentCard(clientEspeces.id)
+    async initializeDefaultPayment() {
+      try {
+        // Check if auto-add cash payment is enabled
+        const response = await this.$http.get('/general-setup/findByCode', {
+          params: { code: 'AUTO_ADD_CASH_PAYMENT_ON_PAYMENT_PAGE' }
+        })
+        
+        if (response.status === 200 && response.data) {
+          const autoAddCash = response.data.valeur === 'true' || response.data.valeur === '1'
+          
+          if (autoAddCash) {
+            const clientEspeces = this.getClientEspecesPaymentMethod()
+            if (clientEspeces) {
+              this.selectedPaymentMethodId = clientEspeces.id
+              this.addOrUpdatePaymentCard(clientEspeces.id)
+            }
+          }
+          // If false, do nothing - keep payment page empty
+        } else {
+          // If config not found, default to true for backward compatibility
+          const clientEspeces = this.getClientEspecesPaymentMethod()
+          if (clientEspeces) {
+            this.selectedPaymentMethodId = clientEspeces.id
+            this.addOrUpdatePaymentCard(clientEspeces.id)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading auto-add cash payment config:', error)
+        // On error, default to true for backward compatibility
+        const clientEspeces = this.getClientEspecesPaymentMethod()
+        if (clientEspeces) {
+          this.selectedPaymentMethodId = clientEspeces.id
+          this.addOrUpdatePaymentCard(clientEspeces.id)
+        }
       }
     },
     selectPaymentMethod(methodId) {
@@ -867,8 +897,12 @@ export default {
 
       // Don't auto-focus - let user click on the field they want
     },
-    removeCard(index) {
+    async removeCard(index) {
       if (index < 0 || index >= this.paymentCards.length) return
+
+      const cardToRemove = this.paymentCards[index]
+      const cardPaymentMethod = cardToRemove ? this.getPaymentMethodById(cardToRemove.paymentMethodId) : null
+      const isClientEspeces = cardPaymentMethod && cardPaymentMethod.type === 'CLIENT_ESPECES'
 
       this.paymentCards.splice(index, 1)
 
@@ -883,11 +917,38 @@ export default {
         this.selectedCardIndex--
       }
 
-      // If no cards left and CLIENT_ESPECES is selected, create default card
+      // If removing CLIENT_ESPECES card, clear the selected payment method
+      if (isClientEspeces) {
+        this.selectedPaymentMethodId = null
+      }
+
+      // If no cards left and CLIENT_ESPECES is selected, check config before recreating
       if (this.paymentCards.length === 0 && this.selectedPaymentMethodId) {
         const method = this.getPaymentMethodById(this.selectedPaymentMethodId)
         if (method && method.type === 'CLIENT_ESPECES') {
-          this.addOrUpdatePaymentCard(this.selectedPaymentMethodId)
+          // Check config before recreating
+          try {
+            const response = await this.$http.get('/general-setup/findByCode', {
+              params: { code: 'AUTO_ADD_CASH_PAYMENT_ON_PAYMENT_PAGE' }
+            })
+            
+            if (response.status === 200 && response.data) {
+              const autoAddCash = response.data.valeur === 'true' || response.data.valeur === '1'
+              if (autoAddCash) {
+                this.addOrUpdatePaymentCard(this.selectedPaymentMethodId)
+              } else {
+                // Config says don't auto-add, so clear selection
+                this.selectedPaymentMethodId = null
+              }
+            } else {
+              // Config not found, default to true (recreate)
+              this.addOrUpdatePaymentCard(this.selectedPaymentMethodId)
+            }
+          } catch (error) {
+            console.error('Error checking auto-add cash payment config:', error)
+            // On error, default to true (recreate) for backward compatibility
+            this.addOrUpdatePaymentCard(this.selectedPaymentMethodId)
+          }
         }
       }
 
@@ -1062,40 +1123,102 @@ export default {
         return
       }
 
+      // Get the actual input element from the Vue component ref
+      const inputRef = this.$refs[`amount-input-${this.selectedCardIndex}`]
+      let inputElement = null
+      
+      if (inputRef) {
+        // Handle both single ref and array of refs
+        const ref = Array.isArray(inputRef) ? inputRef[0] : inputRef
+        // For b-form-input, the actual input is in $el
+        inputElement = ref.$el ? ref.$el : ref
+        if (inputElement && inputElement.tagName !== 'INPUT') {
+          inputElement = inputElement.querySelector('input')
+        }
+      }
+
+      // Get current value from input element (preserves decimal point) or use card.amountString
+      let currentValue = ''
+      if (inputElement && inputElement.value !== undefined) {
+        currentValue = inputElement.value
+      } else if (card.amountString !== undefined) {
+        currentValue = card.amountString
+      } else {
+        currentValue = card.amount ? String(card.amount) : '0'
+      }
+
       if (key === '⌫') {
         // Backspace - remove last character
-        const currentAmount = card.amount ? String(card.amount) : ''
-        if (currentAmount.length > 0) {
-          const newAmount = currentAmount.slice(0, -1)
-          card.amount = newAmount ? parseFloat(newAmount) : null
-          this.updatePaymentTotal()
+        if (currentValue.length > 0) {
+          const newValue = currentValue.slice(0, -1)
+          this.setAmountValue(inputElement, card, newValue || '0')
         }
       } else if (key === '.') {
         // Decimal point - add if not present
-        const currentAmount = card.amount ? String(card.amount) : '0'
-        if (!currentAmount.includes('.')) {
-          card.amount = parseFloat(currentAmount + '.') || 0
-          this.updatePaymentTotal()
+        if (!currentValue.includes('.')) {
+          const newValue = currentValue === '0' ? '0.' : currentValue + '.'
+          this.setAmountValue(inputElement, card, newValue)
         }
       } else if (key >= '0' && key <= '9') {
         // Number - append to current amount
-        const currentAmount = card.amount ? String(card.amount) : '0'
-        const newAmount = currentAmount === '0' ? key : currentAmount + key
-        card.amount = parseFloat(newAmount) || 0
+        const newValue = currentValue === '0' ? key : currentValue + key
+        this.setAmountValue(inputElement, card, newValue)
+      }
+    },
+    setAmountValue(inputElement, card, stringValue) {
+      // Store the string value to preserve decimal point
+      card.amountString = stringValue
+      
+      // Set the value directly on the input element
+      if (inputElement) {
+        inputElement.value = stringValue
+        // Dispatch the input event so our handler picks it up
+        const inputEvent = new Event('input', { bubbles: true, cancelable: true })
+        inputElement.dispatchEvent(inputEvent)
+      } else {
+        // Fallback if input element not found - update model directly
+        const numValue = parseFloat(stringValue)
+        card.amount = isNaN(numValue) ? 0 : numValue
         this.updatePaymentTotal()
       }
+    },
+    getAmountDisplayValue(card) {
+      // Return the string value for display, preserving decimal point if it exists
+      if (card.amountString !== undefined) {
+        return card.amountString
+      }
+      // If no string value, format the numeric amount
+      return card.amount ? String(card.amount) : ''
+    },
+    handleAmountInput(event, card) {
+      // Handle input from the text field - preserve decimal point while typing
+      const inputValue = event.target.value
+      
+      if (!card || this.isReturnVoucherPayment(card)) {
+        return
+      }
+      
+      // Store the raw string value to preserve decimal point
+      card.amountString = inputValue
+      
+      // Also update the numeric value for calculations
+      if (inputValue === '' || inputValue === '.') {
+        card.amount = inputValue === '' ? null : 0
+      } else {
+        const numValue = parseFloat(inputValue)
+        card.amount = isNaN(numValue) ? 0 : numValue
+      }
+      
+      this.updatePaymentTotal()
     },
     updatePaymentTotal() {
       this.$forceUpdate()
     },
     formatTunCurrency(value) {
-      const amount = parseFloat(value) || 0
-      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      return `${formatted} TND`
+      return formatCurrency(value)
     },
     formatTunCurrencyWithoutSuffix(value) {
-      const amount = parseFloat(value) || 0
-      return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return formatCurrencyAmount(value)
     },
     goBack() {
       this.$router.push({ name: 'pos-item-selection' })

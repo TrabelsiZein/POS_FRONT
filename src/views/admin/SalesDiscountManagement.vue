@@ -28,7 +28,7 @@
         </b-col>
         <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
           <small class="text-muted">
-            {{ $t('admin.salesDiscountManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.salesDiscountManagement.record') : $t('admin.salesDiscountManagement.records') }}
+            {{ $t('admin.salesDiscountManagement.showing') }} {{ salesDiscounts.length }} {{ $t('admin.salesDiscountManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.salesDiscountManagement.record') : $t('admin.salesDiscountManagement.records') }}
           </small>
         </b-col>
       </b-row>
@@ -124,7 +124,8 @@ export default {
       loading: false,
       searchTerm: '',
       currentPage: 1,
-      perPage: 10,
+      perPage: 20,
+      totalRows: 0,
       perPageOptions: [
         { value: 10, text: '10' },
         { value: 20, text: '20' },
@@ -146,50 +147,34 @@ export default {
         { key: 'modifiedAt', label: this.$t('admin.salesDiscountManagement.tableHeaders.modifiedAt'), sortable: true }
       ]
     },
-    filteredSalesDiscounts() {
-      let filtered = this.salesDiscounts
-
-      // Filter by search term
-      if (this.searchTerm) {
-        const term = this.searchTerm.toLowerCase()
-        filtered = filtered.filter(discount => {
-          return (
-            (discount.code && discount.code.toLowerCase().includes(term)) ||
-            (discount.salesCode && discount.salesCode.toLowerCase().includes(term)) ||
-            (discount.salesType && discount.salesType.toLowerCase().includes(term)) ||
-            (discount.type && discount.type.toLowerCase().includes(term))
-          )
-        })
-      }
-
-      return filtered
-    },
-    totalRows() {
-      return this.filteredSalesDiscounts.length
-    },
     paginatedSalesDiscounts() {
-      const start = (this.currentPage - 1) * this.perPage
-      return this.filteredSalesDiscounts.slice(start, start + this.perPage)
+      // Backend handles pagination and search, so we display the salesDiscounts directly
+      return this.salesDiscounts
     },
     startIndex() {
-      return this.totalRows === 0 ? 0 : (this.currentPage - 1) * this.perPage + 1
+      if (this.totalRows === 0) return 0
+      const count = this.salesDiscounts.length
+      if (count === 0) return 0
+      return (this.currentPage - 1) * this.perPage + 1
     },
     endIndex() {
-      return Math.min(this.currentPage * this.perPage, this.totalRows)
+      const count = this.salesDiscounts.length
+      if (count === 0) return 0
+      return (this.currentPage - 1) * this.perPage + count
     }
   },
   watch: {
     searchTerm() {
+      // Reset to page 1 when search changes and reload from backend
       this.currentPage = 1
+      this.loadSalesDiscounts()
     },
     perPage() {
       this.currentPage = 1
+      this.loadSalesDiscounts()
     },
-    filteredSalesDiscounts(newList) {
-      const maxPage = Math.max(1, Math.ceil(newList.length / this.perPage))
-      if (this.currentPage > maxPage) {
-        this.currentPage = maxPage
-      }
+    currentPage() {
+      this.loadSalesDiscounts()
     }
   },
   mounted() {
@@ -199,8 +184,29 @@ export default {
     async loadSalesDiscounts() {
       this.loading = true
       try {
-        const response = await this.$http.get('/sales-discount')
-        this.salesDiscounts = Array.isArray(response.data) ? response.data : []
+        // Convert from 1-based (frontend) to 0-based (backend) page number
+        const page = this.currentPage - 1
+        const params = {
+          page: page,
+          size: this.perPage
+        }
+        
+        // Add search parameter if search term exists
+        if (this.searchTerm && this.searchTerm.trim()) {
+          params.search = this.searchTerm.trim()
+        }
+        
+        const response = await this.$http.get('/sales-discount/paginated', { params })
+        
+        // Handle Spring Page response structure
+        if (response.data && response.data.content) {
+          this.salesDiscounts = Array.isArray(response.data.content) ? response.data.content : []
+          this.totalRows = response.data.totalElements || 0
+        } else {
+          // Fallback for non-page response
+          this.salesDiscounts = Array.isArray(response.data) ? response.data : []
+          this.totalRows = this.salesDiscounts.length
+        }
       } catch (error) {
         console.error('Error loading sales discounts:', error)
         this.$toast({

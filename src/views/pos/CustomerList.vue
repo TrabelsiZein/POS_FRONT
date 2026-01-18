@@ -42,15 +42,7 @@
             </b-input-group>
           </b-form-group>
         </b-col>
-        <b-col cols="12" lg="6">
-          <b-form-group :label="$t('pos.customerManagement.filterByStatus')" label-for="status-filter" class="mb-md-0">
-            <b-form-select
-              id="status-filter"
-              v-model="statusFilter"
-              :options="statusFilterOptions"
-            />
-          </b-form-group>
-        </b-col>
+        <!-- Status filter removed - only active customers are shown in POS -->
       </b-row>
       <b-row class="mt-1">
         <b-col cols="12" class="d-flex align-items-end justify-content-lg-end">
@@ -64,13 +56,14 @@
     <!-- Customers Table -->
     <b-card>
       <b-table
-        :items="paginatedCustomers"
+        :items="customers"
         :fields="customerFields"
         striped
         hover
         responsive
         :busy="loading"
         show-empty
+        :tbody-tr-class="getRowClass"
       >
         <template #table-busy>
           <div class="text-center my-2">
@@ -84,12 +77,6 @@
             <feather-icon icon="InboxIcon" size="48" class="text-muted mb-2" />
             <p class="text-muted mb-0">{{ $t('pos.customerManagement.noCustomersFound') }}</p>
           </div>
-        </template>
-
-        <template #cell(active)="row">
-          <b-badge :variant="row.item.active ? 'success' : 'danger'">
-            {{ row.item.active ? $t('pos.customerManagement.active') : $t('pos.customerManagement.inactive') }}
-          </b-badge>
         </template>
 
         <template #cell(customerCode)="row">
@@ -121,7 +108,13 @@
         </template>
 
         <template #cell(actions)="row">
-          <div class="d-flex justify-content-end">
+          <div class="d-flex justify-content-end align-items-center">
+            <feather-icon 
+              v-if="isCustomerSelected(row.item)" 
+              icon="CheckCircleIcon" 
+              size="18" 
+              class="text-success mr-2"
+            />
             <b-button 
               variant="primary" 
               size="sm" 
@@ -156,12 +149,22 @@
             </div>
           </b-col>
         </b-row>
+        <!-- Selected customer indicator (when not in current page) -->
+        <b-row v-if="selectedCustomer && !isSelectedCustomerInList" class="mt-2">
+          <b-col cols="12">
+            <b-alert variant="info" show class="mb-0 py-2">
+              <feather-icon icon="CheckCircleIcon" size="16" class="mr-2" />
+              <strong>{{ $t('pos.customerManagement.selectedCustomer') }}:</strong> {{ selectedCustomer.name }} ({{ selectedCustomer.customerCode }})
+            </b-alert>
+          </b-col>
+        </b-row>
         <div class="d-flex justify-content-center mt-2">
           <b-pagination
-            v-model="currentPage"
+            :value="currentPage + 1"
             :total-rows="totalRows"
             :per-page="perPage"
             align="center"
+            @change="onPageChange"
           />
         </div>
       </div>
@@ -175,6 +178,29 @@
       @badge-scanned="onBadgeScanned"
       @close="onBadgeScanClose"
     />
+
+    <!-- Customer Change Confirmation Modal -->
+    <b-modal v-model="showCustomerChangeConfirm" :title="$t('pos.itemSelection.customerChangeConfirm.title')"
+      @ok="confirmCustomerSelection" @cancel="cancelCustomerSelection" :ok-disabled="recalculatingCart"
+      :cancel-disabled="recalculatingCart" centered>
+      <div v-if="recalculatingCart" class="text-center py-3">
+        <b-spinner class="mb-2" />
+        <p class="mb-0">{{ $t('pos.itemSelection.customerChangeConfirm.recalculating') }}</p>
+      </div>
+      <div v-else>
+        <p>{{ $t('pos.itemSelection.customerChangeConfirm.message') }}</p>
+        <b-alert variant="warning" show>
+          <strong>{{ $t('pos.itemSelection.customerChangeConfirm.warning') }}</strong>
+          <p class="mb-0 mt-1">{{ $t('pos.itemSelection.customerChangeConfirm.warningText') }}</p>
+        </b-alert>
+      </div>
+      <template #modal-ok>
+        {{ $t('pos.itemSelection.customerChangeConfirm.confirm') }}
+      </template>
+      <template #modal-cancel>
+        {{ $t('pos.itemSelection.customerChangeConfirm.cancel') }}
+      </template>
+    </b-modal>
   </div>
 </template>
 
@@ -193,102 +219,79 @@ export default {
       customers: [],
       loading: false,
       searchTerm: '',
-      statusFilter: 'all',
-      currentPage: 1,
-      perPage: 10,
+      statusFilter: 'all', // Not used anymore (only active customers), kept for compatibility
+      currentPage: 0, // Changed to 0-based for backend pagination
+      perPage: 20,
       perPageOptions: [
         { value: 10, text: '10' },
         { value: 20, text: '20' },
         { value: 50, text: '50' },
         { value: 100, text: '100' }
       ],
+      totalRows: 0,
+      totalPages: 0,
       showBadgeScanPopup: false,
       badgeScanRequired: false,
-      badgeScanned: false
+      badgeScanned: false,
+      showCustomerChangeConfirm: false,
+      pendingCustomer: null,
+      pricingEnabled: false,
+      recalculatingCart: false,
+      selectedCustomer: null, // Store selected customer to show in list
+      searchTimeout: null
     }
   },
   computed: {
-    statusFilterOptions() {
-      return [
-        { value: 'all', text: this.$t('pos.customerManagement.statusFilterOptions.all') },
-        { value: 'active', text: this.$t('pos.customerManagement.statusFilterOptions.active') },
-        { value: 'inactive', text: this.$t('pos.customerManagement.statusFilterOptions.inactive') }
-      ]
-    },
+    // Status filter removed - only active customers are shown
     customerFields() {
       return [
         { key: 'customerCode', label: this.$t('pos.customerManagement.tableHeaders.code'), sortable: true },
         { key: 'name', label: this.$t('pos.customerManagement.tableHeaders.name'), sortable: true },
         { key: 'contact', label: this.$t('pos.customerManagement.tableHeaders.contact') },
         { key: 'address', label: this.$t('pos.customerManagement.tableHeaders.address') },
-        { key: 'active', label: this.$t('pos.customerManagement.tableHeaders.status'), sortable: true },
         { key: 'actions', label: this.$t('pos.customerManagement.tableHeaders.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' }
       ]
     },
-    filteredCustomers() {
-      let filtered = this.customers
-
-      // Filter by status
-      if (this.statusFilter === 'active') {
-        filtered = filtered.filter(customer => customer.active === true)
-      } else if (this.statusFilter === 'inactive') {
-        filtered = filtered.filter(customer => customer.active === false)
-      }
-
-      // Filter by search term
-      const term = this.searchTerm.trim().toLowerCase()
-      if (term) {
-        filtered = filtered.filter(customer => {
-          return [
-            customer.customerCode,
-            customer.name,
-            customer.email,
-            customer.phone,
-            customer.city,
-            customer.country,
-            customer.taxId
-          ].some(field => field && field.toString().toLowerCase().includes(term))
-        })
-      }
-
-      return filtered
-    },
-    totalRows() {
-      return this.filteredCustomers.length
-    },
-    paginatedCustomers() {
-      const start = (this.currentPage - 1) * this.perPage
-      return this.filteredCustomers.slice(start, start + this.perPage)
-    },
+    // Removed client-side filtering - now using server-side pagination
     startIndex() {
-      return this.totalRows === 0 ? 0 : (this.currentPage - 1) * this.perPage + 1
+      return this.totalRows === 0 ? 0 : (this.currentPage) * this.perPage + 1
     },
     endIndex() {
-      return Math.min(this.currentPage * this.perPage, this.totalRows)
+      return Math.min((this.currentPage + 1) * this.perPage, this.totalRows)
+    },
+    isSelectedCustomerInList() {
+      if (!this.selectedCustomer) return false
+      return this.customers.some(c => c.id === this.selectedCustomer.id)
     },
     currentSessionId() {
       const session = this.$store.state.pos?.currentSession
       return session ? session.id : null
+    },
+    cart() {
+      return this.$store.state.pos?.cart || []
     }
   },
   watch: {
     searchTerm() {
-      this.currentPage = 1
-    },
-    statusFilter() {
-      this.currentPage = 1
+      // Reset to first page when search changes
+      this.currentPage = 0
+      // Debounce search to avoid too many API calls
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout)
+      }
+      this.searchTimeout = setTimeout(() => {
+        this.loadCustomers()
+      }, 500) // Wait 500ms after user stops typing
     },
     perPage() {
-      this.currentPage = 1
-    },
-    filteredCustomers(newList) {
-      const maxPage = Math.max(1, Math.ceil(newList.length / this.perPage))
-      if (this.currentPage > maxPage) {
-        this.currentPage = maxPage
-      }
+      this.currentPage = 0
+      this.loadCustomers()
     }
   },
   async mounted() {
+    // Load pricing configuration to check if we need to show confirmation
+    await this.loadPricingConfig()
+    
     // Check if badge scan is required for customer list
     // If navigating from ItemSelection (has returnTo query), badge was already checked before navigation
     const hasReturnTo = this.$route.query.returnTo
@@ -345,32 +348,100 @@ export default {
         this.goBack()
       }
     },
-    selectCustomerForTicket(customer) {
-      // Store selected customer in POS store
+    async selectCustomerForTicket(customer) {
+      // Check if we need to show confirmation dialog
+      // Only show if pricing is enabled and cart has items
+      if (this.pricingEnabled && this.cart && this.cart.length > 0) {
+        // Store pending customer and show confirmation
+        this.pendingCustomer = customer
+        this.showCustomerChangeConfirm = true
+        return
+      }
+      
+      // No confirmation needed - select customer directly (no items in cart)
+      this.pendingCustomer = customer
+      this.confirmCustomerSelection()
+    },
+    async confirmCustomerSelection() {
+      if (!this.pendingCustomer) return
+
+      // If cart has items and pricing is enabled, we'll recalculate on ItemSelection page
+      // For now, just select the customer and navigate
       if (this.$store.state.pos) {
-        this.$store.dispatch('pos/setSelectedCustomerId', customer.id)
+        this.$store.dispatch('pos/setSelectedCustomerId', this.pendingCustomer.id)
       }
       
       // Show success message
-      this.$toast({
-        component: ToastificationContent,
-        props: {
-          title: this.$t('pos.customerManagement.success.customerSelected'),
-          icon: 'CheckCircleIcon',
-          text: this.$t('pos.customerManagement.success.customerSelectedText', { name: customer.name }),
-          variant: 'success'
-        }
-      })
+      // this.$toast({
+      //   component: ToastificationContent,
+      //   props: {
+      //     title: this.$t('pos.customerManagement.success.customerSelected'),
+      //     icon: 'CheckCircleIcon',
+      //     text: this.$t('pos.customerManagement.success.customerSelectedText', { name: this.pendingCustomer.name }),
+      //     variant: 'success'
+      //   }
+      // })
       
-      // Navigate back to ItemSelection
-      const returnTo = this.$route.query.returnTo || 'pos-item-selection'
-      this.$router.push({ name: returnTo })
+      // Close modal
+      this.showCustomerChangeConfirm = false
+      this.pendingCustomer = null
+      
+      // Always navigate to ItemSelection when customer is changed
+      // This ensures items are recalculated with new customer pricing
+      // User can then proceed to Payment page after seeing updated prices
+      this.$router.push({ name: 'pos-item-selection' })
+    },
+    cancelCustomerSelection() {
+      // Don't select customer, just close modal
+      this.showCustomerChangeConfirm = false
+      this.pendingCustomer = null
+    },
+    async loadPricingConfig() {
+      try {
+        const response = await this.$http.get('/item/pricing-config')
+        this.pricingEnabled = response.data.priceGroupEnabled || false
+      } catch (error) {
+        console.error('Error loading pricing config:', error)
+        this.pricingEnabled = false
+      }
+    },
+    onPageChange(page) {
+      // Page is 1-based from b-pagination, convert to 0-based for backend
+      this.currentPage = page - 1
+      this.loadCustomers()
     },
     async loadCustomers() {
       this.loading = true
       try {
-        const response = await this.$http.get('/customer')
-        this.customers = response.data
+        // Get selected customer ID from store
+        const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+        
+        const response = await this.$http.get('/customer/paginated', {
+          params: {
+            page: this.currentPage,
+            size: this.perPage,
+            searchTerm: this.searchTerm && this.searchTerm.trim() ? this.searchTerm.trim() : null,
+            selectedCustomerId: selectedCustomerId
+          }
+        })
+        
+        if (response.data) {
+          this.customers = response.data.content || []
+          this.totalRows = response.data.totalElements || 0
+          this.totalPages = response.data.totalPages || 0
+          
+          // If selected customer is provided and not in current page, add it to the list
+          if (response.data.selectedCustomer) {
+            this.selectedCustomer = response.data.selectedCustomer
+            // Add selected customer at the beginning of the list if not already present
+            const existsInList = this.customers.some(c => c.id === this.selectedCustomer.id)
+            if (!existsInList) {
+              this.customers.unshift(this.selectedCustomer)
+            }
+          } else {
+            this.selectedCustomer = null
+          }
+        }
       } catch (error) {
         console.error('Error loading customers:', error)
         this.$toast({
@@ -388,6 +459,23 @@ export default {
     },
     clearSearch() {
       this.searchTerm = ''
+    },
+    isCustomerSelected(customer) {
+      const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+      if (!selectedCustomerId) return false
+      
+      // Check if this customer is selected (either in list or as selectedCustomer)
+      if (customer.id === selectedCustomerId) return true
+      if (this.selectedCustomer && customer.id === this.selectedCustomer.id) return true
+      
+      return false
+    },
+    getRowClass(item, type) {
+      if (!item || type !== 'row') return ''
+      if (this.isCustomerSelected(item)) {
+        return 'selected-customer-row'
+      }
+      return ''
     },
     goBack() {
       // Check if there's a return route in query params
@@ -423,6 +511,20 @@ export default {
 
 .page-header h2 {
   margin: 0;
+}
+
+/* Selected customer row styling */
+::v-deep .selected-customer-row {
+  background-color: #e8f5e9 !important;
+  border-left: 4px solid #4caf50;
+}
+
+::v-deep .selected-customer-row:hover {
+  background-color: #c8e6c9 !important;
+}
+
+::v-deep .selected-customer-row td {
+  font-weight: 500;
 }
 
 @media (max-width: 575.98px) {

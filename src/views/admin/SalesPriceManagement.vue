@@ -28,7 +28,7 @@
         </b-col>
         <b-col cols="12" md="6" class="d-flex align-items-end justify-content-md-end">
           <small class="text-muted">
-            {{ $t('admin.salesPriceManagement.showing') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.salesPriceManagement.record') : $t('admin.salesPriceManagement.records') }}
+            {{ $t('admin.salesPriceManagement.showing') }} {{ salesPrices.length }} {{ $t('admin.salesPriceManagement.of') }} {{ totalRows }} {{ totalRows === 1 ? $t('admin.salesPriceManagement.record') : $t('admin.salesPriceManagement.records') }}
           </small>
         </b-col>
       </b-row>
@@ -135,6 +135,7 @@
 
 <script>
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
+import { formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'SalesPriceManagement',
@@ -144,7 +145,8 @@ export default {
       loading: false,
       searchTerm: '',
       currentPage: 1,
-      perPage: 10,
+      perPage: 20,
+      totalRows: 0,
       perPageOptions: [
         { value: 10, text: '10' },
         { value: 20, text: '20' },
@@ -170,55 +172,34 @@ export default {
         { key: 'modifiedAt', label: this.$t('admin.salesPriceManagement.tableHeaders.modifiedAt'), sortable: true }
       ]
     },
-    filteredSalesPrices() {
-      let filtered = this.salesPrices
-
-      // Filter by search term
-      if (this.searchTerm) {
-        const term = this.searchTerm.toLowerCase()
-        filtered = filtered.filter(price => {
-          return (
-            (price.itemNo && price.itemNo.toLowerCase().includes(term)) ||
-            (price.salesCode && price.salesCode.toLowerCase().includes(term)) ||
-            (price.salesType && price.salesType.toLowerCase().includes(term)) ||
-            (price.responsibilityCenter && price.responsibilityCenter.toLowerCase().includes(term)) ||
-            (price.startingDate && price.startingDate.toLowerCase().includes(term)) ||
-            (price.currencyCode && price.currencyCode.toLowerCase().includes(term)) ||
-            (price.variantCode && price.variantCode.toLowerCase().includes(term)) ||
-            (price.unitOfMeasureCode && price.unitOfMeasureCode.toLowerCase().includes(term)) ||
-            (price.minimumQuantity != null && price.minimumQuantity.toString().includes(term))
-          )
-        })
-      }
-
-      return filtered
-    },
-    totalRows() {
-      return this.filteredSalesPrices.length
-    },
     paginatedSalesPrices() {
-      const start = (this.currentPage - 1) * this.perPage
-      return this.filteredSalesPrices.slice(start, start + this.perPage)
+      // Backend handles pagination and search, so we display the salesPrices directly
+      return this.salesPrices
     },
     startIndex() {
-      return this.totalRows === 0 ? 0 : (this.currentPage - 1) * this.perPage + 1
+      if (this.totalRows === 0) return 0
+      const count = this.salesPrices.length
+      if (count === 0) return 0
+      return (this.currentPage - 1) * this.perPage + 1
     },
     endIndex() {
-      return Math.min(this.currentPage * this.perPage, this.totalRows)
+      const count = this.salesPrices.length
+      if (count === 0) return 0
+      return (this.currentPage - 1) * this.perPage + count
     }
   },
   watch: {
     searchTerm() {
+      // Reset to page 1 when search changes and reload from backend
       this.currentPage = 1
+      this.loadSalesPrices()
     },
     perPage() {
       this.currentPage = 1
+      this.loadSalesPrices()
     },
-    filteredSalesPrices(newList) {
-      const maxPage = Math.max(1, Math.ceil(newList.length / this.perPage))
-      if (this.currentPage > maxPage) {
-        this.currentPage = maxPage
-      }
+    currentPage() {
+      this.loadSalesPrices()
     }
   },
   mounted() {
@@ -228,8 +209,29 @@ export default {
     async loadSalesPrices() {
       this.loading = true
       try {
-        const response = await this.$http.get('/sales-price')
-        this.salesPrices = Array.isArray(response.data) ? response.data : []
+        // Convert from 1-based (frontend) to 0-based (backend) page number
+        const page = this.currentPage - 1
+        const params = {
+          page: page,
+          size: this.perPage
+        }
+        
+        // Add search parameter if search term exists
+        if (this.searchTerm && this.searchTerm.trim()) {
+          params.search = this.searchTerm.trim()
+        }
+        
+        const response = await this.$http.get('/sales-price/paginated', { params })
+        
+        // Handle Spring Page response structure
+        if (response.data && response.data.content) {
+          this.salesPrices = Array.isArray(response.data.content) ? response.data.content : []
+          this.totalRows = response.data.totalElements || 0
+        } else {
+          // Fallback for non-page response
+          this.salesPrices = Array.isArray(response.data) ? response.data : []
+          this.totalRows = this.salesPrices.length
+        }
       } catch (error) {
         console.error('Error loading sales prices:', error)
         this.$toast({
@@ -250,10 +252,7 @@ export default {
     },
     formatPrice(price) {
       if (price == null) return '-'
-      return new Intl.NumberFormat('fr-FR', {
-        style: 'currency',
-        currency: 'TND'
-      }).format(price)
+      return formatCurrencyAmount(price)
     }
   }
 }

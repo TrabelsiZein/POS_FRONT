@@ -95,7 +95,8 @@
               </div>
               <div v-else-if="filteredGridItems.length === 0" class="grid-status empty-state">
                 <feather-icon :icon="gridStatusIcon" size="48" class="text-muted mb-1" />
-                <p class="mb-0">{{ $t('pos.itemSelection.noItemsFound', { level: currentLevelLabel.toLowerCase() }) }}</p>
+                <p class="mb-0">{{ $t('pos.itemSelection.noItemsFound', { level: currentLevelLabel.toLowerCase() }) }}
+                </p>
                 <small class="text-muted">{{ $t('pos.itemSelection.tryDifferentSelection') }}</small>
               </div>
               <div v-else class="items-grid">
@@ -192,9 +193,13 @@
             <div class="cart-item-breakdown">
               <div class="breakdown-row">
                 <span class="breakdown-label">{{ $t('pos.itemSelection.unitPrice') }}</span>
-                <span class="breakdown-value">{{ formatShortTun(cartItem.unitPrice) }} {{ $t('pos.itemSelection.ht') }}</span>
-                <span class="breakdown-value secondary">{{ formatVatPercentage(cartItem) }}% {{ $t('pos.itemSelection.vat') }}</span>
-                <span class="breakdown-value primary">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} {{ $t('pos.itemSelection.ttc') }}</span>
+                <span class="breakdown-value">{{ formatShortTun(cartItem.unitPrice) }} {{ $t('pos.itemSelection.ht')
+                }}</span>
+                <span class="breakdown-value secondary">{{ formatVatPercentage(cartItem) }}% {{
+                  $t('pos.itemSelection.vat')
+                }}</span>
+                <span class="breakdown-value primary">{{ formatShortTun(getUnitPriceWithVat(cartItem)) }} {{
+                  $t('pos.itemSelection.ttc') }}</span>
               </div>
               <div v-if="cartItem.discountPercentage || cartItem.discountAmount" class="breakdown-row discount-row">
                 <feather-icon icon="PercentIcon" size="14" class="breakdown-icon" />
@@ -234,7 +239,9 @@
 
         <div class="cart-summary">
           <div class="cart-summary-header">
-            <span class="cart-summary-title">{{ $t('pos.itemSelection.cart.title') }} {{ cartCount > 0 ? `(${cartCount})` : '' }}</span>
+            <span class="cart-summary-title">{{ $t('pos.itemSelection.cart.title') }} {{ cartCount > 0 ?
+              `(${cartCount})` : ''
+            }}</span>
             <b-button v-if="cart.length > 0" variant="outline-secondary" size="sm" @click="clearCart"
               class="cart-clear-btn">
               {{ $t('pos.itemSelection.cart.clear') }}
@@ -305,8 +312,9 @@
     </b-row>
 
     <!-- Pending Tickets Modal -->
-    <b-modal id="pending-tickets-modal" v-model="showPendingTicketsModal" :title="$t('pos.itemSelection.pendingTicketsModal.title')" size="xl"
-      @show="loadPendingTickets" @hide="resetPendingTickets">
+    <b-modal id="pending-tickets-modal" v-model="showPendingTicketsModal"
+      :title="$t('pos.itemSelection.pendingTicketsModal.title')" size="xl" @show="loadPendingTickets"
+      @hide="resetPendingTickets">
       <div v-if="loadingPendingTickets" class="text-center py-4">
         <b-spinner class="align-middle"></b-spinner>
         <p class="mt-2">{{ $t('pos.itemSelection.pendingTicketsModal.loading') }}</p>
@@ -369,8 +377,9 @@
     </b-modal>
 
     <!-- Close Session Modal -->
-    <b-modal id="close-session-modal" v-model="showCloseSessionModal" :title="$t('pos.itemSelection.closeSessionModal.title')" size="xl"
-      @ok="closeSession" @cancel="resetCloseSessionForm" @hide="resetCloseSessionForm" @shown="onCloseSessionModalShown"
+    <b-modal id="close-session-modal" v-model="showCloseSessionModal"
+      :title="$t('pos.itemSelection.closeSessionModal.title')" size="xl" @ok="closeSession"
+      @cancel="resetCloseSessionForm" @hide="resetCloseSessionForm" @shown="onCloseSessionModalShown"
       :ok-disabled="!canCloseSession" ok-variant="danger">
       <div class="cash-count-section">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -399,16 +408,17 @@
                 size="sm" placeholder="0" />
             </template>
             <template #cell(paymentMethod)="row">
-              <b-form-select v-model="row.item.paymentMethodId" :options="paymentMethodOptionsWithCash" 
-                value-field="id" text-field="name" size="sm" @change="updateCashCountTotals">
+              <b-form-select v-model="row.item.paymentMethodId" :options="paymentMethodOptionsWithCash" value-field="id"
+                text-field="name" size="sm" @change="updateCashCountTotals">
               </b-form-select>
             </template>
             <template #cell(lineTotal)="row">
-              <strong class="text-primary">TND {{ formatPrice(row.item.denominationValue * row.item.quantity) }}</strong>
+              <strong class="text-primary">TND {{ formatPrice(row.item.denominationValue * row.item.quantity)
+              }}</strong>
             </template>
             <template #cell(actions)="row">
-              <b-button variant="link" size="sm" @click="removeCashCountLine(row.index)" 
-                class="text-danger p-0" v-b-tooltip.hover :title="$t('pos.itemSelection.closeSessionModal.removeLine')">
+              <b-button variant="link" size="sm" @click="removeCashCountLine(row.index)" class="text-danger p-0"
+                v-b-tooltip.hover :title="$t('pos.itemSelection.closeSessionModal.removeLine')">
                 <feather-icon icon="XIcon" size="16" />
               </b-button>
             </template>
@@ -426,12 +436,13 @@
           <b-card class="border-primary">
             <div class="d-flex justify-content-between align-items-center">
               <div>
-                <strong class="text-muted d-block mb-1" style="font-size: 0.9rem;">{{ $t('pos.itemSelection.closeSessionModal.totalCounted') }}</strong>
+                <strong class="text-muted d-block mb-1" style="font-size: 0.9rem;">{{
+                  $t('pos.itemSelection.closeSessionModal.totalCounted') }}</strong>
                 <strong class="text-primary" style="font-size: 1.5rem;">
-                  TND {{ formatPrice(calculatedTotalCash) }}
+                   {{ formatPrice(calculatedTotalCash) }}
                 </strong>
               </div>
-              <feather-icon icon="DollarSignIcon" size="32" class="text-primary" />
+              <b-badge>TND</b-badge>
             </div>
           </b-card>
         </div>
@@ -448,8 +459,8 @@
     </b-modal>
 
     <!-- Discount Modal -->
-    <b-modal id="discount-modal" v-model="showDiscountModal" :title="$t('pos.itemSelection.discountModal.title')" size="md" @ok="applyLineDiscount"
-      @hide="resetDiscountForm" :ok-disabled="!canApplyDiscount">
+    <b-modal id="discount-modal" v-model="showDiscountModal" :title="$t('pos.itemSelection.discountModal.title')"
+      size="md" @ok="applyLineDiscount" @hide="resetDiscountForm" :ok-disabled="!canApplyDiscount">
       <div v-if="discountModalItemIndex !== null">
         <div class="mb-3" v-if="getDiscountModalItem()">
           <strong>{{ getDiscountModalItem().name }}</strong>
@@ -465,7 +476,8 @@
         </b-form-group>
 
         <!-- Discount Input -->
-        <b-form-group :label="discountType === 'percentage' ? $t('pos.itemSelection.discountModal.discountPercentage') : $t('pos.itemSelection.discountModal.discountAmount')">
+        <b-form-group
+          :label="discountType === 'percentage' ? $t('pos.itemSelection.discountModal.discountPercentage') : $t('pos.itemSelection.discountModal.discountAmount')">
           <b-input-group>
             <b-form-input v-model.number="discountValue" type="number" step="0.01" :min="0"
               :max="discountType === 'percentage' ? 100 : getOriginalLineTotal()"
@@ -502,31 +514,18 @@
     </b-modal>
 
     <!-- Badge Scan Popup for Customer Management -->
-    <BadgeScanPopup
-      :show="showBadgeScanPopupForCustomer"
-      :required-permission="'CONSULT_CUSTOMER_LIST'"
-      :session-id="currentSessionId"
-      @badge-scanned="onBadgeScannedForCustomer"
-      @close="onBadgeScanCloseForCustomer"
-    />
+    <BadgeScanPopup :show="showBadgeScanPopupForCustomer" :required-permission="'CONSULT_CUSTOMER_LIST'"
+      :session-id="currentSessionId" @badge-scanned="onBadgeScannedForCustomer" @close="onBadgeScanCloseForCustomer" />
 
     <!-- Badge Scan Popup for Return Products -->
-    <BadgeScanPopup
-      :show="showBadgeScanPopupForReturn"
-      :required-permission="'MAKE_RETURN'"
-      :session-id="currentSessionId"
-      @badge-scanned="onBadgeScannedForReturn"
-      @close="onBadgeScanCloseForReturn"
-    />
+    <BadgeScanPopup :show="showBadgeScanPopupForReturn" :required-permission="'MAKE_RETURN'"
+      :session-id="currentSessionId" @badge-scanned="onBadgeScannedForReturn" @close="onBadgeScanCloseForReturn" />
 
     <!-- Badge Scan Popup for Line Discount -->
-    <BadgeScanPopup
-      :show="showBadgeScanPopupForLineDiscount"
-      :required-permission="'APPLY_LINE_DISCOUNT'"
-      :session-id="currentSessionId"
-      @badge-scanned="onBadgeScannedForLineDiscount"
-      @close="onBadgeScanCloseForLineDiscount"
-    />
+    <BadgeScanPopup :show="showBadgeScanPopupForLineDiscount" :required-permission="'APPLY_LINE_DISCOUNT'"
+      :session-id="currentSessionId" @badge-scanned="onBadgeScannedForLineDiscount"
+      @close="onBadgeScanCloseForLineDiscount" />
+
   </div>
 </template>
 
@@ -535,6 +534,7 @@ import useJwt from '@/auth/jwt/useJwt'
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
 import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
+import { formatCurrency, formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'ItemSelection',
@@ -571,14 +571,17 @@ export default {
         notes: '',
         cashCountLines: []
       },
+      pricingEnabled: false, // Pricing feature flag - checked once on mount
       showBadgeScanPopupForCustomer: false,
       badgeScannedForCustomer: false,
+      previousCustomerId: null, // Track previous customer for auto-recalculation
       showBadgeScanPopupForReturn: false,
       badgeScannedForReturn: false,
       showBadgeScanPopupForLineDiscount: false,
       badgeScannedForLineDiscount: false,
       pendingLineDiscountIndex: null,
       selectedCustomerObj: null,
+      passengerCustomer: null, // Default customer (PASSENGER)
       keyboardLayout: [
         ['7', '8', '9'],
         ['4', '5', '6'],
@@ -801,6 +804,21 @@ export default {
       return false
     }
   },
+  watch: {
+    '$store.state.pos.selectedCustomerId': {
+      handler(newCustomerId) {
+        // Update previous customer ID in sessionStorage when customer changes
+        // (Auto-recalculation happens on mount when returning from customer page)
+        this.previousCustomerId = newCustomerId
+        if (newCustomerId !== null && newCustomerId !== undefined) {
+          sessionStorage.setItem('pos_previous_customer_id', newCustomerId.toString())
+        } else {
+          sessionStorage.removeItem('pos_previous_customer_id')
+        }
+      },
+      immediate: false
+    }
+  },
   async mounted() {
     document.body.classList.add('pos-no-scroll')
     this.loadCurrentSession()
@@ -808,8 +826,118 @@ export default {
     // this.loadItemsWithBarcodes()
     // this.loadPaymentMethods()
     this.loadPendingTicketsCount()
-    // Load selected customer from store if exists
-    await this.loadSelectedCustomer()
+    // Load pricing configuration first (needed for customer change check)
+    await this.loadPricingConfig()
+    
+    // Load default/passenger customer first
+    await this.loadPassengerCustomer()
+    
+    // Load selected customer from store if exists, otherwise set to default customer
+    const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+    if (!selectedCustomerId && this.passengerCustomer) {
+      // No customer selected - set default customer to avoid false "change" detection
+      this.$store.dispatch('pos/setSelectedCustomerId', this.passengerCustomer.id)
+      await this.loadSelectedCustomer()
+    } else {
+      await this.loadSelectedCustomer()
+    }
+    
+    // Get stored previous customer ID (from sessionStorage to persist across navigation)
+    const storedPreviousCustomerId = sessionStorage.getItem('pos_previous_customer_id')
+    // Handle both null string and actual null
+    const storedPreviousCustomerIdNum = storedPreviousCustomerId && storedPreviousCustomerId !== 'null' 
+      ? parseInt(storedPreviousCustomerId, 10) 
+      : null
+    
+    // Get current customer ID from store (should now always have a value - default or selected)
+    const currentCustomerId = this.$store.state.pos?.selectedCustomerId
+    
+    // Debug logging
+    console.log('Customer Change Check:', {
+      pricingEnabled: this.pricingEnabled,
+      cartLength: this.cart.length,
+      storedPreviousCustomerId: storedPreviousCustomerIdNum,
+      currentCustomerId: currentCustomerId,
+      cart: this.cart
+    })
+    
+    // Check if customer changed while we were away (e.g., from customer management page)
+    // Use $nextTick to ensure cart is loaded from store
+    this.$nextTick(() => {
+      const cartLength = this.cart ? this.cart.length : 0
+      const hasCartItems = cartLength > 0
+      const hasPricingEnabled = this.pricingEnabled === true
+      const hasCurrentCustomer = currentCustomerId !== undefined && currentCustomerId !== null
+      const hasPreviousCustomer = storedPreviousCustomerIdNum !== null
+      
+      // Customer changed if previous customer exists and is different from current
+      // Note: We no longer need to check for "first time selection" because default customer
+      // is now set in ItemSelection, so customer should never be null
+      const customerChanged = hasPreviousCustomer && storedPreviousCustomerIdNum !== currentCustomerId
+      
+      console.log('Customer Change Check Details:', {
+        hasPricingEnabled,
+        hasCartItems,
+        cartLength,
+        hasCurrentCustomer,
+        currentCustomerId,
+        hasPreviousCustomer,
+        storedPreviousCustomerIdNum,
+        customerChanged,
+        scenario: hasPreviousCustomer && storedPreviousCustomerIdNum !== currentCustomerId ? 'Customer changed' : 
+                 'No change',
+        shouldShowDialog: hasPricingEnabled && hasCartItems && hasCurrentCustomer && customerChanged
+      })
+      
+      if (hasPricingEnabled && hasCartItems && hasCurrentCustomer && customerChanged) {
+        console.log('✅ Customer changed - automatically recalculating cart')
+        // Customer changed - automatically recalculate (confirmation was already shown in CustomerList)
+        this.recalculateCartWithNewCustomer(currentCustomerId).then(() => {
+          // Show success message after recalculation
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: this.$t('pos.itemSelection.customerChangeConfirm.successTitle'),
+              icon: 'CheckCircleIcon',
+              text: this.$t('pos.itemSelection.customerChangeConfirm.successText'),
+              variant: 'success'
+            }
+          })
+        }).catch(error => {
+          console.error('Error recalculating cart:', error)
+          this.$toast({
+            component: ToastificationContent,
+            props: {
+              title: this.$t('pos.itemSelection.customerChangeConfirm.errorTitle'),
+              icon: 'AlertCircleIcon',
+              text: this.$t('pos.itemSelection.customerChangeConfirm.errorText'),
+              variant: 'danger'
+            }
+          })
+        })
+      } else {
+        console.log('❌ Conditions not met for customer change recalculation')
+        if (!hasPricingEnabled) console.log('  - Pricing not enabled')
+        if (!hasCartItems) console.log('  - No cart items')
+        if (!hasCurrentCustomer) console.log('  - No current customer')
+        if (!customerChanged) console.log('  - Customer did not change')
+      }
+    })
+    
+    // Store current customer ID for next time (in both component and sessionStorage)
+    // Note: currentCustomerId should now always have a value (default customer is set if none selected)
+    this.previousCustomerId = currentCustomerId
+    if (currentCustomerId !== null && currentCustomerId !== undefined) {
+      sessionStorage.setItem('pos_previous_customer_id', currentCustomerId.toString())
+    } else {
+      // Fallback: if somehow still null, use default customer
+      if (this.passengerCustomer) {
+        sessionStorage.setItem('pos_previous_customer_id', this.passengerCustomer.id.toString())
+        this.previousCustomerId = this.passengerCustomer.id
+      } else {
+        sessionStorage.removeItem('pos_previous_customer_id')
+      }
+    }
 
     // Cart is now always loaded from store via computed property
     // Focus on barcode input when component mounts
@@ -825,9 +953,9 @@ export default {
     })
 
     // Refresh pending count periodically
-    this.pendingTicketsInterval = setInterval(() => {
-      this.loadPendingTicketsCount()
-    }, 10000) // Check every 10 seconds
+    // this.pendingTicketsInterval = setInterval(() => {
+    //   this.loadPendingTicketsCount()
+    // }, 10000) // Check every 10 seconds
 
     if (this.$refs.cartList) {
       this.$refs.cartList.addEventListener('scroll', this.handleCartScroll, { passive: true })
@@ -876,8 +1004,7 @@ export default {
       return price * (vat / 100)
     },
     formatShortTun(value) {
-      const amount = parseFloat(value) || 0
-      return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return formatCurrencyAmount(value)
     },
     formatVatPercentage(item) {
       const vat = this.getVatPercent(item)
@@ -942,6 +1069,18 @@ export default {
         })
       } finally {
         this.gridLoading = false
+      }
+    },
+    async loadPricingConfig() {
+      try {
+        const response = await this.$http.get('/item/pricing-config')
+        if (response.data) {
+          this.pricingEnabled = response.data.priceGroupEnabled || false
+        }
+      } catch (error) {
+        console.error('Error loading pricing config:', error)
+        // Default to false if config cannot be loaded (safe fallback)
+        this.pricingEnabled = false
       }
     },
     async loadSubFamilies(family) {
@@ -1169,6 +1308,7 @@ export default {
             const response = await this.$http.get(`/item-barcode/barcode/${encodeURIComponent(barcode)}`)
             if (response.data) {
               foundItem = response.data
+              // Price calculation will be done in addToCart
             }
           } catch (apiError) {
             // API endpoint might not exist or item not found
@@ -1273,6 +1413,7 @@ export default {
         unitPrice: line.unitPrice,
         quantity: line.quantity,
         defaultVAT: line.item.defaultVAT || 0,
+        maximumAuthorizedDiscount: line.item.maximumAuthorizedDiscount || null,
         discountPercentage: line.discountPercentage || null,
         discountAmount: line.discountAmount || null
       }))
@@ -1386,12 +1527,58 @@ export default {
       const date = new Date(dateString)
       return date.toLocaleString()
     },
-    addToCart(item) {
+    async addToCart(item) {
+      // Calculate price if customer is selected and pricing is enabled
+      const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+      let calculatedPrice = item.unitPrice || 0
+      let calculatedDiscountPercentage = null
+
+      // Only call pricing API if pricing is enabled
+      if (this.pricingEnabled && item.id) {
+        try {
+          const response = await this.$http.get(`/item/${item.id}/calculate-price`, {
+            params: {
+              customerId: selectedCustomerId,
+              quantity: 1
+            }
+          })
+          
+          if (response.data) {
+            calculatedPrice = response.data.unitPrice || item.unitPrice || 0
+            calculatedDiscountPercentage = response.data.discountPercentage
+            // Update item with calculated price for display
+            item.unitPrice = calculatedPrice
+          }
+        } catch (error) {
+          console.error('Error calculating price:', error)
+          // Fallback to item.unitPrice if calculation fails
+        }
+      }
+
       const currentCart = [...this.cart]
       const existingIndex = currentCart.findIndex(cartItem => cartItem.id === item.id)
       if (existingIndex !== -1) {
         const existingItem = currentCart[existingIndex]
         existingItem.quantity += 1
+        // Recalculate price for updated quantity if pricing is enabled
+        if (this.pricingEnabled && selectedCustomerId && item.id) {
+          try {
+            const response = await this.$http.get(`/item/${item.id}/calculate-price`, {
+              params: {
+                customerId: selectedCustomerId,
+                quantity: existingItem.quantity + 1
+              }
+            })
+            if (response.data) {
+              existingItem.unitPrice = response.data.unitPrice || existingItem.unitPrice
+              if (response.data.discountPercentage !== null && response.data.discountPercentage !== undefined) {
+                existingItem.discountPercentage = response.data.discountPercentage
+              }
+            }
+          } catch (error) {
+            console.error('Error recalculating price:', error)
+          }
+        }
         currentCart.splice(existingIndex, 1)
         currentCart.unshift(existingItem)
       } else {
@@ -1399,10 +1586,11 @@ export default {
           id: item.id,
           itemCode: item.itemCode,
           name: item.name,
-          unitPrice: item.unitPrice || 0,
+          unitPrice: calculatedPrice,
           defaultVAT: item.defaultVAT || 0,
+          maximumAuthorizedDiscount: item.maximumAuthorizedDiscount || null,
           quantity: 1,
-          discountPercentage: null,
+          discountPercentage: calculatedDiscountPercentage,
           discountAmount: null,
         })
       }
@@ -1416,28 +1604,74 @@ export default {
         }
       })
 
-      // Show toast notification
-      this.$toast({
-        component: ToastificationContent,
-        props: {
-          title: this.$t('pos.itemSelection.messages.addedToCart'),
-          icon: 'CheckIcon',
-          text: this.$t('pos.itemSelection.messages.addedToCartText', { itemName: item.name }),
-          variant: 'success'
-        },
-      }, {
-        position: 'top-left', // ⬅️ here
-      })
+      // // Show toast notification
+      // this.$toast({
+      //   component: ToastificationContent,
+      //   props: {
+      //     title: this.$t('pos.itemSelection.messages.addedToCart'),
+      //     icon: 'CheckIcon',
+      //     text: this.$t('pos.itemSelection.messages.addedToCartText', { itemName: item.name }),
+      //     variant: 'success'
+      //   },
+      // }, {
+      //   position: 'top-left', // ⬅️ here
+      // })
     },
-    increaseQuantity(index) {
+    async increaseQuantity(index) {
       const currentCart = [...this.cart]
-      currentCart[index].quantity += 1
+        const cartItem = currentCart[index]
+        cartItem.quantity += 1
+
+        // Recalculate price if pricing is enabled and customer is selected
+        const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+        if (this.pricingEnabled && selectedCustomerId && cartItem.id) {
+          try {
+            const response = await this.$http.get(`/item/${cartItem.id}/calculate-price`, {
+              params: {
+                customerId: selectedCustomerId,
+                quantity: cartItem.quantity
+              }
+            })
+            if (response.data) {
+              cartItem.unitPrice = response.data.unitPrice || cartItem.unitPrice
+              if (response.data.discountPercentage !== null && response.data.discountPercentage !== undefined) {
+                cartItem.discountPercentage = response.data.discountPercentage
+              }
+            }
+          } catch (error) {
+            console.error('Error recalculating price:', error)
+          }
+        }
+
       this.$store.dispatch('pos/setCart', currentCart)
     },
-    decreaseQuantity(index) {
+    async decreaseQuantity(index) {
       const currentCart = [...this.cart]
       if (currentCart[index].quantity > 1) {
-        currentCart[index].quantity -= 1
+        const cartItem = currentCart[index]
+        cartItem.quantity -= 1
+
+        // Recalculate price if pricing is enabled and customer is selected
+        const selectedCustomerId = this.$store.state.pos?.selectedCustomerId
+        if (this.pricingEnabled && selectedCustomerId && cartItem.id) {
+          try {
+            const response = await this.$http.get(`/item/${cartItem.id}/calculate-price`, {
+              params: {
+                customerId: selectedCustomerId,
+                quantity: cartItem.quantity
+              }
+            })
+            if (response.data) {
+              cartItem.unitPrice = response.data.unitPrice || cartItem.unitPrice
+              if (response.data.discountPercentage !== null && response.data.discountPercentage !== undefined) {
+                cartItem.discountPercentage = response.data.discountPercentage
+              }
+            }
+          } catch (error) {
+            console.error('Error recalculating price:', error)
+          }
+        }
+
         this.$store.dispatch('pos/setCart', currentCart)
       } else {
         this.removeFromCart(index)
@@ -1456,13 +1690,10 @@ export default {
       }
     },
     formatPrice(price) {
-      const value = parseFloat(price) || 0
-      return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return formatCurrencyAmount(price)
     },
     formatTunCurrency(value) {
-      const amount = parseFloat(value) || 0
-      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      return `${formatted} TND`
+      return formatCurrency(value)
     },
     highlightCartItem(itemId) {
       this.highlightedItemId = itemId
@@ -1489,6 +1720,25 @@ export default {
       this.$router.push({ name: 'pos-payment' })
     },
     async goToCustomerManagement() {
+      // Store current customer ID before navigating (so we can detect changes when returning)
+      const currentCustomerId = this.$store.state.pos?.selectedCustomerId
+      if (currentCustomerId !== null && currentCustomerId !== undefined) {
+        sessionStorage.setItem('pos_previous_customer_id', currentCustomerId.toString())
+        this.previousCustomerId = currentCustomerId
+        console.log('Stored customer before navigation:', currentCustomerId)
+      } else {
+        // Fallback: if somehow null, store default customer ID if available
+        if (this.passengerCustomer) {
+          sessionStorage.setItem('pos_previous_customer_id', this.passengerCustomer.id.toString())
+          this.previousCustomerId = this.passengerCustomer.id
+          console.log('No customer selected, storing default customer:', this.passengerCustomer.id)
+        } else {
+          sessionStorage.setItem('pos_previous_customer_id', 'null')
+          this.previousCustomerId = null
+          console.log('No customer selected and no default customer available')
+        }
+      }
+      
       // Check if badge scan is required before navigating
       const badgeRequired = await this.checkBadgeRequirementForCustomer()
       if (badgeRequired && !this.badgeScannedForCustomer) {
@@ -1517,6 +1767,25 @@ export default {
       }
     },
     onBadgeScannedForCustomer() {
+      // Store current customer ID before navigating (so we can detect changes when returning)
+      const currentCustomerId = this.$store.state.pos?.selectedCustomerId
+      if (currentCustomerId !== null && currentCustomerId !== undefined) {
+        sessionStorage.setItem('pos_previous_customer_id', currentCustomerId.toString())
+        this.previousCustomerId = currentCustomerId
+        console.log('Stored customer before navigation (after badge scan):', currentCustomerId)
+      } else {
+        // Fallback: if somehow null, store default customer ID if available
+        if (this.passengerCustomer) {
+          sessionStorage.setItem('pos_previous_customer_id', this.passengerCustomer.id.toString())
+          this.previousCustomerId = this.passengerCustomer.id
+          console.log('No customer selected, storing default customer (after badge scan):', this.passengerCustomer.id)
+        } else {
+          sessionStorage.setItem('pos_previous_customer_id', 'null')
+          this.previousCustomerId = null
+          console.log('No customer selected and no default customer available (after badge scan)')
+        }
+      }
+      
       this.badgeScannedForCustomer = true
       this.showBadgeScanPopupForCustomer = false
       // Navigate to customer management page after successful badge scan
@@ -1617,18 +1886,88 @@ export default {
         }
       }
     },
+    async loadPassengerCustomer() {
+      try {
+        const response = await this.$http.get('/customer/passenger')
+        if (response.status === 200 && response.data) {
+          this.passengerCustomer = response.data
+        }
+      } catch (error) {
+        console.error('Error loading passenger customer:', error)
+      }
+    },
     clearSelectedCustomer() {
       this.selectedCustomerObj = null
-      this.$store.dispatch('pos/clearSelectedCustomerId')
-      this.$toast({
-        component: ToastificationContent,
-        props: {
-          title: this.$t('pos.itemSelection.customerCleared'),
-          icon: 'CheckCircleIcon',
-          text: this.$t('pos.itemSelection.customerClearedText'),
-          variant: 'success'
+      // When clearing customer, set to default customer instead of null
+      if (this.passengerCustomer) {
+        this.$store.dispatch('pos/setSelectedCustomerId', this.passengerCustomer.id)
+        this.loadSelectedCustomer()
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: this.$t('pos.itemSelection.customerCleared'),
+            icon: 'CheckCircleIcon',
+            text: this.$t('pos.itemSelection.customerClearedText'),
+            variant: 'success'
+          }
+        })
+      } else {
+        // Fallback if passenger customer not loaded
+        this.$store.dispatch('pos/clearSelectedCustomerId')
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: this.$t('pos.itemSelection.customerCleared'),
+            icon: 'CheckCircleIcon',
+            text: this.$t('pos.itemSelection.customerClearedText'),
+            variant: 'success'
+          }
+        })
+      }
+    },
+    async recalculateCartWithNewCustomer(customerId) {
+      const currentCart = [...this.cart]
+      
+      // Recalculate price for each cart item
+      const recalculationPromises = currentCart.map(async cartItem => {
+        if (cartItem.id) {
+          try {
+            const response = await this.$http.get(`/item/${cartItem.id}/calculate-price`, {
+              params: {
+                customerId: customerId,
+                quantity: cartItem.quantity
+              }
+            })            
+            if (response.data) {
+              cartItem.unitPrice = response.data.unitPrice || cartItem.unitPrice
+              if (response.data.discountPercentage !== null && response.data.discountPercentage !== undefined) {
+                cartItem.discountPercentage = response.data.discountPercentage
+              } else {
+                // Clear discount if not provided
+                cartItem.discountPercentage = null
+              }
+            }
+          } catch (error) {
+            console.error(`Error recalculating price for item ${cartItem.id}:`, error)
+            // Keep existing price on error
+          }
         }
+        return cartItem
       })
+
+      // Wait for all recalculations to complete
+      const updatedCart = await Promise.all(recalculationPromises)
+      
+      // Update cart in store
+      this.$store.dispatch('pos/setCart', updatedCart)
+      
+      // Update previous customer ID in sessionStorage for next time
+      this.previousCustomerId = customerId
+      if (customerId !== null && customerId !== undefined) {
+        sessionStorage.setItem('pos_previous_customer_id', customerId.toString())
+      } else {
+        sessionStorage.removeItem('pos_previous_customer_id')
+      }
     },
     addCashCountLine() {
       this.closeSessionData.cashCountLines.push({
@@ -1853,6 +2192,27 @@ export default {
       } else {
         discountAmount = Math.min(this.discountValue, originalTotal)
         discountPercentage = originalTotal > 0 ? (discountAmount / originalTotal) * 100 : 0
+      }
+
+      // Check maximum authorized discount
+      const maximumAuthorizedDiscount = item.maximumAuthorizedDiscount !== null && item.maximumAuthorizedDiscount !== undefined 
+        ? item.maximumAuthorizedDiscount 
+        : null
+      
+      if (maximumAuthorizedDiscount !== null && discountPercentage > maximumAuthorizedDiscount) {
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: this.$t('pos.itemSelection.discountModal.errorTitle') || 'Discount Error',
+            icon: 'AlertCircleIcon',
+            text: this.$t('pos.itemSelection.discountModal.maximumDiscountExceeded', { 
+              max: maximumAuthorizedDiscount,
+              attempted: discountPercentage.toFixed(2)
+            }) || `Maximum authorized discount is ${maximumAuthorizedDiscount}%. Attempted discount: ${discountPercentage.toFixed(2)}%`,
+            variant: 'danger'
+          }
+        })
+        return // Don't apply the discount
       }
 
       item.discountPercentage = discountPercentage

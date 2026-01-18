@@ -193,6 +193,7 @@ import ToastificationContent from '@core/components/toastification/Toastificatio
 import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
 import BadgeScanPopup from '@/components/pos/BadgeScanPopup.vue'
 import { checkCurrentUserPermission, getAlwaysShowBadgeScan, BADGE_PERMISSIONS } from '@/services/badgeService'
+import { formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'ReturnProducts',
@@ -636,8 +637,8 @@ export default {
       return date.toLocaleString()
     },
     formatPrice(price) {
-      if (!price) return '0.00'
-      return parseFloat(price).toFixed(2)
+      if (!price && price !== 0) return '0.00'
+      return formatCurrencyAmount(price)
     },
     goBack() {
       this.$router.push({ name: 'pos-item-selection' })
@@ -673,11 +674,15 @@ export default {
         salesLines: returnLines.map(line => ({
           item: {
             name: line.item?.name || this.$t('pos.returnProducts.print.returnItem'),
-            itemCode: line.item?.itemCode || 'N/A'
+            itemCode: line.item?.itemCode || 'N/A',
+            defaultVAT: line.item ? line.item.defaultVAT : null
           },
           quantity: line.quantity || 0,
-          lineTotal: (line.unitPrice || 0) * (line.quantity || 0),
-          unitPrice: line.unitPrice || 0
+          unitPrice: line.unitPrice || 0, // HT (excluding VAT)
+          unitPriceIncludingVat: line.unitPriceIncludingVat || null, // TTC (including VAT)
+          lineTotal: line.lineTotal || ((line.unitPrice || 0) * (line.quantity || 0)), // HT (excluding VAT)
+          lineTotalIncludingVat: line.lineTotalIncludingVat || null, // TTC (including VAT)
+          vatPercent: line.item ? line.item.defaultVAT : null
         })),
         paymentHeaders: [{
           paymentMethod: {

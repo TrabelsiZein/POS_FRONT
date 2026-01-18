@@ -213,7 +213,7 @@
     </b-card>
 
     <!-- Return Details Modal -->
-    <b-modal id="return-details-modal" v-model="showDetailsModal" :title="$t('admin.returnsManagement.modal.returnDetails')" size="xl" hide-footer
+    <b-modal id="return-details-modal" v-model="showDetailsModal" :title="$t('admin.returnsManagement.modal.returnDetails')" size="xl"
       scrollable>
       <div v-if="selectedReturn">
         <!-- Return Header Info -->
@@ -386,19 +386,16 @@
             </template>
           </b-table>
         </b-card>
-
-        <!-- Actions -->
-        <div class="text-right mt-3">
-          <b-button v-if="selectedReturn.returnType === 'RETURN_VOUCHER' && selectedReturn.returnVoucher"
-            variant="success" @click="printVoucher(selectedReturn)" class="mr-2">
-            <feather-icon icon="PrinterIcon" size="16" class="mr-1" />
-            {{ $t('admin.returnsManagement.modal.printVoucher') }}
-          </b-button>
-          <b-button variant="secondary" @click="showDetailsModal = false">
-            {{ $t('admin.returnsManagement.modal.close') }}
-          </b-button>
-        </div>
       </div>
+      <template #modal-footer>
+        <b-button variant="secondary" @click="showDetailsModal = false">
+          {{ $t('admin.returnsManagement.modal.close') }}
+        </b-button>
+        <b-button v-if="selectedReturn && selectedReturn.returnVoucher" variant="primary" @click="printVoucher(selectedReturn)" :disabled="loading">
+          <feather-icon icon="PrinterIcon" size="16" class="mr-1" />
+          {{ $t('admin.returnsManagement.modal.printVoucher') }}
+        </b-button>
+      </template>
     </b-modal>
   </div>
 </template>
@@ -407,6 +404,7 @@
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
 import moment from 'moment'
+import { formatCurrency } from '@core/utils/filter'
 
 export default {
   name: 'ReturnsManagement',
@@ -709,11 +707,15 @@ export default {
         salesLines: returnLines.map(line => ({
           item: {
             name: line.item ? line.item.name : this.$t('admin.returnsManagement.nA'),
-            itemCode: line.item ? line.item.itemCode : null
+            itemCode: line.item ? line.item.itemCode : null,
+            defaultVAT: line.item ? line.item.defaultVAT : null
           },
           quantity: line.quantity,
-          unitPrice: line.unitPrice,
-          lineTotal: line.lineTotal
+          unitPrice: line.unitPrice, // HT (excluding VAT)
+          unitPriceIncludingVat: line.unitPriceIncludingVat || null, // TTC (including VAT)
+          lineTotal: line.lineTotal, // HT (excluding VAT)
+          lineTotalIncludingVat: line.lineTotalIncludingVat || null, // TTC (including VAT)
+          vatPercent: line.item ? line.item.defaultVAT : null
         })),
         paymentHeaders: [{
           paymentMethod: {
@@ -903,13 +905,11 @@ export default {
       }
     },
     formatTunCurrency(value) {
-      const amount = parseFloat(value) || 0
-      const formatted = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      return `${formatted} TND`
+      return formatCurrency(value)
     },
     formatPrice(price) {
       // Keep for backward compatibility, but use formatTunCurrency instead
-      return this.formatTunCurrency(price)
+      return formatCurrency(price)
     },
     formatDate(dateString) {
       if (!dateString) return ''

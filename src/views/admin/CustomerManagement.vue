@@ -60,7 +60,7 @@
     <!-- Customers Table -->
     <b-card>
       <b-table
-        :items="paginatedCustomers"
+        :items="customers"
         :fields="customerFields"
         striped
         hover
@@ -128,7 +128,8 @@
               variant="outline-primary" 
               size="sm" 
               @click="setAsDefaultCustomer(row.item)"
-              :disabled="row.item.isDefault"
+              :disabled="row.item.isDefault || !row.item.active"
+              :title="!row.item.active ? $t('pos.customerManagement.cannotSetInactiveAsDefault') : ''"
             >
               <feather-icon icon="StarIcon" size="14" />
               {{ $t('pos.customerManagement.setAsDefault') }}
@@ -161,10 +162,11 @@
         </b-row>
         <div class="d-flex justify-content-center mt-2">
           <b-pagination
-            v-model="currentPage"
+            :value="currentPage + 1"
             :total-rows="totalRows"
             :per-page="perPage"
             align="center"
+            @change="onPageChange"
           />
         </div>
       </div>
@@ -183,14 +185,17 @@ export default {
       loading: false,
       searchTerm: '',
       statusFilter: 'all',
-      currentPage: 1,
-      perPage: 10,
+      currentPage: 0, // Changed to 0-based for backend pagination
+      perPage: 20,
       perPageOptions: [
         { value: 10, text: '10' },
         { value: 20, text: '20' },
         { value: 50, text: '50' },
         { value: 100, text: '100' }
-      ]
+      ],
+      totalRows: 0,
+      totalPages: 0,
+      searchTimeout: null
     }
   },
   computed: {
@@ -212,74 +217,61 @@ export default {
         { key: 'actions', label: this.$t('pos.customerManagement.tableHeaders.actions'), sortable: false, thClass: 'text-right', tdClass: 'text-right' }
       ]
     },
-    filteredCustomers() {
-      let filtered = this.customers
-
-      // Filter by status
-      if (this.statusFilter === 'active') {
-        filtered = filtered.filter(customer => customer.active === true)
-      } else if (this.statusFilter === 'inactive') {
-        filtered = filtered.filter(customer => customer.active === false)
-      }
-
-      // Filter by search term
-      const term = this.searchTerm.trim().toLowerCase()
-      if (term) {
-        filtered = filtered.filter(customer => {
-          return [
-            customer.customerCode,
-            customer.name,
-            customer.email,
-            customer.phone,
-            customer.city,
-            customer.country,
-            customer.taxId
-          ].some(field => field && field.toString().toLowerCase().includes(term))
-        })
-      }
-
-      return filtered
-    },
-    totalRows() {
-      return this.filteredCustomers.length
-    },
-    paginatedCustomers() {
-      const start = (this.currentPage - 1) * this.perPage
-      return this.filteredCustomers.slice(start, start + this.perPage)
-    },
+    // Removed client-side filtering - now using server-side pagination
     startIndex() {
-      return this.totalRows === 0 ? 0 : (this.currentPage - 1) * this.perPage + 1
+      return this.totalRows === 0 ? 0 : (this.currentPage) * this.perPage + 1
     },
     endIndex() {
-      return Math.min(this.currentPage * this.perPage, this.totalRows)
+      return Math.min((this.currentPage + 1) * this.perPage, this.totalRows)
     }
   },
   watch: {
     searchTerm() {
-      this.currentPage = 1
+      // Reset to first page when search changes
+      this.currentPage = 0
+      // Debounce search to avoid too many API calls
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout)
+      }
+      this.searchTimeout = setTimeout(() => {
+        this.loadCustomers()
+      }, 500) // Wait 500ms after user stops typing
     },
     statusFilter() {
-      this.currentPage = 1
+      this.currentPage = 0
+      this.loadCustomers()
     },
     perPage() {
-      this.currentPage = 1
-    },
-    filteredCustomers(newList) {
-      const maxPage = Math.max(1, Math.ceil(newList.length / this.perPage))
-      if (this.currentPage > maxPage) {
-        this.currentPage = maxPage
-      }
+      this.currentPage = 0
+      this.loadCustomers()
     }
   },
   mounted() {
     this.loadCustomers()
   },
   methods: {
+    onPageChange(page) {
+      // Page is 1-based from b-pagination, convert to 0-based for backend
+      this.currentPage = page - 1
+      this.loadCustomers()
+    },
     async loadCustomers() {
       this.loading = true
       try {
-        const response = await this.$http.get('/customer')
-        this.customers = response.data
+        const response = await this.$http.get('/customer/admin/paginated', {
+          params: {
+            page: this.currentPage,
+            size: this.perPage,
+            searchTerm: this.searchTerm && this.searchTerm.trim() ? this.searchTerm.trim() : null,
+            statusFilter: this.statusFilter
+          }
+        })
+        
+        if (response.data) {
+          this.customers = response.data.content || []
+          this.totalRows = response.data.totalElements || 0
+          this.totalPages = response.data.totalPages || 0
+        }
       } catch (error) {
         console.error('Error loading customers:', error)
         this.$toast({
@@ -302,6 +294,20 @@ export default {
       this.searchTerm = ''
     },
     async setAsDefaultCustomer(customer) {
+      // Prevent setting inactive customer as default
+      if (!customer.active) {
+        this.$toast({
+          component: ToastificationContent,
+          props: {
+            title: this.$t('common.error'),
+            icon: 'AlertCircleIcon',
+            text: this.$t('pos.customerManagement.cannotSetInactiveAsDefault'),
+            variant: 'danger'
+          }
+        })
+        return
+      }
+
       try {
         const { value: confirmed } = await this.$swal({
           title: this.$t('pos.customerManagement.setAsDefaultModal.title'),
@@ -343,7 +349,14 @@ export default {
         console.error('Error setting default customer:', error)
         let errorMessage = this.$t('pos.customerManagement.failedToSetDefault')
         if (error.response && error.response.data) {
-          errorMessage = error.response.data || errorMessage
+          // Try to extract error message from response
+          if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message
+          } else if (error.response.data.error) {
+            errorMessage = error.response.data.error
+          }
         }
         this.$toast({
           component: ToastificationContent,

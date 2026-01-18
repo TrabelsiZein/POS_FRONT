@@ -446,6 +446,7 @@
 <script>
 import ToastificationContent from '@core/components/toastification/ToastificationContent.vue'
 import ReceiptTemplate from '@/components/ReceiptTemplate.vue'
+import { formatCurrencyAmount } from '@core/utils/filter'
 
 export default {
   name: 'TicketsHistory',
@@ -784,8 +785,8 @@ export default {
       return date.toLocaleString()
     },
     formatPrice(price) {
-      if (!price) return '0.00'
-      return parseFloat(price).toFixed(2)
+      if (!price && price !== 0) return '0.00'
+      return formatCurrencyAmount(price)
     },
     getStatusVariant(status) {
       switch (status) {
